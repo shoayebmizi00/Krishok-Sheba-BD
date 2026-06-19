@@ -1,0 +1,12 @@
+.env
+node_modules/
+uploads/*
+!uploads/.gitkeep
+!uploads/crops/
+!uploads/crops/.gitkeep
+!uploads/equipment/
+!uploads/equipment/.gitkeep
+!uploads/vehicles/
+!uploads/vehicles/.gitkeep
+!uploads/profiles/
+!uploads/profiles/.gitkeep

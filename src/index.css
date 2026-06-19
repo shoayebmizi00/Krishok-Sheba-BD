@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 120 20% 99%;
+    --foreground: 150 30% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 150 30% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 30% 8%;
+    --primary: 142 72% 29%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 40% 94%;
+    --secondary-foreground: 142 72% 20%;
+    --muted: 120 10% 96%;
+    --muted-foreground: 150 10% 40%;
+    --accent: 48 96% 53%;
+    --accent-foreground: 30 80% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 140 15% 90%;
+    --input: 140 15% 90%;
+    --ring: 142 72% 29%;
+    --chart-1: 142 72% 29%;
+    --chart-2: 48 96% 53%;
+    --chart-3: 30 80% 28%;
+    --chart-4: 160 60% 45%;
+    --chart-5: 80 60% 50%;
+    --radius: 0.625rem;
+    --font-heading: 'Noto Sans Bengali', 'Inter', sans-serif;
+    --font-body: 'Noto Sans Bengali', 'Inter', sans-serif;
+    --font-display: 'Noto Sans Bengali', 'Inter', sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --sidebar-background: 142 40% 97%;
+    --sidebar-foreground: 150 30% 15%;
+    --sidebar-primary: 142 72% 29%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 40% 94%;
+    --sidebar-accent-foreground: 142 72% 20%;
+    --sidebar-border: 140 15% 90%;
+    --sidebar-ring: 142 72% 29%;
+  }
+
+  .dark {
+    --background: 150 20% 5%;
+    --foreground: 120 10% 95%;
+    --card: 150 15% 8%;
+    --card-foreground: 120 10% 95%;
+    --popover: 150 15% 8%;
+    --popover-foreground: 120 10% 95%;
+    --primary: 142 72% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 20% 15%;
+    --secondary-foreground: 142 40% 90%;
+    --muted: 150 10% 12%;
+    --muted-foreground: 150 10% 55%;
+    --accent: 48 90% 50%;
+    --accent-foreground: 30 80% 10%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 150 10% 15%;
+    --input: 150 10% 15%;
+    --ring: 142 72% 40%;
+    --chart-1: 142 72% 40%;
+    --chart-2: 48 90% 50%;
+    --chart-3: 30 70% 40%;
+    --chart-4: 160 50% 40%;
+    --chart-5: 80 50% 45%;
+    --sidebar-background: 150 15% 7%;
+    --sidebar-foreground: 120 10% 90%;
+    --sidebar-primary: 142 72% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 20% 12%;
+    --sidebar-accent-foreground: 142 40% 90%;
+    --sidebar-border: 150 10% 15%;
+    --sidebar-ring: 142 72% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+}

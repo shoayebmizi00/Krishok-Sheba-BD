@@ -1,0 +1,183 @@
+import { createMockDatabase, demoUsers } from './mockData.js';
+
+const DATABASE_KEY = 'krishok_sheba_demo_database_v1';
+const SESSION_KEY = 'krishok_sheba_demo_user';
+
+const clone = (value) => structuredClone(value);
+
+function normalizeRecord(record) {
+  const normalized = { ...record };
+  if (normalized.created_at && !normalized.created_date) normalized.created_date = normalized.created_at;
+  if (normalized.updated_at && !normalized.updated_date) normalized.updated_date = normalized.updated_at;
+  return normalized;
+}
+
+function loadDatabase() {
+  try {
+    const saved = localStorage.getItem(DATABASE_KEY);
+    return saved ? JSON.parse(saved) : createMockDatabase();
+  } catch {
+    return createMockDatabase();
+  }
+}
+
+let database = loadDatabase();
+
+function saveDatabase() {
+  localStorage.setItem(DATABASE_KEY, JSON.stringify(database));
+}
+
+function publicUser(user) {
+  if (!user) return null;
+  const { password: _password, ...safeUser } = user;
+  return clone(safeUser);
+}
+
+function getCurrentUser() {
+  const id = localStorage.getItem(SESSION_KEY);
+  return database.User.find((user) => user.id === id) || null;
+}
+
+function makeError(message, status = 400) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
+
+function normalizeSortField(field) {
+  if (field === 'created_date') return 'created_at';
+  if (field === 'updated_date') return 'updated_at';
+  return field;
+}
+
+function entityClient(name) {
+  const list = (sort, limit, filters = {}) => {
+    let records = database[name] || [];
+    records = records.filter((record) => Object.entries(filters).every(([key, value]) => {
+      if (Array.isArray(record[key])) return record[key].includes(value);
+      return String(record[key] ?? '') === String(value);
+    }));
+
+    if (sort) {
+      const descending = sort.startsWith('-');
+      const field = normalizeSortField(descending ? sort.slice(1) : sort);
+      records = [...records].sort((left, right) => {
+        const a = left[field] ?? '';
+        const b = right[field] ?? '';
+        return (a > b ? 1 : a < b ? -1 : 0) * (descending ? -1 : 1);
+      });
+    }
+
+    const result = (limit ? records.slice(0, limit) : records).map(normalizeRecord);
+    return Promise.resolve(clone(result));
+  };
+
+  return {
+    list: (sort, limit) => list(sort, limit),
+    filter: (filters, sort, limit) => list(sort, limit, filters),
+    async create(data) {
+      const created = {
+        ...clone(data),
+        id: `${name.toLowerCase()}-${crypto.randomUUID()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      database[name] = [created, ...(database[name] || [])];
+      saveDatabase();
+      return clone(normalizeRecord(created));
+    },
+    async update(id, data) {
+      const index = (database[name] || []).findIndex((record) => record.id === id);
+      if (index < 0) throw makeError(`${name} not found`, 404);
+      database[name][index] = {
+        ...database[name][index],
+        ...clone(data),
+        updated_at: new Date().toISOString()
+      };
+      saveDatabase();
+      return clone(normalizeRecord(database[name][index]));
+    },
+    async delete(id) {
+      database[name] = (database[name] || []).filter((record) => record.id !== id);
+      saveDatabase();
+      return null;
+    }
+  };
+}
+
+const entities = Object.fromEntries(
+  Object.keys(createMockDatabase()).map((name) => [name, entityClient(name)])
+);
+
+export const localApi = {
+  entities,
+  auth: {
+    async register(data) {
+      if (database.User.some((user) => user.email.toLowerCase() === data.email.toLowerCase())) {
+        throw makeError('An account with this email already exists', 409);
+      }
+      const user = {
+        id: `user-${crypto.randomUUID()}`,
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        full_name: data.full_name,
+        role: data.role || 'farmer',
+        district: '',
+        is_active: true,
+        created_at: new Date().toISOString()
+      };
+      database.User.unshift(user);
+      localStorage.setItem(SESSION_KEY, user.id);
+      saveDatabase();
+      return { token: `demo-token-${user.id}`, user: publicUser(user) };
+    },
+    async login(email, password) {
+      const user = database.User.find((candidate) =>
+        candidate.email.toLowerCase() === email.trim().toLowerCase() &&
+        candidate.password === password
+      );
+      if (!user || !user.is_active) throw makeError('Invalid email or password', 401);
+      localStorage.setItem(SESSION_KEY, user.id);
+      return { token: `demo-token-${user.id}`, user: publicUser(user) };
+    },
+    logout(redirectTo) {
+      localStorage.removeItem(SESSION_KEY);
+      if (redirectTo !== false) {
+        window.location.assign(typeof redirectTo === 'string' ? redirectTo : '/');
+      }
+    },
+    async me() {
+      const user = getCurrentUser();
+      if (!user) throw makeError('Authentication required', 401);
+      return publicUser(user);
+    },
+    async updateMe(data) {
+      const user = getCurrentUser();
+      if (!user) throw makeError('Authentication required', 401);
+      Object.assign(user, clone(data), { updated_at: new Date().toISOString() });
+      saveDatabase();
+      return publicUser(user);
+    },
+    async isAuthenticated() {
+      return Boolean(getCurrentUser());
+    },
+    async requestPasswordReset(email) {
+      const exists = demoUsers.some((user) => user.email === email.trim().toLowerCase());
+      return { message: exists ? 'Demo reset request accepted.' : 'If the account exists, a reset link will be sent.' };
+    },
+    async resetPassword() {
+      return { message: 'Password reset is simulated in local demo mode.' };
+    }
+  },
+  async upload(file, folder = 'crops') {
+    return {
+      file_url: URL.createObjectURL(file),
+      folder,
+      filename: file.name
+    };
+  },
+  resetDemoData() {
+    database = createMockDatabase();
+    saveDatabase();
+  }
+};

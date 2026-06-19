@@ -1,0 +1,134 @@
+{
+  "info": {
+    "_postman_id": "9ca68136-52c6-4b37-9e67-krishok-sheba-bd",
+    "name": "KRISHOK-SHEBA BD REST API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "resourceId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"full_name\":\"Test Farmer\",\"email\":\"farmer@example.com\",\"password\":\"password123\",\"role\":\"farmer\"}" },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["const body = pm.response.json();", "if (body.token) pm.collectionVariables.set('token', body.token);"] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"farmer@example.com\",\"password\":\"password123\"}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"phone\":\"+8801700000000\",\"district\":\"Dhaka\"}" },
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crop Listings CRUD",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": "{{baseUrl}}/crop-listings?sort=-created_date&limit=50" }
+        },
+        {
+          "name": "Create",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["const body = pm.response.json();", "if (body.id) pm.collectionVariables.set('resourceId', body.id);"] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"crop_name\":\"Rice\",\"quantity\":100,\"unit\":\"kg\",\"expected_price\":65,\"district\":\"Dhaka\",\"status\":\"active\",\"listing_type\":\"ready\",\"images\":[]}" },
+            "url": "{{baseUrl}}/crop-listings"
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\"expected_price\":70}" },
+            "url": "{{baseUrl}}/crop-listings/{{resourceId}}"
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/crop-listings/{{resourceId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "All Resource Lists",
+      "item": [
+        { "name": "Users", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/users" } },
+        { "name": "Bids", "request": { "method": "GET", "url": "{{baseUrl}}/bids" } },
+        { "name": "Conversations", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/conversations" } },
+        { "name": "Messages", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/messages" } },
+        { "name": "Equipment", "request": { "method": "GET", "url": "{{baseUrl}}/equipment" } },
+        { "name": "Equipment Bookings", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/equipment-bookings" } },
+        { "name": "Vehicles", "request": { "method": "GET", "url": "{{baseUrl}}/vehicles" } },
+        { "name": "Transport Bookings", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/transport-bookings" } },
+        { "name": "Orders", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/orders" } },
+        { "name": "Products", "request": { "method": "GET", "url": "{{baseUrl}}/products" } },
+        { "name": "Transactions", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/transactions" } },
+        { "name": "Notifications", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/notifications" } },
+        { "name": "Government Notices", "request": { "method": "GET", "url": "{{baseUrl}}/government-notices" } },
+        { "name": "Market Prices", "request": { "method": "GET", "url": "{{baseUrl}}/market-prices" } }
+      ]
+    },
+    {
+      "name": "Upload Crop Image",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "" }] },
+        "url": "{{baseUrl}}/uploads/crops"
+      }
+    }
+  ]
+}

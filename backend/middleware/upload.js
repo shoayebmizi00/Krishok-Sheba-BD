@@ -1,0 +1,28 @@
+import path from 'node:path';
+import crypto from 'node:crypto';
+import multer from 'multer';
+
+const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles']);
+const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+const storage = multer.diskStorage({
+  destination(req, _file, callback) {
+    const folder = allowedFolders.has(req.params.folder) ? req.params.folder : 'crops';
+    callback(null, path.join(process.cwd(), 'uploads', folder));
+  },
+  filename(_req, file, callback) {
+    const extension = path.extname(file.originalname).toLowerCase();
+    callback(null, `${Date.now()}-${crypto.randomUUID()}${extension}`);
+  }
+});
+
+export const uploadImage = multer({
+  storage,
+  limits: { fileSize: Number(process.env.MAX_UPLOAD_MB || 5) * 1024 * 1024 },
+  fileFilter(_req, file, callback) {
+    if (!allowedTypes.has(file.mimetype)) {
+      return callback(new Error('Only JPEG, PNG, WebP, and GIF images are allowed'));
+    }
+    callback(null, true);
+  }
+});
