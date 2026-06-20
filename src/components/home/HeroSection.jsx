@@ -67,14 +67,14 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <div className="hidden lg:grid gap-4 grid-cols-2">
-            {featureCards.map((f, i) =>
-            <div key={i} className={`p-6 bg-card border border-border shadow-sm hover:shadow-md transition-shadow rounded-2xl ${i === 1 ? 'mt-8' : ''} ${i === 2 ? '-mt-4' : ''}`}>
+          <div className="hidden lg:grid grid-cols-2 auto-rows-fr gap-4">
+            {featureCards.map((f) =>
+            <div key={f.title} className="h-full min-h-44 p-6 bg-card border border-border shadow-sm hover:shadow-md transition-shadow rounded-2xl flex flex-col">
                 <div className={`w-10 h-10 rounded-xl ${f.color} flex items-center justify-center mb-3`}>
                   <f.icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-heading font-semibold text-sm">{f.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{f.desc}</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{f.desc}</p>
               </div>
             )}
           </div>
