@@ -3,7 +3,12 @@ import crypto from 'node:crypto';
 import multer from 'multer';
 
 const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles']);
-const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+export const cloudinaryEnabled = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME
+  && process.env.CLOUDINARY_API_KEY
+  && process.env.CLOUDINARY_API_SECRET
+);
 
 const storage = multer.diskStorage({
   destination(req, _file, callback) {
@@ -17,11 +22,11 @@ const storage = multer.diskStorage({
 });
 
 export const uploadImage = multer({
-  storage,
+  storage: cloudinaryEnabled ? multer.memoryStorage() : storage,
   limits: { fileSize: Number(process.env.MAX_UPLOAD_MB || 5) * 1024 * 1024 },
   fileFilter(_req, file, callback) {
     if (!allowedTypes.has(file.mimetype)) {
-      return callback(new Error('Only JPEG, PNG, WebP, and GIF images are allowed'));
+      return callback(new Error('Only JPG, JPEG, PNG, and WebP images are allowed'));
     }
     callback(null, true);
   }

@@ -76,6 +76,47 @@ function entityClient(name) {
     list: (sort, limit) => list(sort, limit),
     filter: (filters, sort, limit) => list(sort, limit, filters),
     async create(data) {
+      const currentUser = getCurrentUser();
+      if (name === 'CropListing') {
+        if (currentUser?.role !== 'farmer') throw makeError('Only farmers can upload crops.', 403);
+        data = {
+          ...data,
+          farmer_id: currentUser.id,
+          farmer_name: currentUser.full_name || 'Farmer'
+        };
+      }
+      if (name === 'Conversation') {
+        const participantIds = [...new Set(data.participant_ids || [])];
+        if (!currentUser || participantIds.length !== 2 || !participantIds.includes(currentUser.id)) {
+          throw makeError('A conversation must include you and one other user');
+        }
+        const existing = (database.Conversation || []).find((conversation) =>
+          conversation.listing_id === data.listing_id
+          && participantIds.every((id) => conversation.participant_ids?.includes(id))
+        );
+        if (existing) return clone(normalizeRecord(existing));
+        data = {
+          ...data,
+          participant_ids: participantIds,
+          participant_names: participantIds.map((id) =>
+            database.User.find((user) => user.id === id)?.full_name || 'User'
+          )
+        };
+      }
+      if (name === 'Message') {
+        const conversation = database.Conversation.find((item) => item.id === data.conversation_id);
+        if (!currentUser || !conversation?.participant_ids?.includes(currentUser.id)) {
+          throw makeError('You are not a participant in this conversation', 403);
+        }
+        data = {
+          ...data,
+          sender_id: currentUser.id,
+          receiver_id: conversation.participant_ids.find((id) => id !== currentUser.id),
+          sender_name: currentUser.full_name || 'User',
+          content: String(data.content || '').trim()
+        };
+        if (!data.content) throw makeError('Message cannot be empty');
+      }
       const created = {
         ...clone(data),
         id: `${name.toLowerCase()}-${crypto.randomUUID()}`,
@@ -83,6 +124,15 @@ function entityClient(name) {
         updated_at: new Date().toISOString()
       };
       database[name] = [created, ...(database[name] || [])];
+      if (name === 'Message') {
+        const conversation = database.Conversation.find((item) => item.id === created.conversation_id);
+        if (conversation) {
+          conversation.last_message = created.content;
+          conversation.last_message_by = created.sender_id;
+          conversation.last_message_date = created.created_at;
+          conversation.updated_at = created.created_at;
+        }
+      }
       saveDatabase();
       return clone(normalizeRecord(created));
     },
@@ -170,6 +220,10 @@ export const localApi = {
     }
   },
   async upload(file, folder = 'crops') {
+    const currentUser = getCurrentUser();
+    if (folder === 'crops' && currentUser?.role !== 'farmer') {
+      throw makeError('Only farmers can upload crop images.', 403);
+    }
     return {
       file_url: URL.createObjectURL(file),
       folder,

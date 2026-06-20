@@ -10,14 +10,19 @@ export default function Messages() {
   const { user } = useOutletContext();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!user?.id) { setLoading(false); return; }
     const load = async () => {
-      const all = await apiClient.entities.Conversation.list('-last_message_date', 100);
-      const mine = all.filter(c => c.participant_ids?.includes(user.id));
-      setConversations(mine);
-      setLoading(false);
+      try {
+        const all = await apiClient.entities.Conversation.list('-last_message_date', 100);
+        setConversations(all);
+      } catch (loadError) {
+        setError(loadError.message || 'Unable to load conversations');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, [user]);
@@ -31,6 +36,13 @@ export default function Messages() {
   }
 
   if (loading) return <div className="max-w-3xl mx-auto px-4 py-8"><LoadingSpinner /></div>;
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center">
+        <EmptyState icon={MessageSquare} title="Messages unavailable" description={error} />
+      </div>
+    );
+  }
 
   const otherName = (conv) => {
     const i = conv.participant_ids?.indexOf(user.id);

@@ -12,12 +12,14 @@ export const resources = {
   cropListings: {
     table: 'crop_listings',
     route: 'crop-listings',
-    columns: ['crop_name', 'quantity', 'unit', 'expected_harvest_date', 'expected_price', 'location', 'district', 'description', 'images', 'status', 'farmer_name', 'farmer_id', 'listing_type', ...timestamps],
+    columns: ['crop_name', 'category', 'quantity', 'unit', 'expected_harvest_date', 'expected_price', 'location', 'district', 'description', 'images', 'status', 'farmer_name', 'farmer_id', 'listing_type', ...timestamps],
     json: ['images'],
     publicRead: true,
     ownerFields: ['farmer_id'],
     creatorField: 'farmer_id',
-    createRoles: ['farmer', 'admin']
+    createRoles: ['farmer'],
+    strictCreateRoles: true,
+    createDeniedMessage: 'Only farmers can upload crops.'
   },
   bids: {
     table: 'bids',
@@ -39,7 +41,7 @@ export const resources = {
   messages: {
     table: 'messages',
     route: 'messages',
-    columns: ['conversation_id', 'sender_id', 'sender_name', 'content', ...timestamps],
+    columns: ['conversation_id', 'sender_id', 'receiver_id', 'sender_name', 'content', ...timestamps],
     publicRead: false,
     ownerFields: ['sender_id'],
     creatorField: 'sender_id',

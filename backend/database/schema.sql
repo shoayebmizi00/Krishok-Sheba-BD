@@ -29,6 +29,7 @@ CREATE TABLE users (
 CREATE TABLE crop_listings (
   id CHAR(36) PRIMARY KEY,
   crop_name VARCHAR(150) NOT NULL,
+  category ENUM('rice', 'vegetables', 'fruits', 'pulses', 'spices', 'fish', 'other') NOT NULL DEFAULT 'other',
   quantity DECIMAL(12,2) NOT NULL,
   unit ENUM('kg', 'ton', 'maund', 'mon') NOT NULL DEFAULT 'kg',
   expected_harvest_date DATE NULL,
@@ -46,6 +47,7 @@ CREATE TABLE crop_listings (
   CONSTRAINT fk_crop_listings_farmer FOREIGN KEY (farmer_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_crop_listings_farmer (farmer_id),
   INDEX idx_crop_listings_status_created (status, created_at),
+  INDEX idx_crop_listings_category (category),
   INDEX idx_crop_listings_district_crop (district, crop_name),
   INDEX idx_crop_listings_harvest (expected_harvest_date)
 ) ENGINE=InnoDB;
@@ -93,14 +95,17 @@ CREATE TABLE messages (
   id CHAR(36) PRIMARY KEY,
   conversation_id CHAR(36) NOT NULL,
   sender_id CHAR(36) NOT NULL,
+  receiver_id CHAR(36) NOT NULL,
   sender_name VARCHAR(120) NULL,
   content TEXT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
   CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_messages_receiver FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_messages_conversation_created (conversation_id, created_at),
-  INDEX idx_messages_sender (sender_id)
+  INDEX idx_messages_sender (sender_id),
+  INDEX idx_messages_receiver (receiver_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE equipment (

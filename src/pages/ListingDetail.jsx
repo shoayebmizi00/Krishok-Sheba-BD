@@ -63,26 +63,20 @@ export default function ListingDetail() {
   const handleStartChat = async () => {
     if (!user || !listing) return;
     setStartingChat(true);
-    const existing = await apiClient.entities.Conversation.list('-created_date', 100);
-    const found = existing.find(c => 
-      c.listing_id === id && 
-      c.participant_ids?.includes(user.id) && 
-      c.participant_ids?.includes(listing.farmer_id)
-    );
-    if (found) {
-      window.location.href = `/messages/${found.id}`;
-      return;
+    try {
+      const conv = await apiClient.entities.Conversation.create({
+        participant_ids: [user.id, listing.farmer_id],
+        listing_id: listing.id
+      });
+      window.location.href = `/messages/${conv.id}`;
+    } catch (error) {
+      toast({
+        title: 'Could not start conversation',
+        description: error.message || 'Please try again.',
+        variant: 'destructive'
+      });
+      setStartingChat(false);
     }
-    const conv = await apiClient.entities.Conversation.create({
-      participant_ids: [user.id, listing.farmer_id],
-      participant_names: [user.full_name || 'Buyer', listing.farmer_name || 'Farmer'],
-      subject: `${listing.crop_name} - ${listing.district}`,
-      listing_id: listing.id,
-      listing_name: listing.crop_name,
-      last_message: '',
-      last_message_date: new Date().toISOString()
-    });
-    window.location.href = `/messages/${conv.id}`;
   };
 
   if (loading) return <LoadingSpinner />;
@@ -116,6 +110,11 @@ export default function ListingDetail() {
             <div className="flex items-center gap-3 mb-2">
               <h1 className="font-heading font-bold text-2xl text-foreground">{listing.crop_name}</h1>
               <StatusBadge status={listing.status} />
+              {listing.category && (
+                <span className="px-2 py-1 rounded-full bg-secondary text-xs font-medium capitalize">
+                  {listing.category}
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {listing.district}</span>
@@ -186,10 +185,12 @@ export default function ListingDetail() {
               <label className="text-sm text-muted-foreground">Message (optional)</label>
               <Textarea placeholder="Add a note for the farmer..." value={bidMsg} onChange={e => setBidMsg(e.target.value)} className="mt-1" rows={3} />
             </div>
-            <Button onClick={handlePlaceBid} disabled={!bidAmount || submitting} className="w-full bg-primary hover:bg-primary/90 gap-2">
-              <Send className="w-4 h-4" /> {submitting ? 'Placing...' : 'Place Bid'}
-            </Button>
-            {user && user.id !== listing.farmer_id && (
+            {user?.role === 'buyer' && (
+              <Button onClick={handlePlaceBid} disabled={!bidAmount || submitting} className="w-full bg-primary hover:bg-primary/90 gap-2">
+                <Send className="w-4 h-4" /> {submitting ? 'Placing...' : 'Place Bid'}
+              </Button>
+            )}
+            {user?.role === 'buyer' && user.id !== listing.farmer_id && (
               <Button onClick={handleStartChat} disabled={startingChat} variant="outline" className="w-full gap-2">
                 <MessageSquare className="w-4 h-4" /> {startingChat ? 'Starting...' : 'Message Farmer'}
               </Button>

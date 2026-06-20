@@ -53,14 +53,17 @@ export default function MyListings() {
           {listings.map(listing => (
             <div key={listing.id} className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <span className="text-2xl">🌾</span>
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  {listing.images?.[0]
+                    ? <img src={listing.images[0]} alt={listing.crop_name} className="w-full h-full object-cover" />
+                    : <span className="text-2xl">🌾</span>}
                 </div>
                 <div>
                   <h3 className="font-medium text-foreground">{listing.crop_name}</h3>
                   <p className="text-xs text-muted-foreground">{listing.district} · {listing.quantity} {listing.unit || 'kg'}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <StatusBadge status={listing.status} />
+                    <span className="text-xs text-muted-foreground capitalize">{listing.category || 'other'}</span>
                     <span className="text-xs text-muted-foreground capitalize">{(listing.listing_type || 'ready').replace('_', '-')}</span>
                   </div>
                 </div>

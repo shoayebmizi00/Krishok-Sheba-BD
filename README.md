@@ -78,6 +78,26 @@ UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
 
 No paid email provider is required. In development, the API logs the reset URL and returns the reset token in the response. Connect an SMTP provider before production deployment.
 
+## Production uploads
+
+Render's local filesystem is temporary. Configure these backend environment variables for permanent image storage:
+
+```text
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+```
+
+Without Cloudinary, uploads still work for local development and short-lived demos, but Render may remove them during a restart or redeploy.
+
+## Database migrations
+
+The backend applies idempotent SQL migrations before starting:
+
+```powershell
+npm.cmd --prefix backend run migrate
+```
+
 ## Documentation
 
 - [API reference](docs/API.md)

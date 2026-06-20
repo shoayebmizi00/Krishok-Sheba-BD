@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/api/apiClient';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { Search, MapPin, Plus, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,13 @@ function CropCard({ crop, type }) {
             </span>
           </div>
         )}
+        {crop.category && (
+          <div className="absolute bottom-3 left-3">
+            <span className="px-2 py-0.5 rounded-full bg-card/90 text-foreground text-xs font-medium capitalize">
+              {crop.category}
+            </span>
+          </div>
+        )}
       </div>
       <div className="p-4">
         <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -54,6 +61,7 @@ function CropCard({ crop, type }) {
 }
 
 export default function Marketplace() {
+  const { user } = useOutletContext();
   const [listings, setListings] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,11 +112,13 @@ export default function Marketplace() {
           <h1 className="font-heading font-bold text-2xl text-foreground">Crop Marketplace</h1>
           <p className="text-muted-foreground text-sm mt-1">Browse crops from farmers across Bangladesh</p>
         </div>
-        <Link to="/farmer-dashboard/add-listing">
-          <Button className="bg-primary hover:bg-primary/90 gap-2">
-            <Plus className="w-4 h-4" /> Add Listing
-          </Button>
-        </Link>
+        {user?.role === 'farmer' && (
+          <Link to="/farmer-dashboard/add-listing">
+            <Button className="bg-primary hover:bg-primary/90 gap-2">
+              <Plus className="w-4 h-4" /> Add Listing
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filters */}

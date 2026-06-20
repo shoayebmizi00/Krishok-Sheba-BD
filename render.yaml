@@ -38,3 +38,9 @@ services:
         value: "30"
       - key: MAX_UPLOAD_MB
         value: "5"
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

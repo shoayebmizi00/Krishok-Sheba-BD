@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useOutletContext, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useOutletContext, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Sprout, Plus, Gavel, Package, Wrench, Truck, History, Clock, Bell, MessageSquare, UserCircle } from 'lucide-react';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -10,6 +10,10 @@ export default function FarmerDashboard() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
+
+  if (user?.role !== 'farmer') {
+    return <Navigate to={user?.role === 'buyer' ? '/buyer-dashboard' : '/'} replace />;
+  }
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/farmer-dashboard" },

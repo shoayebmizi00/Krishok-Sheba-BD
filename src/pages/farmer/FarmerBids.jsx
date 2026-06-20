@@ -33,26 +33,20 @@ export default function FarmerBids() {
 
   const handleMessageBuyer = async (bid) => {
     setChattingId(bid.id);
-    const existing = await apiClient.entities.Conversation.list('-created_date', 100);
-    const found = existing.find(c => 
-      c.listing_id === bid.listing_id && 
-      c.participant_ids?.includes(user.id) && 
-      c.participant_ids?.includes(bid.buyer_id)
-    );
-    if (found) {
-      window.location.href = `/messages/${found.id}`;
-      return;
+    try {
+      const conv = await apiClient.entities.Conversation.create({
+        participant_ids: [user.id, bid.buyer_id],
+        listing_id: bid.listing_id
+      });
+      window.location.href = `/messages/${conv.id}`;
+    } catch (error) {
+      toast({
+        title: 'Could not start conversation',
+        description: error.message || 'Please try again.',
+        variant: 'destructive'
+      });
+      setChattingId(null);
     }
-    const conv = await apiClient.entities.Conversation.create({
-      participant_ids: [user.id, bid.buyer_id],
-      participant_names: [user.full_name || 'Farmer', bid.buyer_name || 'Buyer'],
-      subject: `${bid.crop_name || 'Crop'} - Bid Discussion`,
-      listing_id: bid.listing_id,
-      listing_name: bid.crop_name,
-      last_message: '',
-      last_message_date: new Date().toISOString()
-    });
-    window.location.href = `/messages/${conv.id}`;
   };
 
   if (loading) return <LoadingSpinner />;

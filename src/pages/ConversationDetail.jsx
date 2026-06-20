@@ -4,28 +4,36 @@ import { apiClient } from '@/api/apiClient';
 import { ArrowLeft, Send, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 export default function ConversationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useOutletContext();
+  const { toast } = useToast();
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
   const bottomRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
-      const convs = await apiClient.entities.Conversation.filter({ id });
-      if (convs.length > 0) {
-        setConversation(convs[0]);
-        const msgs = await apiClient.entities.Message.filter({ conversation_id: id }, 'created_date', 200);
-        setMessages(msgs);
+      try {
+        const convs = await apiClient.entities.Conversation.filter({ id });
+        if (convs.length > 0) {
+          setConversation(convs[0]);
+          const msgs = await apiClient.entities.Message.filter({ conversation_id: id }, 'created_date', 200);
+          setMessages(msgs);
+        }
+      } catch (loadError) {
+        setError(loadError.message || 'Unable to load this conversation');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     load();
   }, [id]);
@@ -48,20 +56,22 @@ export default function ConversationDetail() {
   const handleSend = async () => {
     if (!newMsg.trim() || !user) return;
     setSending(true);
-    const msg = await apiClient.entities.Message.create({
-      conversation_id: id,
-      sender_id: user.id,
-      sender_name: user.full_name || 'User',
-      content: newMsg.trim()
-    });
-    setMessages(prev => [...prev, msg]);
-    await apiClient.entities.Conversation.update(id, {
-      last_message: newMsg.trim(),
-      last_message_by: user.id,
-      last_message_date: new Date().toISOString()
-    });
-    setNewMsg('');
-    setSending(false);
+    try {
+      const msg = await apiClient.entities.Message.create({
+        conversation_id: id,
+        content: newMsg.trim()
+      });
+      setMessages(prev => [...prev, msg]);
+      setNewMsg('');
+    } catch (sendError) {
+      toast({
+        title: 'Message not sent',
+        description: sendError.message || 'Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -72,6 +82,15 @@ export default function ConversationDetail() {
   };
 
   if (loading) return <div className="max-w-3xl mx-auto px-4 py-8"><LoadingSpinner /></div>;
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <h2 className="font-heading font-bold text-xl">Unable to load conversation</h2>
+        <p className="text-sm text-muted-foreground mt-2">{error}</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate('/messages')}>Back to Messages</Button>
+      </div>
+    );
+  }
   if (!conversation) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">

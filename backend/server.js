@@ -68,6 +68,7 @@ app.get('/api/health', async (_req, res, next) => {
         status: 'error',
         database: 'schema_incomplete',
         missingTables: schema.missingTables,
+        missingColumns: schema.missingColumns,
         deployment
       });
     }

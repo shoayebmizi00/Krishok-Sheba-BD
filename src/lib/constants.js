@@ -12,7 +12,6 @@ export const DISTRICTS = [
 
 export const CROP_CATEGORIES = [
   { value: "rice", label: "Rice (ধান)" },
-  { value: "wheat", label: "Wheat (গম)" },
   { value: "vegetables", label: "Vegetables (সবজি)" },
   { value: "fruits", label: "Fruits (ফল)" },
   { value: "spices", label: "Spices (মশলা)" },

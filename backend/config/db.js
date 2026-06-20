@@ -20,6 +20,14 @@ const requiredTables = [
   'government_notices',
   'market_prices'
 ];
+const requiredColumns = [
+  ['users', 'role'],
+  ['crop_listings', 'category'],
+  ['crop_listings', 'images'],
+  ['conversations', 'participant_ids'],
+  ['messages', 'sender_id'],
+  ['messages', 'receiver_id']
+];
 
 const configuredSsl = String(process.env.DB_SSL || '').toLowerCase();
 const isAivenHost = String(process.env.DB_HOST || '').endsWith('.aivencloud.com');
@@ -73,10 +81,18 @@ export async function checkDatabaseSchema() {
   );
   const tables = new Set(rows.map((row) => row.TABLE_NAME || row.table_name));
   const missingTables = requiredTables.filter((table) => !tables.has(table));
+  const [columnRows] = await pool.query(
+    'SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = DATABASE()'
+  );
+  const columns = new Set(columnRows.map((row) => `${row.TABLE_NAME || row.table_name}.${row.COLUMN_NAME || row.column_name}`));
+  const missingColumns = requiredColumns
+    .map(([table, column]) => `${table}.${column}`)
+    .filter((column) => !columns.has(column));
 
   return {
-    ready: missingTables.length === 0,
+    ready: missingTables.length === 0 && missingColumns.length === 0,
     tableCount: tables.size,
-    missingTables
+    missingTables,
+    missingColumns
   };
 }
