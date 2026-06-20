@@ -8,6 +8,7 @@ const isAivenHost = String(process.env.DB_HOST || '').endsWith('.aivencloud.com'
 const sslEnabled = isAivenHost || ['true', '1', 'required'].includes(
   configuredSsl
 );
+const rejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true';
 
 export const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
@@ -22,7 +23,7 @@ export const pool = mysql.createPool({
   dateStrings: true,
   ssl: sslEnabled
     ? {
-        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+        rejectUnauthorized
       }
     : undefined
 });

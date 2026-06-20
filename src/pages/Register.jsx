@@ -37,6 +37,14 @@ export default function Register() {
       setError('Passwords do not match');
       return;
     }
+    if (!form.full_name.trim()) {
+      setError('Full name is required');
+      return;
+    }
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
     setLoading(true);
     try {
       await apiClient.auth.register({

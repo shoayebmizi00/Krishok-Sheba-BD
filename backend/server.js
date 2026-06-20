@@ -92,6 +92,9 @@ app.use((error, _req, res, _next) => {
   if (error.code === 'ER_DUP_ENTRY') {
     return res.status(409).json({ message: 'A record with this value already exists' });
   }
+  if (['ECONNREFUSED', 'ETIMEDOUT', 'PROTOCOL_CONNECTION_LOST', 'HANDSHAKE_SSL_ERROR'].includes(error.code)) {
+    return res.status(503).json({ message: 'Database is temporarily unavailable. Please try again shortly.' });
+  }
   if (error.name === 'MulterError' || error.message?.startsWith('Only ')) {
     return res.status(400).json({ message: error.message });
   }

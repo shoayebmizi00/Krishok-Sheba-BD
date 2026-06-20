@@ -25,11 +25,21 @@ function signToken(user) {
 export async function register(req, res, next) {
   try {
     const { email, password, full_name = '', role = 'farmer' } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
     if (password.length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters' });
     if (!roles.has(role) || role === 'admin') return res.status(400).json({ message: 'Invalid registration role' });
 
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = typeof full_name === 'string' ? full_name.trim() : '';
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+    if (!normalizedName) {
+      return res.status(400).json({ message: 'Full name is required' });
+    }
+
     const [existing] = await pool.execute('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
     if (existing.length) return res.status(409).json({ message: 'An account with this email already exists' });
 
@@ -37,7 +47,7 @@ export async function register(req, res, next) {
     const passwordHash = await bcrypt.hash(password, 12);
     await pool.execute(
       'INSERT INTO users (id, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, ?)',
-      [id, normalizedEmail, passwordHash, full_name.trim(), role]
+      [id, normalizedEmail, passwordHash, normalizedName, role]
     );
     const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
     const user = rows[0];
