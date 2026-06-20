@@ -6,6 +6,7 @@ const DEFAULT_API_URL = import.meta.env.PROD
 const API_URL = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/$/, '');
 const TOKEN_KEY = 'krishok_sheba_token';
 const USE_LOCAL_API = import.meta.env.DEV && import.meta.env.VITE_USE_LOCAL_API !== 'false';
+const REQUEST_TIMEOUT_MS = 30000;
 
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -22,7 +23,25 @@ async function request(path, options = {}) {
   if (token) headers.set('Authorization', `Bearer ${token}`);
   if (options.body && !(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
 
-  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response;
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('The server took too long to respond. Please try again.');
+    }
+    throw new Error('Cannot connect to the server. Please try again shortly.');
+  } finally {
+    window.clearTimeout(timeout);
+  }
+
   if (response.status === 204) return null;
 
   const payload = await response.json().catch(() => ({}));

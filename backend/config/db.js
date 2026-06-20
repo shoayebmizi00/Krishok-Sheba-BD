@@ -3,8 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const sslEnabled = ['true', '1', 'required'].includes(
-  String(process.env.DB_SSL || '').toLowerCase()
+const configuredSsl = String(process.env.DB_SSL || '').toLowerCase();
+const isAivenHost = String(process.env.DB_HOST || '').endsWith('.aivencloud.com');
+const sslEnabled = isAivenHost || ['true', '1', 'required'].includes(
+  configuredSsl
 );
 
 export const pool = mysql.createPool({

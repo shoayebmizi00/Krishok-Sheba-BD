@@ -21,21 +21,28 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const port = Number(process.env.PORT || 5000);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const allowedOrigins = (process.env.FRONTEND_URL
-  || (process.env.NODE_ENV === 'production'
-    ? 'https://krishok-sheba-bd.vercel.app'
-    : 'http://localhost:5173'))
+const defaultOrigins = [
+  'http://localhost:5173',
+  'https://krishok-sheba-bd.vercel.app'
+];
+const configuredOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((item) => item.trim().replace(/\/$/, ''))
   .filter(Boolean);
+const allowedOrigins = new Set([...defaultOrigins, ...configuredOrigins]);
 
 app.disable('x-powered-by');
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+    const normalizedOrigin = origin?.replace(/\/$/, '');
+    const isVercelPreview = /^https:\/\/krishok-sheba-bd(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(
+      normalizedOrigin || ''
+    );
+
+    if (!origin || allowedOrigins.has(normalizedOrigin) || isVercelPreview) {
       return callback(null, true);
     }
-    return callback(new Error('Origin is not allowed by CORS'));
+    return callback(null, false);
   },
   credentials: false
 }));
