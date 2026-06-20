@@ -3,6 +3,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const requiredTables = [
+  'users',
+  'crop_listings',
+  'bids',
+  'conversations',
+  'messages',
+  'equipment',
+  'equipment_bookings',
+  'vehicles',
+  'transport_bookings',
+  'products',
+  'orders',
+  'transactions',
+  'notifications',
+  'government_notices',
+  'market_prices'
+];
+
 const configuredSsl = String(process.env.DB_SSL || '').toLowerCase();
 const isAivenHost = String(process.env.DB_HOST || '').endsWith('.aivencloud.com');
 const sslEnabled = isAivenHost || ['true', '1', 'required'].includes(
@@ -47,4 +65,18 @@ export async function checkDatabaseConnection() {
   } finally {
     connection.release();
   }
+}
+
+export async function checkDatabaseSchema() {
+  const [rows] = await pool.query(
+    'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()'
+  );
+  const tables = new Set(rows.map((row) => row.TABLE_NAME || row.table_name));
+  const missingTables = requiredTables.filter((table) => !tables.has(table));
+
+  return {
+    ready: missingTables.length === 0,
+    tableCount: tables.size,
+    missingTables
+  };
 }

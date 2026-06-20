@@ -27,9 +27,14 @@ export default function Notices() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await apiClient.entities.GovernmentNotice.list('-created_date', 50);
-      setNotices(data.length > 0 ? data : SAMPLE_NOTICES);
-      setLoading(false);
+      try {
+        const data = await apiClient.entities.GovernmentNotice.list('-created_date', 50);
+        setNotices(data.length > 0 ? data : SAMPLE_NOTICES);
+      } catch {
+        setNotices(SAMPLE_NOTICES);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);

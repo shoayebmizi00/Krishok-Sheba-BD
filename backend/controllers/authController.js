@@ -23,15 +23,20 @@ function signToken(user) {
 }
 
 export async function register(req, res, next) {
+  let connection;
+  let normalizedEmail = '';
+  let role = 'farmer';
+
   try {
-    const { email, password, full_name = '', role = 'farmer' } = req.body;
+    const { email, password, full_name = '' } = req.body;
+    role = req.body.role || 'farmer';
     if (typeof email !== 'string' || typeof password !== 'string') {
       return res.status(400).json({ message: 'Email and password are required' });
     }
     if (password.length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters' });
     if (!roles.has(role) || role === 'admin') return res.status(400).json({ message: 'Invalid registration role' });
 
-    const normalizedEmail = email.trim().toLowerCase();
+    normalizedEmail = email.trim().toLowerCase();
     const normalizedName = typeof full_name === 'string' ? full_name.trim() : '';
     if (!normalizedEmail || !normalizedEmail.includes('@')) {
       return res.status(400).json({ message: 'Please enter a valid email address' });
@@ -40,27 +45,54 @@ export async function register(req, res, next) {
       return res.status(400).json({ message: 'Full name is required' });
     }
 
-    const [existing] = await pool.execute('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
-    if (existing.length) return res.status(409).json({ message: 'An account with this email already exists' });
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const [existing] = await connection.execute(
+      'SELECT id FROM users WHERE email = ? LIMIT 1 FOR UPDATE',
+      [normalizedEmail]
+    );
+    if (existing.length) {
+      await connection.rollback();
+      return res.status(409).json({ message: 'An account with this email already exists' });
+    }
 
     const id = crypto.randomUUID();
     const passwordHash = await bcrypt.hash(password, 12);
-    await pool.execute(
+    await connection.execute(
       'INSERT INTO users (id, email, password_hash, full_name, role) VALUES (?, ?, ?, ?, ?)',
       [id, normalizedEmail, passwordHash, normalizedName, role]
     );
-    const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
+    const [rows] = await connection.execute('SELECT * FROM users WHERE id = ?', [id]);
     const user = rows[0];
-    res.status(201).json({ token: signToken(user), user: publicUser(user) });
+    const token = signToken(user);
+    await connection.commit();
+    res.status(201).json({ token, user: publicUser(user) });
   } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('[auth.register] Registration failed', {
+      requestId: req.id,
+      emailDomain: normalizedEmail.split('@')[1] || 'invalid',
+      role,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState,
+      message: error.message,
+      stack: error.stack
+    });
     next(error);
+  } finally {
+    connection?.release();
   }
 }
 
 export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ? LIMIT 1', [email?.trim().toLowerCase()]);
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ? LIMIT 1', [email.trim().toLowerCase()]);
     const user = rows[0];
     if (!user || !user.is_active || !(await bcrypt.compare(password || '', user.password_hash))) {
       return res.status(401).json({ message: 'Invalid email or password' });

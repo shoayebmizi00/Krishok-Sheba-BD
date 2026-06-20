@@ -57,6 +57,7 @@ export default function Marketplace() {
   const [listings, setListings] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -64,13 +65,19 @@ export default function Marketplace() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const [listData, prodData] = await Promise.all([
-        apiClient.entities.CropListing.list('-created_date', 50),
-        apiClient.entities.Product.list('-created_date', 50)
-      ]);
-      setListings(listData);
-      setProducts(prodData);
-      setLoading(false);
+      setError('');
+      try {
+        const [listData, prodData] = await Promise.all([
+          apiClient.entities.CropListing.list('-created_date', 50),
+          apiClient.entities.Product.list('-created_date', 50)
+        ]);
+        setListings(listData);
+        setProducts(prodData);
+      } catch (loadError) {
+        setError(loadError.message || 'Unable to load marketplace data');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -133,6 +140,8 @@ export default function Marketplace() {
 
       {loading ? (
         <LoadingSpinner text="Loading marketplace..." />
+      ) : error ? (
+        <EmptyState icon={Sprout} title="Marketplace unavailable" description={error} />
       ) : (
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList>

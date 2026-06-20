@@ -41,9 +41,14 @@ export default function MarketPrices() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await apiClient.entities.MarketPrice.list('-created_date', 100);
-      setPrices(data.length > 0 ? data : SAMPLE_PRICES);
-      setLoading(false);
+      try {
+        const data = await apiClient.entities.MarketPrice.list('-created_date', 100);
+        setPrices(data.length > 0 ? data : SAMPLE_PRICES);
+      } catch {
+        setPrices(SAMPLE_PRICES);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);

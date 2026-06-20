@@ -68,15 +68,22 @@ export default function Equipment() {
   const { user } = useOutletContext();
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
 
   useEffect(() => {
     const load = async () => {
-      const data = await apiClient.entities.Equipment.list('-created_date', 50);
-      setEquipment(data);
-      setLoading(false);
+      try {
+        setError('');
+        const data = await apiClient.entities.Equipment.list('-created_date', 50);
+        setEquipment(data);
+      } catch (loadError) {
+        setError(loadError.message || 'Unable to load equipment');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -120,6 +127,8 @@ export default function Equipment() {
 
       {loading ? (
         <LoadingSpinner />
+      ) : error ? (
+        <EmptyState icon={Wrench} title="Equipment unavailable" description={error} />
       ) : filtered.length === 0 ? (
         <EmptyState icon={Wrench} title="No equipment found" description="Equipment will appear here when owners add their listings" />
       ) : (

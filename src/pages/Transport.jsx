@@ -71,14 +71,21 @@ export default function Transport() {
   const { user } = useOutletContext();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
   useEffect(() => {
     const load = async () => {
-      const data = await apiClient.entities.Vehicle.list('-created_date', 50);
-      setVehicles(data);
-      setLoading(false);
+      try {
+        setError('');
+        const data = await apiClient.entities.Vehicle.list('-created_date', 50);
+        setVehicles(data);
+      } catch (loadError) {
+        setError(loadError.message || 'Unable to load transport options');
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -112,6 +119,8 @@ export default function Transport() {
 
       {loading ? (
         <LoadingSpinner />
+      ) : error ? (
+        <EmptyState icon={Truck} title="Transport unavailable" description={error} />
       ) : filtered.length === 0 ? (
         <EmptyState icon={Truck} title="No vehicles found" description="Transport providers will list their vehicles here" />
       ) : (

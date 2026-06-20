@@ -1,9 +1,10 @@
 import { localApi } from './localApi.js';
 
 const DEFAULT_API_URL = import.meta.env.PROD
-  ? '/api'
+  ? 'https://krishok-sheba-bd.onrender.com'
   : 'http://localhost:5000/api';
-const API_URL = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/$/, '');
+const configuredApiUrl = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
+const API_URL = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
 const TOKEN_KEY = 'krishok_sheba_token';
 const USE_LOCAL_API = import.meta.env.DEV && import.meta.env.VITE_USE_LOCAL_API !== 'false';
 const REQUEST_TIMEOUT_MS = 30000;

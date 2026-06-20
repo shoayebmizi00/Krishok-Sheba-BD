@@ -19,8 +19,12 @@ export default function FeaturedCrops() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await apiClient.entities.CropListing.filter({ status: 'active' }, '-created_date', 4);
-      setCrops(data.length > 0 ? data : PLACEHOLDER_CROPS);
+      try {
+        const data = await apiClient.entities.CropListing.filter({ status: 'active' }, '-created_date', 4);
+        setCrops(data.length > 0 ? data : PLACEHOLDER_CROPS);
+      } catch {
+        setCrops(PLACEHOLDER_CROPS);
+      }
     };
     load();
   }, []);

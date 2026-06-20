@@ -1,9 +1,10 @@
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import { checkDatabaseConnection } from './config/db.js';
+import { checkDatabaseConnection, checkDatabaseSchema } from './config/db.js';
 import { resources } from './config/resources.js';
 import { models } from './models/index.js';
 import { createResourceController } from './controllers/resourceController.js';
@@ -21,6 +22,7 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const port = Number(process.env.PORT || 5000);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const deployment = process.env.RENDER_GIT_COMMIT?.slice(0, 7) || process.env.npm_package_version || 'development';
 const defaultOrigins = [
   'http://localhost:5173',
   'https://krishok-sheba-bd.vercel.app'
@@ -32,6 +34,11 @@ const configuredOrigins = (process.env.FRONTEND_URL || '')
 const allowedOrigins = new Set([...defaultOrigins, ...configuredOrigins]);
 
 app.disable('x-powered-by');
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.id);
+  next();
+});
 app.use(cors({
   origin(origin, callback) {
     const normalizedOrigin = origin?.replace(/\/$/, '');
@@ -55,11 +62,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 app.get('/api/health', async (_req, res, next) => {
   try {
     const database = await checkDatabaseConnection();
+    const schema = await checkDatabaseSchema();
+    if (!schema.ready) {
+      return res.status(503).json({
+        status: 'error',
+        database: 'schema_incomplete',
+        missingTables: schema.missingTables,
+        deployment
+      });
+    }
     res.json({
       status: 'ok',
       database: 'connected',
       ssl: database.ssl,
-      sslCipher: database.sslCipher
+      sslCipher: database.sslCipher,
+      tables: schema.tableCount,
+      deployment
     });
   } catch (error) {
     next(error);
@@ -70,7 +88,8 @@ app.get('/', (_req, res) => {
   res.json({
     name: 'KRISHOK-SHEBA BD API',
     status: 'running',
-    health: '/api/health'
+    health: '/api/health',
+    deployment
   });
 });
 
@@ -84,8 +103,17 @@ for (const [name, config] of Object.entries(resources)) {
 
 app.use((_req, res) => res.status(404).json({ message: 'API route not found' }));
 
-app.use((error, _req, res, _next) => {
-  console.error(error);
+app.use((error, req, res, _next) => {
+  console.error('[api.error]', {
+    requestId: req.id,
+    method: req.method,
+    path: req.originalUrl,
+    code: error.code,
+    errno: error.errno,
+    sqlState: error.sqlState,
+    message: error.message,
+    stack: error.stack
+  });
   if (error.code === 'ER_NO_REFERENCED_ROW_2') {
     return res.status(400).json({ message: 'A referenced record does not exist' });
   }
@@ -103,8 +131,8 @@ app.use((error, _req, res, _next) => {
   });
 });
 
-app.listen(port, async () => {
-  console.log(`KRISHOK-SHEBA BD API running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', async () => {
+  console.log(`KRISHOK-SHEBA BD API running on 0.0.0.0:${port} (${deployment})`);
   try {
     await checkDatabaseConnection();
     console.log('MySQL connection established');
