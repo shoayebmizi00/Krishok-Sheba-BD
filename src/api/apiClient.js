@@ -1,6 +1,9 @@
 import { localApi } from './localApi.js';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+const DEFAULT_API_URL = import.meta.env.PROD
+  ? 'https://krishok-sheba-bd.onrender.com/api'
+  : 'http://localhost:5000/api';
+const API_URL = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/$/, '');
 const TOKEN_KEY = 'krishok_sheba_token';
 const USE_LOCAL_API = import.meta.env.DEV && import.meta.env.VITE_USE_LOCAL_API !== 'false';
 

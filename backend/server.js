@@ -21,10 +21,22 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const port = Number(process.env.PORT || 5000);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const allowedOrigins = (process.env.FRONTEND_URL
+  || (process.env.NODE_ENV === 'production'
+    ? 'https://krishok-sheba-bd.vercel.app'
+    : 'http://localhost:5173'))
+  .split(',')
+  .map((item) => item.trim().replace(/\/$/, ''))
+  .filter(Boolean);
 
 app.disable('x-powered-by');
 app.use(cors({
-  origin: (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map((item) => item.trim()),
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      return callback(null, true);
+    }
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
   credentials: false
 }));
 app.use(express.json({ limit: '1mb' }));
@@ -35,11 +47,24 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 
 app.get('/api/health', async (_req, res, next) => {
   try {
-    await checkDatabaseConnection();
-    res.json({ status: 'ok', database: 'connected' });
+    const database = await checkDatabaseConnection();
+    res.json({
+      status: 'ok',
+      database: 'connected',
+      ssl: database.ssl,
+      sslCipher: database.sslCipher
+    });
   } catch (error) {
     next(error);
   }
+});
+
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'KRISHOK-SHEBA BD API',
+    status: 'running',
+    health: '/api/health'
+  });
 });
 
 app.use('/api/auth', authRoutes);

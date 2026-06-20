@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "npm --prefix backend start",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --quiet",
@@ -12,7 +13,8 @@
     "preview": "vite preview",
     "server": "npm --prefix backend start",
     "server:dev": "npm --prefix backend run dev",
-    "install:all": "npm install && npm --prefix backend install"
+    "install:all": "npm install && npm --prefix backend install",
+    "postinstall": "npm --prefix backend install"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",

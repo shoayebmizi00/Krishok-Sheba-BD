@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: krishok-sheba-bd
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://krishok-sheba-bd.vercel.app
+      - key: PUBLIC_BASE_URL
+        value: https://krishok-sheba-bd.onrender.com
+      - key: DB_HOST
+        value: mysql-144f41d0-mrshoayeb75-31ff.i.aivencloud.com
+      - key: DB_PORT
+        value: "24973"
+      - key: DB_USER
+        value: avnadmin
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: defaultdb
+      - key: DB_CONNECTION_LIMIT
+        value: "5"
+      - key: DB_SSL
+        value: "true"
+      - key: DB_SSL_REJECT_UNAUTHORIZED
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: RESET_TOKEN_EXPIRES_MINUTES
+        value: "30"
+      - key: MAX_UPLOAD_MB
+        value: "5"
