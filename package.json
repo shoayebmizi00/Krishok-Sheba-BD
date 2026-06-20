@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "start": "npm --prefix backend start",
     "dev": "vite",
@@ -13,8 +16,7 @@
     "preview": "vite preview",
     "server": "npm --prefix backend start",
     "server:dev": "npm --prefix backend run dev",
-    "install:all": "npm install && npm --prefix backend install",
-    "postinstall": "npm --prefix backend install"
+    "install:all": "npm install && npm --prefix backend install"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
