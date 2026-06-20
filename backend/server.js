@@ -34,6 +34,7 @@ const configuredOrigins = (process.env.FRONTEND_URL || '')
 const allowedOrigins = new Set([...defaultOrigins, ...configuredOrigins]);
 
 app.disable('x-powered-by');
+app.set('trust proxy', 1);
 app.use((req, res, next) => {
   req.id = req.headers['x-request-id'] || crypto.randomUUID();
   res.setHeader('X-Request-Id', req.id);

@@ -57,6 +57,7 @@ router.post('/:folder', authenticate, (req, res, next) => {
   return next();
 }, uploadImage.single('file'), async (req, res, next) => {
   const folder = req.params.folder;
+  const requestBaseUrl = `${req.protocol}://${req.get('host')}`;
   if (!req.file) return res.status(400).json({ message: 'Image file is required' });
 
   try {
@@ -75,16 +76,14 @@ router.post('/:folder', authenticate, (req, res, next) => {
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [id, req.user.id, folder, req.file.originalname, req.file.mimetype, req.file.size, req.file.buffer]
       );
-      const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
       return res.status(201).json({
-        file_url: `${baseUrl}/api/uploads/files/${id}`,
+        file_url: `${requestBaseUrl}/api/uploads/files/${id}`,
         storage: 'database'
       });
     }
 
-    const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
     return res.status(201).json({
-      file_url: `${baseUrl}/uploads/${folder}/${req.file.filename}`,
+      file_url: `${requestBaseUrl}/uploads/${folder}/${req.file.filename}`,
       storage: 'local',
       warning: process.env.NODE_ENV === 'production'
         ? 'Local Render uploads are temporary. Configure Cloudinary for permanent storage.'
