@@ -33,6 +33,9 @@ async function validateCropListing(data, user) {
   return {
     data: {
       ...data,
+      expected_harvest_date: data.expected_harvest_date || null,
+      location: data.location?.trim() || null,
+      description: data.description?.trim() || null,
       farmer_name: users[0]?.full_name || 'Farmer'
     }
   };

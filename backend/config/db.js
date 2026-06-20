@@ -5,6 +5,7 @@ dotenv.config();
 
 const requiredTables = [
   'users',
+  'uploaded_files',
   'crop_listings',
   'bids',
   'conversations',

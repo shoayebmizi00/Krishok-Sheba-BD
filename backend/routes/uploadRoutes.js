@@ -1,7 +1,9 @@
+import crypto from 'node:crypto';
 import { Router } from 'express';
 import { v2 as cloudinary } from 'cloudinary';
 import { authenticate } from '../middleware/auth.js';
-import { cloudinaryEnabled, uploadImage } from '../middleware/upload.js';
+import { pool } from '../config/db.js';
+import { cloudinaryEnabled, databaseUploadsEnabled, uploadImage } from '../middleware/upload.js';
 
 const router = Router();
 const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles']);
@@ -29,6 +31,21 @@ function uploadToCloudinary(file, folder) {
   });
 }
 
+router.get('/files/:id', async (req, res, next) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT mime_type, file_data FROM uploaded_files WHERE id = ? LIMIT 1',
+      [req.params.id]
+    );
+    if (!rows[0]) return res.status(404).json({ message: 'Image not found' });
+    res.setHeader('Content-Type', rows[0].mime_type);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    return res.send(rows[0].file_data);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post('/:folder', authenticate, (req, res, next) => {
   const folder = req.params.folder;
   if (!allowedFolders.has(folder)) {
@@ -48,6 +65,20 @@ router.post('/:folder', authenticate, (req, res, next) => {
       return res.status(201).json({
         file_url: result.secure_url,
         storage: 'cloudinary'
+      });
+    }
+
+    if (databaseUploadsEnabled) {
+      const id = crypto.randomUUID();
+      await pool.execute(
+        `INSERT INTO uploaded_files (id, owner_id, folder, original_name, mime_type, file_size, file_data)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, req.user.id, folder, req.file.originalname, req.file.mimetype, req.file.size, req.file.buffer]
+      );
+      const baseUrl = process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      return res.status(201).json({
+        file_url: `${baseUrl}/api/uploads/files/${id}`,
+        storage: 'database'
       });
     }
 

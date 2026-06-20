@@ -88,7 +88,7 @@ CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
 ```
 
-Without Cloudinary, uploads still work for local development and short-lived demos, but Render may remove them during a restart or redeploy.
+Without Cloudinary, production uploads are stored persistently in Aiven MySQL. Local development continues to use the local `uploads` directory.
 
 ## Database migrations
 

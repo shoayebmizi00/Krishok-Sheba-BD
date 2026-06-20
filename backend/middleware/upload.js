@@ -1,6 +1,9 @@
 import path from 'node:path';
 import crypto from 'node:crypto';
 import multer from 'multer';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles']);
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -9,6 +12,7 @@ export const cloudinaryEnabled = Boolean(
   && process.env.CLOUDINARY_API_KEY
   && process.env.CLOUDINARY_API_SECRET
 );
+export const databaseUploadsEnabled = process.env.NODE_ENV === 'production' && !cloudinaryEnabled;
 
 const storage = multer.diskStorage({
   destination(req, _file, callback) {
@@ -22,7 +26,7 @@ const storage = multer.diskStorage({
 });
 
 export const uploadImage = multer({
-  storage: cloudinaryEnabled ? multer.memoryStorage() : storage,
+  storage: cloudinaryEnabled || databaseUploadsEnabled ? multer.memoryStorage() : storage,
   limits: { fileSize: Number(process.env.MAX_UPLOAD_MB || 5) * 1024 * 1024 },
   fileFilter(_req, file, callback) {
     if (!allowedTypes.has(file.mimetype)) {
