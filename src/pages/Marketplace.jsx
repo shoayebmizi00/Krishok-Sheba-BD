@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/api/apiClient';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, useLocation, useOutletContext } from 'react-router-dom';
 import { Search, MapPin, Plus, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,9 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import SimplePagination from '@/components/shared/SimplePagination';
 
-function CropCard({ crop, type }) {
+function CropCard({ crop, type, detailBasePath }) {
   return (
-    <Link to={`/listing/${crop.id}`} className="block rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-all group">
+    <Link to={`${detailBasePath}/${crop.id}`} className="block rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-all group">
       <div className="h-40 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
         {crop.images && crop.images.length > 0 ? (
           <img src={crop.images[0]} alt={crop.crop_name || crop.name} className="w-full h-full object-cover" />
@@ -63,6 +63,10 @@ function CropCard({ crop, type }) {
 
 export default function Marketplace() {
   const { user } = useOutletContext();
+  const location = useLocation();
+  const detailBasePath = location.pathname.startsWith('/buyer-dashboard')
+    ? '/buyer-dashboard/listing'
+    : '/listing';
   const [listings, setListings] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -169,7 +173,7 @@ export default function Marketplace() {
               <EmptyState icon={Sprout} title="No listings yet" description="Be the first to list your crops!" />
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {filteredListings.map(l => <CropCard key={l.id} crop={l} type={l.listing_type} />)}
+                {filteredListings.map(l => <CropCard key={l.id} crop={l} type={l.listing_type} detailBasePath={detailBasePath} />)}
               </div>
             )}
           </TabsContent>
@@ -179,7 +183,7 @@ export default function Marketplace() {
               <EmptyState icon={Sprout} title="No pre-harvest listings" />
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {preHarvest.map(l => <CropCard key={l.id} crop={l} type="pre_harvest" />)}
+                {preHarvest.map(l => <CropCard key={l.id} crop={l} type="pre_harvest" detailBasePath={detailBasePath} />)}
               </div>
             )}
           </TabsContent>
@@ -189,7 +193,7 @@ export default function Marketplace() {
               <EmptyState icon={Sprout} title="No ready listings" />
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {readyListings.map(l => <CropCard key={l.id} crop={l} type="ready" />)}
+                {readyListings.map(l => <CropCard key={l.id} crop={l} type="ready" detailBasePath={detailBasePath} />)}
               </div>
             )}
           </TabsContent>
@@ -199,7 +203,7 @@ export default function Marketplace() {
               <EmptyState icon={Sprout} title="No products yet" />
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {filteredProducts.map(p => <CropCard key={p.id} crop={{...p, crop_name: p.name, expected_price: p.price}} />)}
+                {filteredProducts.map(p => <CropCard key={p.id} crop={{...p, crop_name: p.name, expected_price: p.price}} detailBasePath={detailBasePath} />)}
               </div>
             )}
           </TabsContent>

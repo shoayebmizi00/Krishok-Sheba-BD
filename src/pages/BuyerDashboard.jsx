@@ -15,7 +15,7 @@ export default function BuyerDashboard() {
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/buyer-dashboard" },
-    { icon: Search, label: t('marketplace'), path: "/marketplace" },
+    { icon: Search, label: t('marketplace'), path: "/buyer-dashboard/marketplace" },
     { icon: Package, label: t('orders'), path: "/buyer-dashboard/orders" },
     { icon: History, label: t('transactions'), path: "/buyer-dashboard/transactions" },
     { icon: MessageSquare, label: t('messages'), path: "/buyer-dashboard/messages" },

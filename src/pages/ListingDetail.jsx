@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useOutletContext } from 'react-router-dom';
+import { useParams, Link, useLocation, useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
 import { MapPin, Calendar, User, Send, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import BackButton from '@/components/shared/BackButton';
 
 export default function ListingDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const { user } = useOutletContext();
   const { toast } = useToast();
   const [listing, setListing] = useState(null);
@@ -25,6 +26,9 @@ export default function ListingDetail() {
   const [startingChat, setStartingChat] = useState(false);
   const remainingQuantity = Number(listing?.remaining_quantity ?? listing?.quantity ?? 0);
   const soldOut = ['sold', 'sold_out'].includes(listing?.status) || remainingQuantity <= 0;
+  const insideBuyerDashboard = location.pathname.startsWith('/buyer-dashboard');
+  const marketplacePath = insideBuyerDashboard ? '/buyer-dashboard/marketplace' : '/marketplace';
+  const messagesBasePath = insideBuyerDashboard ? '/buyer-dashboard/messages' : '/messages';
 
   useEffect(() => {
     const load = async () => {
@@ -75,7 +79,7 @@ export default function ListingDetail() {
         participant_ids: [user.id, listing.farmer_id],
         listing_id: listing.id
       });
-      window.location.href = `/messages/${conv.id}`;
+      window.location.href = `${messagesBasePath}/${conv.id}`;
     } catch (error) {
       toast({
         title: 'কথোপকথন শুরু করা যায়নি',
@@ -90,13 +94,13 @@ export default function ListingDetail() {
   if (!listing) return (
     <div className="max-w-3xl mx-auto px-4 py-16 text-center">
       <h2 className="font-heading font-bold text-xl">ফসলের তালিকাটি পাওয়া যায়নি</h2>
-      <Link to="/marketplace"><Button variant="outline" className="mt-4">ফসল বাজারে ফিরুন</Button></Link>
+      <Link to={marketplacePath}><Button variant="outline" className="mt-4">ফসল বাজারে ফিরুন</Button></Link>
     </div>
   );
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <BackButton fallback="/marketplace" className="mb-6" />
+      <BackButton fallback={marketplacePath} className="mb-6" />
 
       <div className="grid lg:grid-cols-5 gap-8">
         {/* Main info */}
