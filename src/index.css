@@ -89,6 +89,12 @@
     @apply bg-background text-foreground font-body;
     font-family: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
   }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href] {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
 }
 
 @layer utilities {
