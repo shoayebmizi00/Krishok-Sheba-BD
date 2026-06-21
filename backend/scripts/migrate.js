@@ -8,6 +8,7 @@ import { getDatabaseConfig } from '../config/databaseConfig.js';
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const schemaPath = path.resolve(__dirname, '..', 'database', 'schema.sql');
 const migrationsDirectory = path.resolve(__dirname, '..', 'database', 'migrations');
 
 const connection = await mysql.createConnection({
@@ -16,6 +17,16 @@ const connection = await mysql.createConnection({
 });
 
 try {
+  const [[{ tableCount }]] = await connection.query(
+    'SELECT COUNT(*) AS tableCount FROM information_schema.tables WHERE table_schema = DATABASE()'
+  );
+
+  if (Number(tableCount) === 0) {
+    const schema = await fs.readFile(schemaPath, 'utf8');
+    await connection.query(schema);
+    console.log('Initialized database schema');
+  }
+
   const files = (await fs.readdir(migrationsDirectory))
     .filter((file) => file.endsWith('.sql'))
     .sort();

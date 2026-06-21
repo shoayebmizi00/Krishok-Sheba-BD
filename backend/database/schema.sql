@@ -1,9 +1,3 @@
-CREATE DATABASE IF NOT EXISTS krishok_sheba_bd
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE krishok_sheba_bd;
-
 CREATE TABLE users (
   id CHAR(36) PRIMARY KEY,
   email VARCHAR(191) NOT NULL UNIQUE,
