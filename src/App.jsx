@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -9,70 +10,65 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import RouteDiagnostics from '@/components/RouteDiagnostics';
+import PageLoader from '@/components/shared/PageLoader';
 
 // Layout
 import MainLayout from '@/components/layout/MainLayout';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-// Public pages
-import Home from '@/pages/Home';
-import Marketplace from '@/pages/Marketplace';
-import ListingDetail from '@/pages/ListingDetail';
-import Equipment from '@/pages/Equipment';
-import Transport from '@/pages/Transport';
-import MarketPrices from '@/pages/MarketPrices';
-import Notices from '@/pages/Notices';
-import Profile from '@/pages/Profile';
-import Notifications from '@/pages/Notifications';
-import Messages from '@/pages/Messages';
-import ConversationDetail from '@/pages/ConversationDetail';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
-
-// Farmer Dashboard
-import FarmerDashboard from '@/pages/FarmerDashboard';
-import FarmerOverview from '@/pages/farmer/FarmerOverview';
-import MyListings from '@/pages/farmer/MyListings';
-import AddListing from '@/pages/farmer/AddListing';
-import FarmerBids from '@/pages/farmer/FarmerBids';
-import FarmerOrders from '@/pages/farmer/FarmerOrders';
-import FarmerEquipmentBookings from '@/pages/farmer/FarmerEquipmentBookings';
-import FarmerTransport from '@/pages/farmer/FarmerTransport';
-import FarmerTransactions from '@/pages/farmer/FarmerTransactions';
-import HarvestReminders from '@/pages/farmer/HarvestReminders';
-
-// Buyer Dashboard
-import BuyerDashboard from '@/pages/BuyerDashboard';
-import BuyerOverview from '@/pages/buyer/BuyerOverview';
-import BuyerOrders from '@/pages/buyer/BuyerOrders';
-import BuyerTransactions from '@/pages/buyer/BuyerTransactions';
-
-// Equipment Owner Dashboard
-import EquipmentOwnerDashboard from '@/pages/EquipmentOwnerDashboard';
-import OwnerOverview from '@/pages/equipment_owner/OwnerOverview';
-import MyEquipment from '@/pages/equipment_owner/MyEquipment';
-import AddEquipment from '@/pages/equipment_owner/AddEquipment';
-import OwnerBookings from '@/pages/equipment_owner/OwnerBookings';
-
-// Transport Dashboard
-import TransportDashboard from '@/pages/TransportDashboard';
-import TransportOverview from '@/pages/transport/TransportOverview';
-import MyVehicles from '@/pages/transport/MyVehicles';
-import AddVehicle from '@/pages/transport/AddVehicle';
-import TransportBookings from '@/pages/transport/TransportBookings';
-
-// Admin Dashboard
-import AdminDashboard from '@/pages/AdminDashboard';
-import AdminOverview from '@/pages/admin/AdminOverview';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminCrops from '@/pages/admin/AdminCrops';
-import AdminOrders from '@/pages/admin/AdminOrders';
-import AdminNotices from '@/pages/admin/AdminNotices';
-import AdminTransactions from '@/pages/admin/AdminTransactions';
-import AdminEquipment from '@/pages/admin/AdminEquipment';
-import AdminTransport from '@/pages/admin/AdminTransport';
+const Home = lazy(() => import('@/pages/Home'));
+const Marketplace = lazy(() => import('@/pages/Marketplace'));
+const ListingDetail = lazy(() => import('@/pages/ListingDetail'));
+const Equipment = lazy(() => import('@/pages/Equipment'));
+const Transport = lazy(() => import('@/pages/Transport'));
+const MarketPrices = lazy(() => import('@/pages/MarketPrices'));
+const Notices = lazy(() => import('@/pages/Notices'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const Notifications = lazy(() => import('@/pages/Notifications'));
+const Messages = lazy(() => import('@/pages/Messages'));
+const ConversationDetail = lazy(() => import('@/pages/ConversationDetail'));
+const Stories = lazy(() => import('@/pages/Stories'));
+const StoryDetail = lazy(() => import('@/pages/StoryDetail'));
+const ShareStory = lazy(() => import('@/pages/ShareStory'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
+const FarmerDashboard = lazy(() => import('@/pages/FarmerDashboard'));
+const FarmerOverview = lazy(() => import('@/pages/farmer/FarmerOverview'));
+const MyListings = lazy(() => import('@/pages/farmer/MyListings'));
+const AddListing = lazy(() => import('@/pages/farmer/AddListing'));
+const FarmerBids = lazy(() => import('@/pages/farmer/FarmerBids'));
+const FarmerOrders = lazy(() => import('@/pages/farmer/FarmerOrders'));
+const FarmerEquipmentBookings = lazy(() => import('@/pages/farmer/FarmerEquipmentBookings'));
+const FarmerTransport = lazy(() => import('@/pages/farmer/FarmerTransport'));
+const FarmerTransactions = lazy(() => import('@/pages/farmer/FarmerTransactions'));
+const HarvestReminders = lazy(() => import('@/pages/farmer/HarvestReminders'));
+const BuyerDashboard = lazy(() => import('@/pages/BuyerDashboard'));
+const BuyerOverview = lazy(() => import('@/pages/buyer/BuyerOverview'));
+const BuyerOrders = lazy(() => import('@/pages/buyer/BuyerOrders'));
+const BuyerTransactions = lazy(() => import('@/pages/buyer/BuyerTransactions'));
+const EquipmentOwnerDashboard = lazy(() => import('@/pages/EquipmentOwnerDashboard'));
+const OwnerOverview = lazy(() => import('@/pages/equipment_owner/OwnerOverview'));
+const MyEquipment = lazy(() => import('@/pages/equipment_owner/MyEquipment'));
+const AddEquipment = lazy(() => import('@/pages/equipment_owner/AddEquipment'));
+const OwnerBookings = lazy(() => import('@/pages/equipment_owner/OwnerBookings'));
+const TransportDashboard = lazy(() => import('@/pages/TransportDashboard'));
+const TransportOverview = lazy(() => import('@/pages/transport/TransportOverview'));
+const MyVehicles = lazy(() => import('@/pages/transport/MyVehicles'));
+const AddVehicle = lazy(() => import('@/pages/transport/AddVehicle'));
+const TransportBookings = lazy(() => import('@/pages/transport/TransportBookings'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
+const AdminOverview = lazy(() => import('@/pages/admin/AdminOverview'));
+const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminCrops = lazy(() => import('@/pages/admin/AdminCrops'));
+const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
+const AdminNotices = lazy(() => import('@/pages/admin/AdminNotices'));
+const AdminTransactions = lazy(() => import('@/pages/admin/AdminTransactions'));
+const AdminEquipment = lazy(() => import('@/pages/admin/AdminEquipment'));
+const AdminTransport = lazy(() => import('@/pages/admin/AdminTransport'));
+const AdminStories = lazy(() => import('@/pages/admin/AdminStories'));
+const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -112,6 +108,9 @@ const AuthenticatedApp = () => {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/messages/:id" element={<ConversationDetail />} />
+        <Route path="/stories" element={<Stories />} />
+        <Route path="/stories/:id" element={<StoryDetail />} />
+        <Route path="/share-story" element={<ShareStory />} />
       </Route>
 
       <Route path="/login" element={<Login />} />
@@ -125,12 +124,17 @@ const AuthenticatedApp = () => {
           <Route index element={<FarmerOverview />} />
           <Route path="listings" element={<MyListings />} />
           <Route path="add-listing" element={<AddListing />} />
+          <Route path="listings/:id/edit" element={<AddListing />} />
           <Route path="bids" element={<FarmerBids />} />
           <Route path="orders" element={<FarmerOrders />} />
           <Route path="equipment-bookings" element={<FarmerEquipmentBookings />} />
           <Route path="transport-requests" element={<FarmerTransport />} />
           <Route path="transactions" element={<FarmerTransactions />} />
           <Route path="harvest-reminders" element={<HarvestReminders />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="messages/:id" element={<ConversationDetail />} />
         </Route>
       </Route>
 
@@ -140,6 +144,10 @@ const AuthenticatedApp = () => {
           <Route index element={<BuyerOverview />} />
           <Route path="orders" element={<BuyerOrders />} />
           <Route path="transactions" element={<BuyerTransactions />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="messages/:id" element={<ConversationDetail />} />
         </Route>
       </Route>
 
@@ -150,6 +158,10 @@ const AuthenticatedApp = () => {
           <Route path="equipment" element={<MyEquipment />} />
           <Route path="add" element={<AddEquipment />} />
           <Route path="bookings" element={<OwnerBookings />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="messages/:id" element={<ConversationDetail />} />
         </Route>
       </Route>
 
@@ -160,6 +172,10 @@ const AuthenticatedApp = () => {
           <Route path="vehicles" element={<MyVehicles />} />
           <Route path="add" element={<AddVehicle />} />
           <Route path="bookings" element={<TransportBookings />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="messages/:id" element={<ConversationDetail />} />
         </Route>
       </Route>
 
@@ -174,6 +190,8 @@ const AuthenticatedApp = () => {
           <Route path="transport" element={<AdminTransport />} />
           <Route path="notices" element={<AdminNotices />} />
           <Route path="transactions" element={<AdminTransactions />} />
+          <Route path="stories" element={<AdminStories />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Route>
 
@@ -187,7 +205,9 @@ const RoutedApp = () => {
 
   return (
     <AppErrorBoundary key={location.pathname}>
-      <AuthenticatedApp />
+      <Suspense fallback={<PageLoader />}>
+        <AuthenticatedApp />
+      </Suspense>
     </AppErrorBoundary>
   );
 };

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -31,9 +31,9 @@
     --chart-4: 160 60% 45%;
     --chart-5: 80 60% 50%;
     --radius: 0.625rem;
-    --font-heading: 'Noto Sans Bengali', 'Inter', sans-serif;
-    --font-body: 'Noto Sans Bengali', 'Inter', sans-serif;
-    --font-display: 'Noto Sans Bengali', 'Inter', sans-serif;
+    --font-heading: 'Hind Siliguri', 'Noto Sans Bengali', 'SolaimanLipi', sans-serif;
+    --font-body: 'Hind Siliguri', 'Noto Sans Bengali', 'SolaimanLipi', sans-serif;
+    --font-display: 'Hind Siliguri', 'Noto Sans Bengali', 'SolaimanLipi', sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --sidebar-background: 142 40% 97%;
     --sidebar-foreground: 150 30% 15%;
@@ -87,6 +87,7 @@
   }
   body {
     @apply bg-background text-foreground font-body;
+    font-family: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
   }
 }
 

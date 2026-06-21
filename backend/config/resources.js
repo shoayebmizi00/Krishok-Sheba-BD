@@ -4,7 +4,7 @@ export const resources = {
   users: {
     table: 'users',
     route: 'users',
-    columns: ['email', 'password_hash', 'full_name', 'phone', 'role', 'district', 'farm_name', 'land_size', 'crops_grown', 'profile_picture', 'is_active', ...timestamps],
+    columns: ['email', 'password_hash', 'full_name', 'phone', 'role', 'district', 'farm_name', 'land_size', 'crops_grown', 'profile_picture', 'bkash_number', 'nagad_number', 'rocket_number', 'upay_number', 'bank_name', 'bank_account_number', 'account_holder_name', 'branch_name', 'is_active', ...timestamps],
     publicRead: false,
     adminOnlyWrite: true,
     userResource: true
@@ -88,7 +88,7 @@ export const resources = {
   orders: {
     table: 'orders',
     route: 'orders',
-    columns: ['buyer_id', 'buyer_name', 'seller_id', 'seller_name', 'items', 'total_amount', 'status', 'delivery_address', 'delivery_district', 'payment_status', ...timestamps],
+    columns: ['buyer_id', 'buyer_name', 'seller_id', 'seller_name', 'items', 'total_amount', 'status', 'delivery_address', 'delivery_district', 'payment_status', 'bid_id', 'payment_method', ...timestamps],
     json: ['items'],
     publicRead: false,
     ownerFields: ['buyer_id', 'seller_id'],
@@ -107,10 +107,11 @@ export const resources = {
   transactions: {
     table: 'transactions',
     route: 'transactions',
-    columns: ['user_id', 'order_id', 'amount', 'type', 'status', 'description', 'counterparty_name', ...timestamps],
+    columns: ['user_id', 'order_id', 'amount', 'type', 'status', 'description', 'counterparty_name', 'buyer_id', 'seller_id', 'payment_method', 'sender_account', 'receiver_account', 'reference', ...timestamps],
     publicRead: false,
-    ownerFields: ['user_id'],
-    adminOnlyWrite: true
+    ownerFields: ['user_id', 'buyer_id', 'seller_id'],
+    creatorField: 'buyer_id',
+    createRoles: ['buyer', 'admin']
   },
   notifications: {
     table: 'notifications',
@@ -131,6 +132,22 @@ export const resources = {
     table: 'market_prices',
     route: 'market-prices',
     columns: ['crop_name', 'market_name', 'district', 'price', 'unit', 'date', ...timestamps],
+    publicRead: true,
+    adminOnlyWrite: true
+  },
+  stories: {
+    table: 'stories',
+    route: 'stories',
+    columns: ['title', 'content', 'image', 'category', 'district', 'author_id', 'author_name', 'status', ...timestamps],
+    publicRead: true,
+    ownerFields: ['author_id'],
+    creatorField: 'author_id',
+    createRoles: ['farmer', 'equipment_owner', 'transport_provider', 'admin']
+  },
+  appSettings: {
+    table: 'app_settings',
+    route: 'app-settings',
+    columns: ['setting_group', 'value', 'label_bn', 'label_en', 'is_active', 'sort_order', ...timestamps],
     publicRead: true,
     adminOnlyWrite: true
   }

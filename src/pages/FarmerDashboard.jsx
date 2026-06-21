@@ -25,9 +25,9 @@ export default function FarmerDashboard() {
     { icon: Truck, label: t('transportRequests'), path: "/farmer-dashboard/transport-requests" },
     { icon: History, label: t('transactions'), path: "/farmer-dashboard/transactions" },
     { icon: Clock, label: t('harvestReminders'), path: "/farmer-dashboard/harvest-reminders" },
-    { icon: Bell, label: t('notifications'), path: "/notifications" },
-    { icon: MessageSquare, label: t('messages'), path: "/messages" },
-    { icon: UserCircle, label: t('profile'), path: "/profile" },
+    { icon: Bell, label: t('notifications'), path: "/farmer-dashboard/notifications" },
+    { icon: MessageSquare, label: t('messages'), path: "/farmer-dashboard/messages" },
+    { icon: UserCircle, label: t('profile'), path: "/farmer-dashboard/profile" },
   ];
 
   const pageTitle = SIDEBAR_LINKS.find(l => l.path === location.pathname)?.label || t('overview');

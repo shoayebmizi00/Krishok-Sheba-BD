@@ -115,7 +115,12 @@ export async function me(req, res, next) {
 
 export async function updateMe(req, res, next) {
   try {
-    const allowed = ['full_name', 'phone', 'district', 'farm_name', 'land_size', 'crops_grown', 'profile_picture'];
+    const allowed = [
+      'full_name', 'phone', 'district', 'farm_name', 'land_size', 'crops_grown',
+      'profile_picture', 'bkash_number', 'nagad_number', 'rocket_number',
+      'upay_number', 'bank_name', 'bank_account_number',
+      'account_holder_name', 'branch_name'
+    ];
     const entries = Object.entries(req.body).filter(([field]) => allowed.includes(field));
     if (!entries.length) return me(req, res, next);
     const assignments = entries.map(([field]) => `\`${field}\` = ?`).join(', ');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useOutletContext, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useOutletContext, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Package, History, Bell, UserCircle, Search, MessageSquare } from 'lucide-react';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -10,15 +10,16 @@ export default function BuyerDashboard() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
+  if (user?.role !== 'buyer') return <Navigate to="/" replace />;
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/buyer-dashboard" },
     { icon: Search, label: t('marketplace'), path: "/marketplace" },
     { icon: Package, label: t('orders'), path: "/buyer-dashboard/orders" },
     { icon: History, label: t('transactions'), path: "/buyer-dashboard/transactions" },
-    { icon: MessageSquare, label: t('messages'), path: "/messages" },
-    { icon: Bell, label: t('notifications'), path: "/notifications" },
-    { icon: UserCircle, label: t('profile'), path: "/profile" },
+    { icon: MessageSquare, label: t('messages'), path: "/buyer-dashboard/messages" },
+    { icon: Bell, label: t('notifications'), path: "/buyer-dashboard/notifications" },
+    { icon: UserCircle, label: t('profile'), path: "/buyer-dashboard/profile" },
   ];
 
   const pageTitle = SIDEBAR_LINKS.find(l => l.path === location.pathname)?.label || t('overview');

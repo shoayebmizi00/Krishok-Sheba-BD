@@ -6,17 +6,30 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import { formatCurrency, formatDate } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function BuyerOrders() {
   const { user } = useOutletContext();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [acceptedBids, setAcceptedBids] = useState([]);
+  const [selectedBid, setSelectedBid] = useState(null);
+  const [form, setForm] = useState({ quantity: '', delivery_address: '', delivery_district: '', payment_method: 'cash_on_delivery' });
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const data = await apiClient.entities.Order.filter({ buyer_id: user.id }, '-created_date');
+      const [data, bids] = await Promise.all([
+        apiClient.entities.Order.filter({ buyer_id: user.id }, '-created_date'),
+        apiClient.entities.Bid.filter({ buyer_id: user.id, status: 'accepted' }, '-created_date')
+      ]);
       setOrders(data);
+      setAcceptedBids(bids.filter((bid) => !data.some((order) => order.bid_id === bid.id)));
       setLoading(false);
     };
     load();
@@ -24,9 +37,30 @@ export default function BuyerOrders() {
 
   if (loading) return <LoadingSpinner />;
 
+  const createOrder = async () => {
+    if (!selectedBid || !form.quantity || !form.delivery_address || !form.delivery_district) return;
+    await apiClient.entities.Order.create({
+      bid_id: selectedBid.id,
+      buyer_name: user.full_name,
+      seller_id: selectedBid.farmer_id,
+      seller_name: 'কৃষক',
+      items: [{ name: selectedBid.crop_name, quantity: Number(form.quantity), unit: 'kg' }],
+      total_amount: Number(form.quantity) * Number(selectedBid.bid_amount),
+      delivery_address: form.delivery_address,
+      delivery_district: form.delivery_district,
+      payment_method: form.payment_method,
+      status: 'pending',
+      payment_status: 'pending'
+    });
+    toast({ title: 'অর্ডার তৈরি হয়েছে' });
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="font-heading font-bold text-xl text-foreground">My Orders</h2>
+
+      {acceptedBids.length > 0 && <div className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-semibold">গৃহীত বিড থেকে অর্ডার তৈরি করুন</h3><div className="mt-3 space-y-2">{acceptedBids.map((bid) => <div key={bid.id} className="flex items-center justify-between rounded-lg bg-card p-3"><span>{bid.crop_name} · {formatCurrency(bid.bid_amount)}</span><Button size="sm" onClick={() => { setSelectedBid(bid); setForm((current) => ({ ...current, quantity: bid.quantity_requested || '' })); }}>অর্ডার তৈরি করুন</Button></div>)}</div></div>}
 
       {orders.length === 0 ? (
         <EmptyState icon={Package} title="No orders yet" description="Your purchases will appear here" />
@@ -47,6 +81,9 @@ export default function BuyerOrders() {
           ))}
         </div>
       )}
+      <Dialog open={Boolean(selectedBid)} onOpenChange={(open) => !open && setSelectedBid(null)}>
+        <DialogContent><DialogHeader><DialogTitle>অর্ডার নিশ্চিত করুন</DialogTitle></DialogHeader><div className="space-y-4"><Input type="number" placeholder="পরিমাণ" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /><Input placeholder="ডেলিভারি ঠিকানা" value={form.delivery_address} onChange={(e) => setForm({ ...form, delivery_address: e.target.value })} /><Input placeholder="ডেলিভারি জেলা" value={form.delivery_district} onChange={(e) => setForm({ ...form, delivery_district: e.target.value })} /><Select value={form.payment_method} onValueChange={(value) => setForm({ ...form, payment_method: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash_on_delivery">ক্যাশ অন ডেলিভারি</SelectItem><SelectItem value="bkash">বিকাশ</SelectItem><SelectItem value="nagad">নগদ</SelectItem><SelectItem value="rocket">রকেট</SelectItem><SelectItem value="upay">উপায়</SelectItem><SelectItem value="bank_transfer">ব্যাংক ট্রান্সফার</SelectItem><SelectItem value="cash">নগদ টাকা</SelectItem></SelectContent></Select><Button onClick={createOrder} className="w-full">অর্ডার নিশ্চিত করুন</Button></div></DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -51,7 +51,7 @@ function normalizeSortField(field) {
 }
 
 function entityClient(name) {
-  const list = (sort, limit, filters = {}) => {
+  const list = (sort, limit, filters = {}, page = 1) => {
     let records = database[name] || [];
     records = records.filter((record) => Object.entries(filters).every(([key, value]) => {
       if (Array.isArray(record[key])) return record[key].includes(value);
@@ -68,13 +68,14 @@ function entityClient(name) {
       });
     }
 
-    const result = (limit ? records.slice(0, limit) : records).map(normalizeRecord);
+    const offset = limit ? (Math.max(Number(page) || 1, 1) - 1) * limit : 0;
+    const result = (limit ? records.slice(offset, offset + limit) : records).map(normalizeRecord);
     return Promise.resolve(clone(result));
   };
 
   return {
-    list: (sort, limit) => list(sort, limit),
-    filter: (filters, sort, limit) => list(sort, limit, filters),
+    list: (sort, limit, page) => list(sort, limit, {}, page),
+    filter: (filters, sort, limit, page) => list(sort, limit, filters, page),
     async create(data) {
       const currentUser = getCurrentUser();
       if (name === 'CropListing') {
@@ -116,6 +117,16 @@ function entityClient(name) {
           content: String(data.content || '').trim()
         };
         if (!data.content) throw makeError('Message cannot be empty');
+      }
+      if (name === 'Story') {
+        if (!currentUser) throw makeError('Authentication required', 401);
+        data = {
+          ...data,
+          author_id: currentUser.id,
+          author_name: currentUser.full_name,
+          district: data.district || currentUser.district,
+          status: currentUser.role === 'admin' ? (data.status || 'approved') : 'pending'
+        };
       }
       const created = {
         ...clone(data),

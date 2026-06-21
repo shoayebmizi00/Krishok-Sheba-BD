@@ -2,6 +2,34 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.js';
 
+async function createNotification(connection, { userId, title, message, type = 'system', link = null }) {
+  if (!userId) return;
+  await connection.execute(
+    `INSERT INTO notifications (id, user_id, title, message, type, is_read, link)
+     VALUES (?, ?, ?, ?, ?, FALSE, ?)`,
+    [crypto.randomUUID(), userId, title, message, type, link]
+  );
+}
+
+async function notifyAfterCreate(config, data) {
+  const payloads = [];
+  if (config.route === 'bids') {
+    payloads.push({ userId: data.farmer_id, title: 'নতুন বিড এসেছে', message: `${data.crop_name || 'আপনার ফসল'}-এর জন্য নতুন বিড এসেছে।`, type: 'bid', link: '/farmer-dashboard/bids' });
+  } else if (config.route === 'orders') {
+    payloads.push({ userId: data.seller_id, title: 'নতুন অর্ডার', message: `${data.buyer_name || 'একজন ক্রেতা'} নতুন অর্ডার নিশ্চিত করেছেন।`, type: 'order', link: '/farmer-dashboard/orders' });
+  } else if (config.route === 'equipment-bookings') {
+    payloads.push({ userId: data.owner_id, title: 'নতুন যন্ত্রপাতি বুকিং', message: `${data.equipment_name || 'যন্ত্রপাতি'} বুকিংয়ের অনুরোধ এসেছে।`, type: 'booking', link: '/equipment-owner-dashboard/bookings' });
+  } else if (config.route === 'transport-bookings') {
+    payloads.push({ userId: data.provider_id, title: 'নতুন পরিবহন বুকিং', message: 'একটি নতুন পরিবহন বুকিং অনুরোধ এসেছে।', type: 'booking', link: '/transport-dashboard/bookings' });
+  } else if (config.route === 'transactions') {
+    payloads.push({ userId: data.seller_id, title: 'নতুন পেমেন্ট রেকর্ড', message: `${data.amount || 0} টাকার একটি লেনদেন রেকর্ড তৈরি হয়েছে।`, type: 'payment', link: '/farmer-dashboard/transactions' });
+  } else if (config.route === 'government-notices') {
+    const [users] = await pool.execute('SELECT id FROM users WHERE is_active = TRUE');
+    payloads.push(...users.map((user) => ({ userId: user.id, title: 'নতুন সরকারি নোটিশ', message: data.title, type: 'notice', link: '/notices' })));
+  }
+  await Promise.all(payloads.map((payload) => createNotification(pool, payload)));
+}
+
 function canCreate(config, user) {
   if (!user) return false;
   if (user.role === 'admin' && !config.strictCreateRoles) return true;
@@ -19,8 +47,7 @@ function parseJsonArray(value) {
 }
 
 async function validateCropListing(data, user) {
-  const categories = new Set(['rice', 'vegetables', 'fruits', 'pulses', 'spices', 'fish', 'other']);
-  if (!categories.has(data.category)) {
+  if (!data.category || String(data.category).length > 100) {
     return { error: 'Please select a valid crop category' };
   }
   if (!data.crop_name || Number(data.quantity) <= 0 || Number(data.expected_price) <= 0 || !data.district) {
@@ -161,6 +188,13 @@ async function createMessage(req, res) {
        WHERE id = ?`,
       [content, req.user.id, conversation.id]
     );
+    await createNotification(connection, {
+      userId: receiverId,
+      title: 'নতুন বার্তা',
+      message: `${senderName} আপনাকে একটি বার্তা পাঠিয়েছেন।`,
+      type: 'message',
+      link: `/messages/${conversation.id}`
+    });
     const [messages] = await connection.execute('SELECT * FROM messages WHERE id = ?', [id]);
     await connection.commit();
     return res.status(201).json(messages[0]);
@@ -176,8 +210,15 @@ export function createResourceController(model, config) {
   return {
     async list(req, res, next) {
       try {
-        const { sort, limit, ...filters } = req.query;
-        const data = await model.list({ filters, sort, limit, user: req.user });
+        const { sort, limit, page, ...filters } = req.query;
+        if (
+          config.route === 'stories'
+          && req.user?.role !== 'admin'
+          && !(filters.author_id && filters.author_id === req.user?.id)
+        ) {
+          filters.status = 'approved';
+        }
+        const data = await model.list({ filters, sort, limit, page, user: req.user });
         res.json(data);
       } catch (error) {
         next(error);
@@ -210,6 +251,12 @@ export function createResourceController(model, config) {
           if (validation.error) return res.status(400).json({ message: validation.error });
           data = validation.data;
         }
+        if (config.route === 'stories') {
+          data.status = req.user.role === 'admin' ? (data.status || 'approved') : 'pending';
+          const [authors] = await pool.execute('SELECT full_name, district FROM users WHERE id = ? LIMIT 1', [req.user.id]);
+          data.author_name = authors[0]?.full_name || 'ব্যবহারকারী';
+          data.district = data.district || authors[0]?.district;
+        }
         if (config.userResource) {
           if (!data.email || !data.password) {
             return res.status(400).json({ message: 'Email and password are required' });
@@ -235,6 +282,7 @@ export function createResourceController(model, config) {
           }
         }
         const created = await model.create(data);
+        await notifyAfterCreate(config, data);
         res.status(201).json(created);
       } catch (error) {
         console.error('[resource.create] Create failed', {
@@ -259,6 +307,15 @@ export function createResourceController(model, config) {
           return res.status(405).json({ message: 'Sent messages cannot be edited' });
         }
         const changes = { ...req.body };
+        if (config.route === 'bids' && ['accepted', 'rejected'].includes(changes.status)) {
+          await createNotification(pool, {
+            userId: existing.buyer_id,
+            title: changes.status === 'accepted' ? 'বিড গ্রহণ করা হয়েছে' : 'বিড প্রত্যাখ্যান করা হয়েছে',
+            message: `${existing.crop_name || 'ফসল'}-এর বিড ${changes.status === 'accepted' ? 'গ্রহণ' : 'প্রত্যাখ্যান'} করা হয়েছে।`,
+            type: 'bid',
+            link: '/buyer-dashboard/orders'
+          });
+        }
         if (config.route === 'conversations') {
           for (const field of ['participant_ids', 'participant_names', 'listing_id', 'last_message', 'last_message_by', 'last_message_date']) {
             delete changes[field];

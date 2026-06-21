@@ -15,14 +15,21 @@ export default function FarmerTransactions() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const data = await apiClient.entities.Transaction.filter({ user_id: user.id }, '-created_date');
-      setTransactions(data);
+      const [legacy, current] = await Promise.all([
+        apiClient.entities.Transaction.filter({ user_id: user.id }, '-created_date'),
+        apiClient.entities.Transaction.filter({ seller_id: user.id }, '-created_date')
+      ]);
+      setTransactions([...new Map([...legacy, ...current].map((item) => [item.id, item])).values()]);
       setLoading(false);
     };
     load();
   }, [user]);
 
   if (loading) return <LoadingSpinner />;
+  const markReceived = async (id) => {
+    await apiClient.entities.Transaction.update(id, { status: 'received' });
+    setTransactions((items) => items.map((item) => item.id === id ? { ...item, status: 'received' } : item));
+  };
 
   return (
     <div className="space-y-6">
@@ -40,6 +47,7 @@ export default function FarmerTransactions() {
                 <th className="p-3 font-medium text-muted-foreground">Description</th>
                 <th className="p-3 font-medium text-muted-foreground">Amount</th>
                 <th className="p-3 font-medium text-muted-foreground">Status</th>
+                <th className="p-3 font-medium text-muted-foreground">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -50,6 +58,7 @@ export default function FarmerTransactions() {
                   <td className="p-3 text-muted-foreground">{t.description || '-'}</td>
                   <td className="p-3 font-medium text-primary">{formatCurrency(t.amount)}</td>
                   <td className="p-3"><StatusBadge status={t.status} /></td>
+                  <td className="p-3">{['pending', 'sent'].includes(t.status) && <button className="text-sm font-medium text-primary" onClick={() => markReceived(t.id)}>পেমেন্ট পেয়েছি</button>}</td>
                 </tr>
               ))}
             </tbody>

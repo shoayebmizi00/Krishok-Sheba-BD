@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useOutletContext, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useOutletContext, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Wrench, Plus, Calendar, Bell, UserCircle, MessageSquare } from 'lucide-react';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -10,15 +10,16 @@ export default function EquipmentOwnerDashboard() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
+  if (user?.role !== 'equipment_owner') return <Navigate to="/" replace />;
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/equipment-owner-dashboard" },
     { icon: Wrench, label: t('myEquipment'), path: "/equipment-owner-dashboard/equipment" },
     { icon: Plus, label: t('addEquipment'), path: "/equipment-owner-dashboard/add" },
     { icon: Calendar, label: t('bookings'), path: "/equipment-owner-dashboard/bookings" },
-    { icon: MessageSquare, label: t('messages'), path: "/messages" },
-    { icon: Bell, label: t('notifications'), path: "/notifications" },
-    { icon: UserCircle, label: t('profile'), path: "/profile" },
+    { icon: MessageSquare, label: t('messages'), path: "/equipment-owner-dashboard/messages" },
+    { icon: Bell, label: t('notifications'), path: "/equipment-owner-dashboard/notifications" },
+    { icon: UserCircle, label: t('profile'), path: "/equipment-owner-dashboard/profile" },
   ];
 
   const pageTitle = SIDEBAR_LINKS.find(l => l.path === location.pathname)?.label || t('overview');

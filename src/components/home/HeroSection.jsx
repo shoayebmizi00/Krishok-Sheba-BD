@@ -8,10 +8,10 @@ export default function HeroSection() {
   const t = useTranslation();
 
   const featureCards = [
-    { icon: Sprout, title: t('sellCrops'), desc: t('sellCropsDesc'), color: "bg-green-50 text-green-600" },
-    { icon: TrendingUp, title: t('marketPricesShort'), desc: t('marketPricesShortDesc'), color: "bg-yellow-50 text-yellow-600" },
-    { icon: Truck, title: t('transportShort'), desc: t('transportShortDesc'), color: "bg-blue-50 text-blue-600" },
-    { icon: Search, title: t('equipmentShort'), desc: t('equipmentShortDesc'), color: "bg-orange-50 text-orange-600" },
+    { icon: Sprout, title: 'ফসল বিক্রি করুন', desc: 'নতুন ফসলের তালিকা প্রকাশ করুন', color: "bg-green-50 text-green-600", to: '/farmer-dashboard/add-listing' },
+    { icon: TrendingUp, title: 'বাজার দর দেখুন', desc: 'জেলা ও বাজারভিত্তিক মূল্য জানুন', color: "bg-yellow-50 text-yellow-600", to: '/market-prices' },
+    { icon: Search, title: 'যন্ত্রপাতি ভাড়া করুন', desc: 'সহজে কৃষি যন্ত্র খুঁজুন', color: "bg-orange-50 text-orange-600", to: '/equipment' },
+    { icon: Truck, title: 'পরিবহন বুক করুন', desc: 'ফসল পরিবহনের গাড়ি বুক করুন', color: "bg-blue-50 text-blue-600", to: '/transport' },
   ];
 
   const stats = [
@@ -69,13 +69,13 @@ export default function HeroSection() {
 
           <div className="hidden lg:grid grid-cols-2 auto-rows-fr gap-4">
             {featureCards.map((f) =>
-            <div key={f.title} className="h-full min-h-44 p-6 bg-card border border-border shadow-sm hover:shadow-md transition-shadow rounded-2xl flex flex-col">
+            <Link to={f.to} key={f.title} className="h-full min-h-44 p-6 bg-card border border-border shadow-sm hover:-translate-y-1 hover:shadow-md transition-all rounded-2xl flex flex-col cursor-pointer">
                 <div className={`w-10 h-10 rounded-xl ${f.color} flex items-center justify-center mb-3`}>
                   <f.icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-heading font-semibold text-sm">{f.title}</h3>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{f.desc}</p>
-              </div>
+              </Link>
             )}
           </div>
         </div>

@@ -81,6 +81,13 @@ export const mockData = {
     { id: 'price-3', crop_name: 'Tomato', market_name: 'Rajshahi City Market', district: 'Rajshahi', price: 55, unit: 'kg', date: date(0), created_at: timestamp(0) },
     { id: 'price-4', crop_name: 'Onion', market_name: 'Khatunganj', district: 'Chattogram', price: 82, unit: 'kg', date: date(-1), created_at: timestamp(-1) },
     { id: 'price-5', crop_name: 'Red Lentil', market_name: 'Kushtia Market', district: 'Kushtia', price: 134, unit: 'kg', date: date(-1), created_at: timestamp(-1) }
+  ],
+  Story: [
+    { id: 'story-1', title: 'সরাসরি বিক্রিতে ন্যায্য দাম', content: 'কৃষক-সেবা বিডির মাধ্যমে মধ্যস্বত্বভোগী ছাড়াই ধান বিক্রি করে ভালো দাম পেয়েছি। এখন ক্রেতার সঙ্গে সরাসরি কথা বলতে পারি এবং নিজের ফসলের মূল্য নিজেই ঠিক করতে পারি।', category: 'ধান চাষ', district: 'রাজশাহী', author_id: 'user-farmer', author_name: 'আব্দুল করিম', status: 'approved', image: '', created_at: timestamp(-2) }
+  ],
+  AppSetting: [
+    { id: 'setting-1', setting_group: 'payment_method', value: 'bkash', label_bn: 'বিকাশ', label_en: 'bKash', is_active: true, sort_order: 1, created_at: timestamp(-2) },
+    { id: 'setting-2', setting_group: 'payment_method', value: 'nagad', label_bn: 'নগদ', label_en: 'Nagad', is_active: true, sort_order: 2, created_at: timestamp(-2) }
   ]
 };
 

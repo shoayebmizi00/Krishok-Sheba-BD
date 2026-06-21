@@ -56,7 +56,7 @@ export default class BaseModel {
     return { sql: ` AND (${clauses.join(' OR ')})`, values };
   }
 
-  async list({ filters = {}, sort = '-created_date', limit = 100, user = null } = {}) {
+  async list({ filters = {}, sort = '-created_date', limit = 100, page = 1, user = null } = {}) {
     const conditions = [];
     const values = [];
     for (const [field, value] of Object.entries(filters)) {
@@ -75,8 +75,10 @@ export default class BaseModel {
     const sortField = sortableAliases[requestedSort] || requestedSort;
     const safeSort = this.allowed(sortField) ? sortField : 'created_at';
     const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 500);
+    const safePage = Math.max(Number(page) || 1, 1);
+    const offset = (safePage - 1) * safeLimit;
     const [rows] = await pool.execute(
-      `SELECT * FROM \`${this.config.table}\` ${where} ORDER BY \`${safeSort}\` ${descending ? 'DESC' : 'ASC'} LIMIT ${safeLimit}`,
+      `SELECT * FROM \`${this.config.table}\` ${where} ORDER BY \`${safeSort}\` ${descending ? 'DESC' : 'ASC'} LIMIT ${safeLimit} OFFSET ${offset}`,
       values
     );
     return rows.map((row) => parseRow(row, this.config));

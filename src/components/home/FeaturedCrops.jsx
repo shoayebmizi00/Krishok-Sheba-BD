@@ -1,75 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { apiClient } from '@/api/apiClient';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, MapPin } from 'lucide-react';
+import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/constants';
-import { useTranslation } from '@/lib/useTranslation';
 
-const PLACEHOLDER_CROPS = [
-  { id: 1, crop_name: "Aman Rice", quantity: 500, unit: "kg", expected_price: 28, district: "Rangpur", status: "active" },
-  { id: 2, crop_name: "Potato", quantity: 1000, unit: "kg", expected_price: 22, district: "Bogura", status: "active" },
-  { id: 3, crop_name: "Onion", quantity: 300, unit: "kg", expected_price: 45, district: "Rajshahi", status: "active" },
-  { id: 4, crop_name: "Tomato", quantity: 200, unit: "kg", expected_price: 35, district: "Jessore", status: "active" },
-];
+const DEFAULT_CROP_IMAGE = 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=900&q=75';
 
 export default function FeaturedCrops() {
-  const [crops, setCrops] = useState([]);
-  const t = useTranslation();
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await apiClient.entities.CropListing.filter({ status: 'active' }, '-created_date', 4);
-        setCrops(data.length > 0 ? data : PLACEHOLDER_CROPS);
-      } catch {
-        setCrops(PLACEHOLDER_CROPS);
-      }
-    };
-    load();
-  }, []);
+  const { data: crops = [], isLoading } = useQuery({
+    queryKey: ['home', 'crops'],
+    queryFn: () => apiClient.entities.CropListing.filter({ status: 'active' }, '-created_date', 4)
+  });
 
   return (
-    <section className="py-16 md:py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-8">
+    <section className="bg-background py-16 md:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <h2 className="font-heading font-bold text-3xl text-foreground">{t('featuredCrops')}</h2>
-            <p className="text-muted-foreground mt-1">{t('featuredCropsDesc')}</p>
+            <h2 className="font-heading text-3xl font-bold">সর্বশেষ ফসল</h2>
+            <p className="mt-1 text-muted-foreground">কৃষকদের নতুন ও সক্রিয় ফসলের তালিকা</p>
           </div>
-          <Link to="/marketplace" className="hidden sm:block">
-            <Button variant="outline" className="gap-2">{t('viewAll')} <ArrowRight className="w-4 h-4" /></Button>
-          </Link>
+          <Button asChild variant="outline" className="hidden gap-2 sm:flex">
+            <Link to="/marketplace">আরো দেখুন <ArrowRight className="h-4 w-4" /></Link>
+          </Button>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {crops.map(crop => (
-            <div key={crop.id} className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow group">
-              <div className="h-36 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                <span className="text-4xl">🌾</span>
-              </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {isLoading && [1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-72 rounded-2xl" />)}
+          {!isLoading && crops.map((crop) => (
+            <Link
+              key={crop.id}
+              to={`/listing/${crop.id}`}
+              className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
+            >
+              <img
+                src={crop.images?.[0] || DEFAULT_CROP_IMAGE}
+                onError={(event) => { event.currentTarget.src = DEFAULT_CROP_IMAGE; }}
+                alt={crop.crop_name}
+                loading="lazy"
+                decoding="async"
+                className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
               <div className="p-4">
-                <h3 className="font-heading font-semibold text-foreground">{crop.crop_name}</h3>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                  <MapPin className="w-3 h-3" /> {crop.district}
+                <h3 className="font-heading font-semibold group-hover:text-primary">{crop.crop_name}</h3>
+                <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3 w-3" /> {crop.district}
                 </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div>
-                    <span className="text-lg font-bold text-primary">{formatCurrency(crop.expected_price)}</span>
-                    <span className="text-xs text-muted-foreground">/{crop.unit}</span>
-                  </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="font-bold text-primary">{formatCurrency(crop.expected_price)}/{crop.unit}</span>
                   <span className="text-xs text-muted-foreground">{crop.quantity} {crop.unit}</span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
-
-        <div className="sm:hidden mt-6 text-center">
-          <Link to="/marketplace">
-            <Button variant="outline" className="gap-2">{t('viewAllCrops')} <ArrowRight className="w-4 h-4" /></Button>
-          </Link>
-        </div>
+        {!isLoading && crops.length === 0 && (
+          <p className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground">এখনো কোনো সক্রিয় ফসল নেই।</p>
+        )}
       </div>
     </section>
   );

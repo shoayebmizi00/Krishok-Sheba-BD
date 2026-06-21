@@ -10,6 +10,7 @@ import { DISTRICTS, CROP_CATEGORIES, formatCurrency } from '@/lib/constants';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
+import SimplePagination from '@/components/shared/SimplePagination';
 
 function CropCard({ crop, type }) {
   return (
@@ -69,6 +70,8 @@ export default function Marketplace() {
   const [search, setSearch] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     const load = async () => {
@@ -76,8 +79,8 @@ export default function Marketplace() {
       setError('');
       try {
         const [listData, prodData] = await Promise.all([
-          apiClient.entities.CropListing.list('-created_date', 50),
-          apiClient.entities.Product.list('-created_date', 50)
+          apiClient.entities.CropListing.list('-created_date', PAGE_SIZE, page),
+          apiClient.entities.Product.list('-created_date', PAGE_SIZE, page)
         ]);
         setListings(listData);
         setProducts(prodData);
@@ -88,7 +91,7 @@ export default function Marketplace() {
       }
     };
     load();
-  }, []);
+  }, [page]);
 
   const filterItems = (items, nameField) => {
     return items.filter(item => {
@@ -202,6 +205,7 @@ export default function Marketplace() {
           </TabsContent>
         </Tabs>
       )}
+      <SimplePagination page={page} hasNext={listings.length === PAGE_SIZE || products.length === PAGE_SIZE} onPageChange={setPage} />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { DISTRICTS, EQUIPMENT_TYPES, formatCurrency } from '@/lib/constants';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
+import SimplePagination from '@/components/shared/SimplePagination';
 
 function BookingDialog({ equipment, user }) {
   const { toast } = useToast();
@@ -72,12 +73,14 @@ export default function Equipment() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     const load = async () => {
       try {
         setError('');
-        const data = await apiClient.entities.Equipment.list('-created_date', 50);
+        const data = await apiClient.entities.Equipment.list('-created_date', PAGE_SIZE, page);
         setEquipment(data);
       } catch (loadError) {
         setError(loadError.message || 'Unable to load equipment');
@@ -86,7 +89,7 @@ export default function Equipment() {
       }
     };
     load();
-  }, []);
+  }, [page]);
 
   const filtered = equipment.filter(eq => {
     const matchSearch = !search || (eq.name || '').toLowerCase().includes(search.toLowerCase());
@@ -165,6 +168,7 @@ export default function Equipment() {
           ))}
         </div>
       )}
+      <SimplePagination page={page} hasNext={equipment.length === PAGE_SIZE} onPageChange={setPage} />
     </div>
   );
 }

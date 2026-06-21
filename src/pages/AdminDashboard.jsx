@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Outlet, useOutletContext, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Sprout, Package, Wrench, Truck, Megaphone, Banknote } from 'lucide-react';
+import { Navigate, Outlet, useOutletContext, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Users, Sprout, Package, Wrench, Truck, Megaphone, Banknote, BookOpen, Settings } from 'lucide-react';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useTranslation } from '@/lib/useTranslation';
@@ -10,6 +10,7 @@ export default function AdminDashboard() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/admin" },
@@ -20,6 +21,8 @@ export default function AdminDashboard() {
     { icon: Truck, label: t('transport'), path: "/admin/transport" },
     { icon: Megaphone, label: t('notices'), path: "/admin/notices" },
     { icon: Banknote, label: t('transactions'), path: "/admin/transactions" },
+    { icon: BookOpen, label: "গল্প অনুমোদন", path: "/admin/stories" },
+    { icon: Settings, label: "সেটিংস", path: "/admin/settings" },
   ];
 
   const pageTitle = SIDEBAR_LINKS.find(l => l.path === location.pathname)?.label || t('overview');

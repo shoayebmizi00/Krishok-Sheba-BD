@@ -70,24 +70,27 @@ const entityRoutes = {
   Transaction: 'transactions',
   Notification: 'notifications',
   GovernmentNotice: 'government-notices',
-  MarketPrice: 'market-prices'
+  MarketPrice: 'market-prices',
+  Story: 'stories',
+  AppSetting: 'app-settings'
 };
 
 function entityClient(route) {
-  const query = (filters = {}, sort, limit) => {
+  const query = (filters = {}, sort, limit, page) => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') params.set(key, value);
     });
     if (sort) params.set('sort', sort);
     if (limit) params.set('limit', limit);
+    if (page) params.set('page', page);
     const suffix = params.size ? `?${params}` : '';
     return request(`/${route}${suffix}`);
   };
 
   return {
-    list: (sort, limit) => query({}, sort, limit),
-    filter: (filters, sort, limit) => query(filters, sort, limit),
+    list: (sort, limit, page) => query({}, sort, limit, page),
+    filter: (filters, sort, limit, page) => query(filters, sort, limit, page),
     create: (data) => request(`/${route}`, { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/${route}/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id) => request(`/${route}/${id}`, { method: 'DELETE' })

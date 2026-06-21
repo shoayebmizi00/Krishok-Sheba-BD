@@ -20,7 +20,9 @@ const requiredTables = [
   'transactions',
   'notifications',
   'government_notices',
-  'market_prices'
+  'market_prices',
+  'stories',
+  'app_settings'
 ];
 const requiredColumns = [
   ['users', 'role'],

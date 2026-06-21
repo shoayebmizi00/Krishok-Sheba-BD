@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sprout, ChevronDown, User, LogOut, LayoutDashboard, Bell, MessageSquare, Languages } from 'lucide-react';
+import { Menu, X, Sprout, ChevronDown, User, LogOut, LayoutDashboard, MessageSquare, Languages } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTranslation } from '@/lib/useTranslation';
 import { useLanguage } from '@/lib/LanguageContext';
+import NotificationBell from '@/components/shared/NotificationBell';
 
 const navKeys = ["home", "marketplace", "equipment", "transport", "marketPrices", "notices"];
 const navPaths = ["/", "/marketplace", "/equipment", "/transport", "/market-prices", "/notices"];
@@ -78,9 +79,7 @@ export default function Navbar({ user }) {
                 <Link to="/messages" className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
                   <MessageSquare className="w-5 h-5" />
                 </Link>
-                <Link to="/notifications" className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
-                  <Bell className="w-5 h-5" />
-                </Link>
+                <NotificationBell user={user} />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">

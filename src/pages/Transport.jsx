@@ -12,6 +12,7 @@ import { VEHICLE_TYPES, formatCurrency } from '@/lib/constants';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
+import SimplePagination from '@/components/shared/SimplePagination';
 
 function TransportBookingDialog({ vehicle, user }) {
   const { toast } = useToast();
@@ -74,12 +75,14 @@ export default function Transport() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     const load = async () => {
       try {
         setError('');
-        const data = await apiClient.entities.Vehicle.list('-created_date', 50);
+        const data = await apiClient.entities.Vehicle.list('-created_date', PAGE_SIZE, page);
         setVehicles(data);
       } catch (loadError) {
         setError(loadError.message || 'Unable to load transport options');
@@ -88,7 +91,7 @@ export default function Transport() {
       }
     };
     load();
-  }, []);
+  }, [page]);
 
   const filtered = vehicles.filter(v => {
     const matchSearch = !search || (v.district || '').toLowerCase().includes(search.toLowerCase());
@@ -148,6 +151,7 @@ export default function Transport() {
           ))}
         </div>
       )}
+      <SimplePagination page={page} hasNext={vehicles.length === PAGE_SIZE} onPageChange={setPage} />
     </div>
   );
 }

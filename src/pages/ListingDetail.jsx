@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
-import { MapPin, Calendar, User, ArrowLeft, Send, MessageSquare } from 'lucide-react';
+import { MapPin, Calendar, User, Send, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency, formatDate } from '@/lib/constants';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import BackButton from '@/components/shared/BackButton';
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -89,9 +90,7 @@ export default function ListingDetail() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      <Link to="/marketplace" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="w-4 h-4" /> Back to Marketplace
-      </Link>
+      <BackButton fallback="/marketplace" className="mb-6" />
 
       <div className="grid lg:grid-cols-5 gap-8">
         {/* Main info */}
@@ -99,7 +98,7 @@ export default function ListingDetail() {
           <div className="rounded-2xl border border-border overflow-hidden">
             <div className="h-56 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
               {listing.images && listing.images.length > 0 ? (
-                <img src={listing.images[0]} alt={listing.crop_name} className="w-full h-full object-cover" />
+                <img src={listing.images[0]} alt={listing.crop_name} decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-6xl">🌾</span>
               )}

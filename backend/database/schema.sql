@@ -10,6 +10,14 @@ CREATE TABLE users (
   land_size DECIMAL(10,2) NULL,
   crops_grown TEXT NULL,
   profile_picture VARCHAR(500) NULL,
+  bkash_number VARCHAR(30) NULL,
+  nagad_number VARCHAR(30) NULL,
+  rocket_number VARCHAR(30) NULL,
+  upay_number VARCHAR(30) NULL,
+  bank_name VARCHAR(120) NULL,
+  bank_account_number VARCHAR(80) NULL,
+  account_holder_name VARCHAR(120) NULL,
+  branch_name VARCHAR(120) NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   reset_password_token CHAR(64) NULL,
   reset_password_expires DATETIME NULL,
@@ -36,9 +44,9 @@ CREATE TABLE uploaded_files (
 CREATE TABLE crop_listings (
   id CHAR(36) PRIMARY KEY,
   crop_name VARCHAR(150) NOT NULL,
-  category ENUM('rice', 'vegetables', 'fruits', 'pulses', 'spices', 'fish', 'other') NOT NULL DEFAULT 'other',
+  category VARCHAR(100) NOT NULL DEFAULT 'other',
   quantity DECIMAL(12,2) NOT NULL,
-  unit ENUM('kg', 'ton', 'maund', 'mon') NOT NULL DEFAULT 'kg',
+  unit VARCHAR(30) NOT NULL DEFAULT 'kg',
   expected_harvest_date DATE NULL,
   expected_price DECIMAL(12,2) NOT NULL,
   location VARCHAR(255) NULL,
@@ -118,7 +126,7 @@ CREATE TABLE messages (
 CREATE TABLE equipment (
   id CHAR(36) PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
-  type ENUM('tractor', 'harvester', 'power_tiller', 'sprayer', 'seeder', 'pump', 'other') NOT NULL,
+  type VARCHAR(100) NOT NULL,
   description TEXT NULL,
   rent_price_per_day DECIMAL(12,2) NULL,
   sale_price DECIMAL(12,2) NULL,
@@ -161,7 +169,7 @@ CREATE TABLE equipment_bookings (
 
 CREATE TABLE vehicles (
   id CHAR(36) PRIMARY KEY,
-  vehicle_type ENUM('pickup_van', 'truck', 'mini_truck', 'three_wheeler') NOT NULL DEFAULT 'truck',
+  vehicle_type VARCHAR(100) NOT NULL DEFAULT 'truck',
   capacity VARCHAR(100) NULL,
   price_per_km DECIMAL(10,2) NULL,
   district VARCHAR(100) NOT NULL,
@@ -234,6 +242,8 @@ CREATE TABLE orders (
   delivery_address VARCHAR(500) NULL,
   delivery_district VARCHAR(100) NULL,
   payment_status ENUM('pending', 'paid', 'refunded') NOT NULL DEFAULT 'pending',
+  bid_id CHAR(36) NULL,
+  payment_method VARCHAR(50) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_orders_buyer FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -249,9 +259,15 @@ CREATE TABLE transactions (
   order_id CHAR(36) NULL,
   amount DECIMAL(12,2) NOT NULL,
   type ENUM('sale', 'purchase', 'rental', 'transport') NOT NULL DEFAULT 'sale',
-  status ENUM('completed', 'pending', 'refunded') NOT NULL DEFAULT 'completed',
+  status ENUM('pending','sent','received','failed','cancelled','completed','refunded') NOT NULL DEFAULT 'pending',
   description TEXT NULL,
   counterparty_name VARCHAR(120) NULL,
+  buyer_id CHAR(36) NULL,
+  seller_id CHAR(36) NULL,
+  payment_method VARCHAR(50) NULL,
+  sender_account VARCHAR(100) NULL,
+  receiver_account VARCHAR(100) NULL,
+  reference VARCHAR(255) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -266,7 +282,7 @@ CREATE TABLE notifications (
   user_id CHAR(36) NOT NULL,
   title VARCHAR(255) NOT NULL,
   message TEXT NOT NULL,
-  type ENUM('bid', 'order', 'delivery', 'notice', 'system') NOT NULL DEFAULT 'system',
+  type ENUM('bid', 'order', 'delivery', 'notice', 'message', 'booking', 'payment', 'system') NOT NULL DEFAULT 'system',
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
   link VARCHAR(500) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -278,7 +294,7 @@ CREATE TABLE notifications (
 CREATE TABLE government_notices (
   id CHAR(36) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
-  category ENUM('notice', 'subsidy', 'loan', 'training', 'scheme') NOT NULL DEFAULT 'notice',
+  category VARCHAR(100) NOT NULL DEFAULT 'notice',
   description TEXT NOT NULL,
   eligibility TEXT NULL,
   deadline DATE NULL,
@@ -303,6 +319,37 @@ CREATE TABLE market_prices (
   UNIQUE KEY uq_market_price_daily (crop_name, market_name, district, unit, date),
   INDEX idx_market_prices_crop_date (crop_name, date),
   INDEX idx_market_prices_district_date (district, date)
+) ENGINE=InnoDB;
+
+CREATE TABLE stories (
+  id CHAR(36) PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  image VARCHAR(500) NULL,
+  category VARCHAR(100) NULL,
+  district VARCHAR(100) NOT NULL,
+  author_id CHAR(36) NOT NULL,
+  author_name VARCHAR(120) NULL,
+  status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_stories_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_stories_status_created (status, created_at),
+  INDEX idx_stories_author (author_id, created_at)
+) ENGINE=InnoDB;
+
+CREATE TABLE app_settings (
+  id CHAR(36) PRIMARY KEY,
+  setting_group ENUM('crop_category','equipment_category','vehicle_category','unit','district','payment_method','notice_type','blog_category') NOT NULL,
+  value VARCHAR(120) NOT NULL,
+  label_bn VARCHAR(120) NOT NULL,
+  label_en VARCHAR(120) NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_app_settings_group_value (setting_group, value),
+  INDEX idx_app_settings_group_active (setting_group, is_active, sort_order)
 ) ENGINE=InnoDB;
 
 -- Promote a registered account to administrator after replacing the email:

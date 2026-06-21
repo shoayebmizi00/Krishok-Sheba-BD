@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
-import { Plus, Trash2, Sprout } from 'lucide-react';
+import { Eye, Pencil, Plus, Trash2, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -70,6 +70,8 @@ export default function MyListings() {
               </div>
               <div className="flex items-center gap-3 sm:ml-auto">
                 <span className="font-bold text-primary">{formatCurrency(listing.expected_price)}/{listing.unit || 'kg'}</span>
+                <Button asChild variant="ghost" size="icon"><Link to={`/listing/${listing.id}`}><Eye className="w-4 h-4" /></Link></Button>
+                <Button asChild variant="ghost" size="icon"><Link to={`/farmer-dashboard/listings/${listing.id}/edit`}><Pencil className="w-4 h-4" /></Link></Button>
                 <Button variant="ghost" size="icon" onClick={() => handleDelete(listing.id)} className="text-destructive hover:text-destructive">
                   <Trash2 className="w-4 h-4" />
                 </Button>
