@@ -82,13 +82,17 @@ export default function Navbar({ user }) {
                 <NotificationBell user={user} />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-2">
+                    <button
+                      type="button"
+                      className="relative z-10 inline-flex h-10 cursor-pointer touch-manipulation items-center justify-center gap-2 rounded-md px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label="প্রোফাইল মেনু খুলুন"
+                    >
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="w-4 h-4 text-primary" />
                       </div>
                       <span className="hidden sm:inline text-sm font-medium">{user.full_name || 'User'}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                    </Button>
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
@@ -110,12 +114,12 @@ export default function Navbar({ user }) {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link to="/login">
-                  <Button variant="ghost" size="sm">{t('login')}</Button>
-                </Link>
-                <Link to="/register">
-                  <Button size="sm" className="bg-primary hover:bg-primary/90">{t('register')}</Button>
-                </Link>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/login">{t('login')}</Link>
+                </Button>
+                <Button asChild size="sm" className="relative z-10 bg-primary hover:bg-primary/90">
+                  <Link to="/register">{t('register')}</Link>
+                </Button>
               </div>
             )}
 
