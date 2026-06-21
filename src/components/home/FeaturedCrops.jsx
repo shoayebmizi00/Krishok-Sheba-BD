@@ -13,7 +13,7 @@ const DEFAULT_CROP_IMAGE = defaultCropImage;
 export default function FeaturedCrops() {
   const { data: crops = [], isLoading } = useQuery({
     queryKey: ['home', 'crops'],
-    queryFn: () => apiClient.entities.CropListing.filter({ status: 'active' }, '-created_date', 4)
+    queryFn: () => apiClient.entities.CropListing.list('-created_date', 4)
   });
 
   return (

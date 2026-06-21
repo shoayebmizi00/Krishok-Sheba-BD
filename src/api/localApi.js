@@ -99,11 +99,11 @@ function entityClient(name) {
           ...data,
           farmer_id: currentUser.id,
           farmer_name: currentUser.full_name || 'কৃষক',
-          status: 'pending'
+          status: 'active'
         };
       }
-      if (name === 'Equipment') data = { ...data, owner_id: currentUser?.id, owner_name: currentUser?.full_name, approval_status: currentUser?.role === 'admin' ? 'approved' : 'pending' };
-      if (name === 'Vehicle') data = { ...data, owner_id: currentUser?.id, owner_name: currentUser?.full_name, approval_status: currentUser?.role === 'admin' ? 'approved' : 'pending' };
+      if (name === 'Equipment') data = { ...data, owner_id: currentUser?.id, owner_name: currentUser?.full_name, approval_status: 'approved' };
+      if (name === 'Vehicle') data = { ...data, owner_id: currentUser?.id, owner_name: currentUser?.full_name, approval_status: 'approved' };
       if (name === 'Bid') {
         const listing = database.CropListing.find((item) => item.id === data.listing_id);
         const remaining = Number(listing?.remaining_quantity ?? listing?.quantity ?? 0);

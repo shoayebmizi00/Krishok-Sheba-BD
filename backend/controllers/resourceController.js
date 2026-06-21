@@ -386,13 +386,13 @@ export function createResourceController(model, config) {
         if (config.route === 'crop-listings') {
           const validation = await validateCropListing(data, req.user);
           if (validation.error) return res.status(400).json({ message: validation.error });
-          data = { ...validation.data, status: req.user.role === 'admin' ? (data.status || 'active') : 'pending' };
+          data = { ...validation.data, status: data.status || 'active' };
         }
         if (config.route === 'equipment') {
-          data.approval_status = req.user.role === 'admin' ? (data.approval_status || 'approved') : 'pending';
+          data.approval_status = data.approval_status || 'approved';
         }
         if (config.route === 'vehicles') {
-          data.approval_status = req.user.role === 'admin' ? (data.approval_status || 'approved') : 'pending';
+          data.approval_status = data.approval_status || 'approved';
         }
         if (config.route === 'bids') {
           const [listings] = await pool.execute(
