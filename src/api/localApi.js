@@ -86,6 +86,13 @@ function entityClient(name) {
           farmer_name: currentUser.full_name || 'Farmer'
         };
       }
+      if (name === 'Bid') {
+        const listing = database.CropListing.find((item) => item.id === data.listing_id);
+        const remaining = Number(listing?.remaining_quantity ?? listing?.quantity ?? 0);
+        const requested = Number(data.quantity_requested || 0);
+        if (!listing || ['sold', 'sold_out'].includes(listing.status) || remaining <= 0) throw makeError('এই ফসলটি বিক্রি শেষ', 409);
+        if (requested <= 0 || requested > remaining) throw makeError(`সর্বোচ্চ ${remaining} ${listing.unit || 'কেজি'} বিড করা যাবে`, 400);
+      }
       if (name === 'Conversation') {
         const participantIds = [...new Set(data.participant_ids || [])];
         if (!currentUser || participantIds.length !== 2 || !participantIds.includes(currentUser.id)) {
@@ -126,6 +133,28 @@ function entityClient(name) {
           author_name: currentUser.full_name,
           district: data.district || currentUser.district,
           status: currentUser.role === 'admin' ? (data.status || 'approved') : 'pending'
+        };
+      }
+      if (name === 'Order') {
+        const bid = database.Bid.find((item) => item.id === data.bid_id && item.buyer_id === currentUser?.id);
+        const listing = database.CropListing.find((item) => item.id === bid?.listing_id);
+        const quantity = Number(data.items?.[0]?.quantity);
+        if (!bid || bid.status !== 'accepted') throw makeError('শুধু গৃহীত বিড থেকে অর্ডার করা যাবে', 400);
+        if (!listing || ['sold', 'sold_out'].includes(listing.status)) throw makeError('এই ফসলটি বিক্রি শেষ', 409);
+        const remaining = Number(listing.remaining_quantity ?? listing.quantity);
+        if (!quantity || quantity > remaining) throw makeError(`সর্বোচ্চ ${remaining} ${listing.unit || 'কেজি'} অর্ডার করা যাবে`, 409);
+        if (database.Order.some((item) => item.bid_id === bid.id)) throw makeError('এই বিড থেকে ইতিমধ্যে অর্ডার তৈরি হয়েছে', 409);
+        listing.total_quantity = Number(listing.total_quantity ?? listing.quantity);
+        listing.sold_quantity = Number(listing.sold_quantity || 0) + quantity;
+        listing.remaining_quantity = remaining - quantity;
+        listing.status = listing.remaining_quantity <= 0 ? 'sold_out' : 'active';
+        data = {
+          ...data,
+          buyer_id: currentUser.id,
+          seller_id: bid.farmer_id,
+          seller_name: listing.farmer_name || 'কৃষক',
+          total_amount: quantity * Number(bid.bid_amount),
+          items: [{ ...data.items[0], listing_id: listing.id, unit: listing.unit, price: Number(bid.bid_amount) }]
         };
       }
       const created = {
@@ -172,6 +201,25 @@ const entities = Object.fromEntries(
 
 export const localApi = {
   entities,
+  availability: {
+    async equipment(id, startDate, endDate) {
+      const conflict = (database.EquipmentBooking || []).some((booking) =>
+        booking.equipment_id === id
+        && ['pending', 'confirmed', 'active'].includes(booking.status)
+        && booking.start_date <= endDate
+        && booking.end_date >= startDate
+      );
+      return { available: !conflict };
+    },
+    async transport(id, pickupDate) {
+      const conflict = (database.TransportBooking || []).some((booking) =>
+        booking.vehicle_id === id
+        && booking.pickup_date === pickupDate
+        && ['pending', 'confirmed', 'in_transit'].includes(booking.status)
+      );
+      return { available: !conflict };
+    }
+  },
   auth: {
     async register(data) {
       if (database.User.some((user) => user.email.toLowerCase() === data.email.toLowerCase())) {

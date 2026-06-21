@@ -85,17 +85,17 @@ export default function ConversationDetail() {
   if (error) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <h2 className="font-heading font-bold text-xl">Unable to load conversation</h2>
+        <h2 className="font-heading font-bold text-xl">কথোপকথন লোড করা যায়নি</h2>
         <p className="text-sm text-muted-foreground mt-2">{error}</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/messages')}>Back to Messages</Button>
+        <Button variant="outline" className="mt-4" onClick={() => navigate('/messages')}>বার্তায় ফিরুন</Button>
       </div>
     );
   }
   if (!conversation) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <h2 className="font-heading font-bold text-xl">Conversation not found</h2>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/messages')}>Back to Messages</Button>
+        <h2 className="font-heading font-bold text-xl">কথোপকথন পাওয়া যায়নি</h2>
+        <Button variant="outline" className="mt-4" onClick={() => navigate('/messages')}>বার্তায় ফিরুন</Button>
       </div>
     );
   }
@@ -123,7 +123,7 @@ export default function ConversationDetail() {
       {/* Messages */}
       <div className="bg-muted/30 rounded-2xl border border-border p-4 mb-4 min-h-[400px] max-h-[60vh] overflow-y-auto space-y-3">
         {messages.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-8">No messages yet. Start the conversation!</p>
+          <p className="text-center text-sm text-muted-foreground py-8">এখনো কোনো বার্তা নেই। কথোপকথন শুরু করুন।</p>
         ) : (
           messages.map(msg => {
             const isMine = msg.sender_id === user?.id;

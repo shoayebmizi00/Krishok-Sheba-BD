@@ -62,7 +62,7 @@ export default function Notices() {
                   </div>
                   <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{notice.description}</p>
                   {notice.eligibility && (
-                    <p className="text-xs text-muted-foreground mt-2"><strong>Eligibility:</strong> {notice.eligibility}</p>
+                    <p className="text-xs text-muted-foreground mt-2"><strong>যোগ্যতা:</strong> {notice.eligibility}</p>
                   )}
                   <div className="flex items-center gap-4 mt-3">
                     {notice.deadline && (
@@ -90,8 +90,8 @@ export default function Notices() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
-        <h1 className="font-heading font-bold text-2xl text-foreground">Government Notices & Subsidies</h1>
-        <p className="text-muted-foreground text-sm mt-1">Stay updated on agricultural programs, loans, and training</p>
+        <h1 className="font-heading font-bold text-2xl text-foreground">সরকারি নোটিশ ও ভর্তুকি</h1>
+        <p className="text-muted-foreground text-sm mt-1">কৃষি প্রকল্প, ঋণ ও প্রশিক্ষণের সর্বশেষ খবর জানুন</p>
       </div>
 
       <Tabs defaultValue="all">

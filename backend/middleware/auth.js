@@ -19,20 +19,20 @@ export function optionalAuth(req, _res, next) {
 
 export function authenticate(req, res, next) {
   const token = extractToken(req);
-  if (!token) return res.status(401).json({ message: 'Authentication required' });
+  if (!token) return res.status(401).json({ message: 'লগইন প্রয়োজন' });
 
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
   } catch {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    return res.status(401).json({ message: 'লগইনের মেয়াদ শেষ হয়েছে, আবার লগইন করুন' });
   }
 }
 
 export function authorizeRoles(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'You do not have permission to perform this action' });
+      return res.status(403).json({ message: 'এই কাজ করার অনুমতি আপনার নেই' });
     }
     next();
   };

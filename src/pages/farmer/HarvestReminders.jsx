@@ -52,7 +52,7 @@ export default function HarvestReminders() {
       type: 'system',
       is_read: false
     });
-    toast({ title: "Reminder set!", description: "You'll be notified before harvest" });
+    toast({ title: "স্মরণিকা সংরক্ষণ হয়েছে", description: "ফসল কাটার আগে আপনাকে জানানো হবে" });
     setReminding(prev => ({ ...prev, [listing.id]: false }));
   };
 
@@ -67,7 +67,7 @@ export default function HarvestReminders() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">Harvest Reminders</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">ফসল কাটার স্মরণিকা</h2>
 
       {upcoming.length === 0 ? (
         <EmptyState

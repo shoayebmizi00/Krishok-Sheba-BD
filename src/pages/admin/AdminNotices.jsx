@@ -29,7 +29,7 @@ export default function AdminNotices() {
   const handleCreate = async () => {
     if (!form.title || !form.description) return;
     await apiClient.entities.GovernmentNotice.create({ ...form, is_active: true });
-    toast({ title: "Notice created!" });
+    toast({ title: "নোটিশ সফলভাবে তৈরি হয়েছে" });
     setForm({ title: '', category: 'notice', description: '', eligibility: '', deadline: '', link: '' });
     setDialogOpen(false);
     load();
@@ -37,7 +37,7 @@ export default function AdminNotices() {
 
   const handleDelete = async (id) => {
     await apiClient.entities.GovernmentNotice.delete(id);
-    toast({ title: "Notice deleted" });
+    toast({ title: "নোটিশ মুছে ফেলা হয়েছে" });
     load();
   };
 
@@ -46,23 +46,23 @@ export default function AdminNotices() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-heading font-bold text-xl text-foreground">Manage Notices</h2>
+        <h2 className="font-heading font-bold text-xl text-foreground">নোটিশ ব্যবস্থাপনা</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 gap-2"><Plus className="w-4 h-4" /> Add Notice</Button>
+            <Button className="bg-primary hover:bg-primary/90 gap-2"><Plus className="w-4 h-4" /> নোটিশ যোগ করুন</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Add Government Notice</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>সরকারি নোটিশ যোগ করুন</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-2">
-              <Input placeholder="Title" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} />
+              <Input placeholder="নোটিশের শিরোনাম" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} />
               <Select value={form.category} onValueChange={v => setForm(p => ({...p, category: v}))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="notice">Notice</SelectItem>
-                  <SelectItem value="subsidy">Subsidy</SelectItem>
-                  <SelectItem value="loan">Loan</SelectItem>
-                  <SelectItem value="training">Training</SelectItem>
-                  <SelectItem value="scheme">Scheme</SelectItem>
+                  <SelectItem value="notice">নোটিশ</SelectItem>
+                  <SelectItem value="subsidy">ভর্তুকি</SelectItem>
+                  <SelectItem value="loan">ঋণ</SelectItem>
+                  <SelectItem value="training">প্রশিক্ষণ</SelectItem>
+                  <SelectItem value="scheme">প্রকল্প</SelectItem>
                 </SelectContent>
               </Select>
               <Textarea placeholder="Description" value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} rows={3} />

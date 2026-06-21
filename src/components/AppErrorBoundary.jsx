@@ -26,7 +26,7 @@ export default class AppErrorBoundary extends React.Component {
       <div className="min-h-[70vh] flex items-center justify-center px-4">
         <div className="max-w-lg text-center">
           <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-4" />
-          <h1 className="font-heading text-xl font-bold">This page could not be displayed</h1>
+          <h1 className="font-heading text-xl font-bold">পাতাটি দেখানো যাচ্ছে না</h1>
           <p className="text-sm text-muted-foreground mt-2">
             The error has been logged in the development console. Reload the page or return home.
           </p>
@@ -39,7 +39,7 @@ export default class AppErrorBoundary extends React.Component {
             <Button variant="outline" onClick={() => window.location.reload()}>
               <RefreshCw className="w-4 h-4 mr-2" /> Reload
             </Button>
-            <Button asChild><Link to="/">Home</Link></Button>
+            <Button asChild><Link to="/">হোম</Link></Button>
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ export default function MyEquipment() {
 
   const handleDelete = async (id) => {
     await apiClient.entities.Equipment.delete(id);
-    toast({ title: "Equipment removed" });
+    toast({ title: "যন্ত্রপাতি সরানো হয়েছে" });
     load();
   };
 
@@ -34,7 +34,7 @@ export default function MyEquipment() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">My Equipment</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">আমার যন্ত্রপাতি</h2>
 
       {equipment.length === 0 ? (
         <EmptyState icon={Wrench} title="No equipment listed" description="Add your equipment to start receiving bookings" />

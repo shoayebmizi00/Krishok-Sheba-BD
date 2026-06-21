@@ -46,13 +46,13 @@ export default function AddListing() {
       const { file_url, warning } = await apiClient.upload(file, 'crops');
       setForm(prev => ({ ...prev, images: [...prev.images, file_url] }));
       toast({
-        title: 'Image uploaded',
-        description: warning || 'The image will be saved with your crop listing.'
+        title: 'ছবি সফলভাবে আপলোড হয়েছে',
+        description: warning || 'ছবিটি আপনার ফসলের তালিকায় সংরক্ষিত হবে।'
       });
     } catch (error) {
       toast({
-        title: 'Image upload failed',
-        description: error.message || 'Please use a JPG, PNG, or WebP image.',
+        title: 'ছবি আপলোড হয়নি',
+        description: error.message || 'JPG, PNG অথবা WebP ছবি ব্যবহার করুন।',
         variant: 'destructive'
       });
     } finally {
@@ -73,6 +73,9 @@ export default function AddListing() {
         ...form,
         expected_harvest_date: form.listing_type === 'pre_harvest' ? form.expected_harvest_date : null,
         quantity: Number(form.quantity),
+        total_quantity: Number(form.quantity),
+        sold_quantity: Number(form.sold_quantity || 0),
+        remaining_quantity: Math.max(Number(form.quantity) - Number(form.sold_quantity || 0), 0),
         expected_price: Number(form.expected_price),
         farmer_name: user?.full_name || 'Farmer',
         status: 'active'
@@ -83,8 +86,8 @@ export default function AddListing() {
       navigate('/farmer-dashboard/listings');
     } catch (error) {
       toast({
-        title: 'Could not create listing',
-        description: error.message || 'Please try again.',
+        title: 'তালিকা সংরক্ষণ করা যায়নি',
+        description: error.message || 'আবার চেষ্টা করুন',
         variant: 'destructive'
       });
     } finally {
@@ -104,13 +107,13 @@ export default function AddListing() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-foreground">Crop Name *</label>
-            <Input value={form.crop_name} onChange={e => handleChange('crop_name', e.target.value)} placeholder="e.g. Aman Rice" className="mt-1" />
+            <label className="text-sm font-medium text-foreground">ফসলের নাম *</label>
+            <Input value={form.crop_name} onChange={e => handleChange('crop_name', e.target.value)} placeholder="যেমন: আমন ধান" className="mt-1" />
           </div>
           <div>
-            <label className="text-sm font-medium text-foreground">Category *</label>
+            <label className="text-sm font-medium text-foreground">ফসলের বিভাগ *</label>
             <Select value={form.category} onValueChange={v => handleChange('category', v)}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Select category" /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="বিভাগ নির্বাচন করুন" /></SelectTrigger>
               <SelectContent>
                 {cropCategories.map(category => (
                   <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
@@ -122,12 +125,12 @@ export default function AddListing() {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-foreground">Listing Type</label>
+            <label className="text-sm font-medium text-foreground">তালিকার ধরন</label>
             <Select value={form.listing_type} onValueChange={v => handleChange('listing_type', v)}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="ready">Ready to Sell</SelectItem>
-                <SelectItem value="pre_harvest">Pre-Harvest</SelectItem>
+                <SelectItem value="ready">বিক্রির জন্য প্রস্তুত</SelectItem>
+                <SelectItem value="pre_harvest">আগাম ফসল</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -135,11 +138,11 @@ export default function AddListing() {
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <label className="text-sm font-medium text-foreground">Quantity *</label>
+            <label className="text-sm font-medium text-foreground">মোট পরিমাণ *</label>
             <Input type="number" value={form.quantity} onChange={e => handleChange('quantity', e.target.value)} placeholder="500" className="mt-1" />
           </div>
           <div>
-            <label className="text-sm font-medium text-foreground">Unit</label>
+            <label className="text-sm font-medium text-foreground">একক</label>
             <Select value={form.unit} onValueChange={v => handleChange('unit', v)}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -148,14 +151,14 @@ export default function AddListing() {
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium text-foreground">Price (৳) *</label>
+            <label className="text-sm font-medium text-foreground">প্রতি এককের মূল্য (৳) *</label>
             <Input type="number" value={form.expected_price} onChange={e => handleChange('expected_price', e.target.value)} placeholder="28" className="mt-1" />
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-foreground">District *</label>
+            <label className="text-sm font-medium text-foreground">জেলা *</label>
             <Select value={form.district} onValueChange={v => handleChange('district', v)}>
               <SelectTrigger className="mt-1"><SelectValue placeholder="Select district" /></SelectTrigger>
               <SelectContent>
@@ -170,17 +173,17 @@ export default function AddListing() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-foreground">Location Details</label>
-          <Input value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="Village, Upazila" className="mt-1" />
+          <label className="text-sm font-medium text-foreground">ঠিকানার বিস্তারিত</label>
+          <Input value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder="গ্রাম, উপজেলা" className="mt-1" />
         </div>
 
         <div>
-          <label className="text-sm font-medium text-foreground">Description</label>
-          <Textarea value={form.description} onChange={e => handleChange('description', e.target.value)} placeholder="Describe your crop quality, variety, etc." rows={4} className="mt-1" />
+          <label className="text-sm font-medium text-foreground">ফসলের বিবরণ</label>
+          <Textarea value={form.description} onChange={e => handleChange('description', e.target.value)} placeholder="ফসলের মান, জাত ও অন্যান্য তথ্য লিখুন" rows={4} className="mt-1" />
         </div>
 
         <div>
-          <label className="text-sm font-medium text-foreground">Upload Images</label>
+          <label className="text-sm font-medium text-foreground">ছবি আপলোড করুন</label>
           <div className="mt-2 flex flex-wrap gap-3">
             {form.images.map((url, i) => (
               <div key={i} className="w-20 h-20 rounded-lg overflow-hidden border border-border">
@@ -189,7 +192,7 @@ export default function AddListing() {
             ))}
             <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
               <Upload className="w-5 h-5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground mt-1">Upload</span>
+              <span className="text-xs text-muted-foreground mt-1">আপলোড</span>
               <input
                 type="file"
                 accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
@@ -199,7 +202,7 @@ export default function AddListing() {
               />
             </label>
           </div>
-          {uploading && <p className="text-xs text-muted-foreground mt-2">Uploading image...</p>}
+          {uploading && <p className="text-xs text-muted-foreground mt-2">ছবি আপলোড হচ্ছে...</p>}
         </div>
 
         <Button type="submit" disabled={submitting || uploading} className="bg-primary hover:bg-primary/90">

@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 export default function DashboardLayout() {
   const { user, setUser, isLoadingAuth } = useAuth();
 
-  if (isLoadingAuth) return <LoadingSpinner text="Checking your demo session..." />;
+  if (isLoadingAuth) return <LoadingSpinner text="অ্যাকাউন্ট যাচাই হচ্ছে..." />;
   if (!user) return <Navigate to="/login" replace />;
 
   return (

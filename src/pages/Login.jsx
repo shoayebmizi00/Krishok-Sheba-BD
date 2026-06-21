@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/lib/useTranslation";
+import { dashboardPathForRole } from '@/lib/roleRoutes';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,6 +16,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const t = useTranslation();
+  const { toast } = useToast();
   const demoAccounts = [
     ['Admin', 'admin@example.com'],
     ['Farmer', 'farmer@example.com'],
@@ -27,10 +30,11 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await apiClient.auth.login(email, password);
-      window.location.href = "/";
+      const result = await apiClient.auth.login(email, password);
+      toast({ title: 'সফলভাবে লগইন হয়েছে' });
+      window.setTimeout(() => window.location.assign(dashboardPathForRole(result.user.role)), 200);
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      setError(err.message || "ইমেইল বা পাসওয়ার্ড সঠিক নয়");
     } finally {
       setLoading(false);
     }
@@ -108,7 +112,7 @@ export default function Login() {
       </form>
       {import.meta.env.DEV && (
         <div className="mt-5 pt-5 border-t border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Demo accounts (password: 123456)</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">ডেমো অ্যাকাউন্ট (পাসওয়ার্ড: 123456)</p>
           <div className="flex flex-wrap gap-2">
             {demoAccounts.map(([label, demoEmail]) => (
               <Button

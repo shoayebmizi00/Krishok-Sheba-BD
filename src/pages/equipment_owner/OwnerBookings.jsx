@@ -48,8 +48,8 @@ export default function OwnerBookings() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="font-medium text-foreground">{b.equipment_name}</h3>
-                  <p className="text-sm text-muted-foreground">by {b.farmer_name}</p>
-                  <p className="text-xs text-muted-foreground">{formatDate(b.start_date)} — {formatDate(b.end_date)}</p>
+                  <p className="text-sm text-muted-foreground">কৃষক: {b.farmer_name}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(b.start_date)} থেকে {formatDate(b.end_date)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-primary">{formatCurrency(b.total_cost)}</span>
@@ -60,19 +60,19 @@ export default function OwnerBookings() {
                 {b.status === 'pending' && (
                   <>
                     <Button size="sm" onClick={() => updateStatus(b.id, 'confirmed')} className="bg-green-600 hover:bg-green-700 gap-1">
-                      <Check className="w-3.5 h-3.5" /> Confirm
+                      <Check className="w-3.5 h-3.5" /> নিশ্চিত করুন
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, 'cancelled')} className="text-destructive gap-1">
-                      <X className="w-3.5 h-3.5" /> Decline
+                      <X className="w-3.5 h-3.5" /> প্রত্যাখ্যান করুন
                     </Button>
                   </>
                 )}
                 <div className="ml-auto">
                   <AddToCalendar 
-                    title={`Equipment Booking: ${b.equipment_name}`}
+                    title={`যন্ত্রপাতি বুকিং: ${b.equipment_name}`}
                     startDate={b.start_date}
                     endDate={b.end_date}
-                    description={`Equipment: ${b.equipment_name}\nFarmer: ${b.farmer_name}\nStatus: ${b.status}\nTotal: ৳${b.total_cost}`}
+                    description={`যন্ত্রপাতি: ${b.equipment_name}\nকৃষক: ${b.farmer_name}\nঅবস্থা: ${b.status}\nমোট: ৳${b.total_cost}`}
                   />
                 </div>
               </div>

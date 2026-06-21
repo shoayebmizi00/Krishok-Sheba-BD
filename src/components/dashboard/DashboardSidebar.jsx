@@ -12,7 +12,7 @@ export default function DashboardSidebar({ links, mobileOpen, setMobileOpen }) {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <Sprout className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-heading font-bold text-sm">KRISHOK-SHEBA</span>
+          <span className="font-heading font-bold text-sm">কৃষক-সেবা বিডি</span>
         </Link>
         {setMobileOpen && (
           <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1">

@@ -23,7 +23,7 @@ export default function AdminCrops() {
 
   const handleDelete = async (id) => {
     await apiClient.entities.CropListing.delete(id);
-    toast({ title: "Listing removed" });
+    toast({ title: "ফসলের তালিকা সরানো হয়েছে" });
     load();
   };
 
@@ -31,7 +31,7 @@ export default function AdminCrops() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">Crop Listings Management</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">ফসলের তালিকা ব্যবস্থাপনা</h2>
 
       {listings.length === 0 ? (
         <EmptyState icon={Sprout} title="No listings" />
@@ -40,12 +40,12 @@ export default function AdminCrops() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3 font-medium text-muted-foreground">Crop</th>
-                <th className="p-3 font-medium text-muted-foreground">Farmer</th>
-                <th className="p-3 font-medium text-muted-foreground">District</th>
-                <th className="p-3 font-medium text-muted-foreground">Price</th>
-                <th className="p-3 font-medium text-muted-foreground">Status</th>
-                <th className="p-3 font-medium text-muted-foreground">Action</th>
+                <th className="p-3 font-medium text-muted-foreground">ফসল</th>
+                <th className="p-3 font-medium text-muted-foreground">কৃষক</th>
+                <th className="p-3 font-medium text-muted-foreground">জেলা</th>
+                <th className="p-3 font-medium text-muted-foreground">মূল্য</th>
+                <th className="p-3 font-medium text-muted-foreground">অবস্থা</th>
+                <th className="p-3 font-medium text-muted-foreground">পদক্ষেপ</th>
               </tr>
             </thead>
             <tbody>

@@ -25,6 +25,11 @@ export default function Profile() {
   const [form, setForm] = useState({});
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const storyPath = user?.role === 'equipment_owner'
+    ? '/equipment-owner-dashboard/share-story'
+    : user?.role === 'transport_provider'
+      ? '/transport-dashboard/share-story'
+      : '/farmer-dashboard/share-story';
   useEffect(() => {
     if (user) setForm({ ...Object.fromEntries(fields.map(([key]) => [key, user[key] || ''])), profile_picture: user.profile_picture || '' });
   }, [user]);
@@ -62,7 +67,7 @@ export default function Profile() {
               <div><h1 className="font-heading text-2xl font-bold">{user.full_name}</h1><p>{user.email}</p><p className="text-sm opacity-80">{ROLE_LABELS[user.role] || user.role}</p></div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {['farmer', 'equipment_owner', 'transport_provider'].includes(user.role) && <Button asChild variant="secondary"><Link to="/share-story">আমার গল্প শেয়ার করুন</Link></Button>}
+              {['farmer', 'equipment_owner', 'transport_provider'].includes(user.role) && <Button asChild variant="secondary"><Link to={storyPath}>আমার গল্প শেয়ার করুন</Link></Button>}
               <Button variant="secondary" onClick={() => setEditing((value) => !value)}>{editing ? <X className="mr-2 h-4 w-4" /> : <Edit3 className="mr-2 h-4 w-4" />}{editing ? 'বাতিল' : 'প্রোফাইল সম্পাদনা'}</Button>
             </div>
           </div>

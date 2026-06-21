@@ -70,8 +70,8 @@ export default function MarketPrices() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
-        <h1 className="font-heading font-bold text-2xl text-foreground">Market Price Comparison</h1>
-        <p className="text-muted-foreground text-sm mt-1">Compare crop prices across markets and districts</p>
+        <h1 className="font-heading font-bold text-2xl text-foreground">বাজার দর তুলনা</h1>
+        <p className="text-muted-foreground text-sm mt-1">বিভিন্ন বাজার ও জেলার ফসলের দাম তুলনা করুন</p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
@@ -84,7 +84,7 @@ export default function MarketPrices() {
         <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
           <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All Districts" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Districts</SelectItem>
+            <SelectItem value="all">সব জেলা</SelectItem>
             {DISTRICTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -139,9 +139,9 @@ export default function MarketPrices() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="pb-3 font-medium text-muted-foreground">Market</th>
-                <th className="pb-3 font-medium text-muted-foreground">District</th>
-                <th className="pb-3 font-medium text-muted-foreground">Price</th>
+                <th className="pb-3 font-medium text-muted-foreground">বাজার</th>
+                <th className="pb-3 font-medium text-muted-foreground">জেলা</th>
+                <th className="pb-3 font-medium text-muted-foreground">মূল্য</th>
               </tr>
             </thead>
             <tbody>
@@ -155,7 +155,7 @@ export default function MarketPrices() {
             </tbody>
           </table>
           {filteredPrices.length === 0 && (
-            <p className="text-center text-muted-foreground py-8">No price data for this selection</p>
+            <p className="text-center text-muted-foreground py-8">এই নির্বাচনের জন্য কোনো মূল্য তথ্য নেই</p>
           )}
         </div>
       </div>

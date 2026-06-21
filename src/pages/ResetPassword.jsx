@@ -24,7 +24,7 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("দুটি পাসওয়ার্ড একই নয়");
       return;
     }
     setLoading(true);
@@ -32,7 +32,7 @@ export default function ResetPassword() {
       await apiClient.auth.resetPassword(resetToken, newPassword);
       window.location.href = "/login";
     } catch (err) {
-      setError(err.message || "Failed to reset password");
+      setError(err.message || "পাসওয়ার্ড পরিবর্তন করা যায়নি");
     } finally {
       setLoading(false);
     }

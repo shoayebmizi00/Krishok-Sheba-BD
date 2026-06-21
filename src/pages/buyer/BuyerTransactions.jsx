@@ -55,10 +55,10 @@ export default function BuyerTransactions() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3 font-medium text-muted-foreground">Date</th>
-                <th className="p-3 font-medium text-muted-foreground">Description</th>
-                <th className="p-3 font-medium text-muted-foreground">Amount</th>
-                <th className="p-3 font-medium text-muted-foreground">Status</th>
+                <th className="p-3 font-medium text-muted-foreground">তারিখ</th>
+                <th className="p-3 font-medium text-muted-foreground">বিবরণ</th>
+                <th className="p-3 font-medium text-muted-foreground">টাকার পরিমাণ</th>
+                <th className="p-3 font-medium text-muted-foreground">অবস্থা</th>
               </tr>
             </thead>
             <tbody>

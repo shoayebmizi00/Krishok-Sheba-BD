@@ -32,7 +32,7 @@ export default function BuyerOverview() {
     <div className="space-y-6">
       <div>
         <h2 className="font-heading font-bold text-xl text-foreground">Welcome, {user?.full_name || 'Buyer'}! 🛒</h2>
-        <p className="text-sm text-muted-foreground mt-1">Your buying activity overview</p>
+        <p className="text-sm text-muted-foreground mt-1">আপনার ক্রয় কার্যক্রমের সারসংক্ষেপ</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -23,12 +23,21 @@ const STATUS_STYLES = {
   countered: "bg-indigo-100 text-indigo-700",
   inactive: "bg-gray-100 text-gray-700",
 };
+const STATUS_LABELS = {
+  active: 'সক্রিয়', available: 'উপলব্ধ', pending: 'অপেক্ষমাণ', confirmed: 'নিশ্চিত',
+  shipped: 'পাঠানো হয়েছে', in_transit: 'পথে আছে', delivered: 'পৌঁছেছে',
+  completed: 'সম্পন্ন', cancelled: 'বাতিল', rejected: 'প্রত্যাখ্যাত',
+  accepted: 'গৃহীত', sold: 'বিক্রি শেষ', sold_out: 'বিক্রি শেষ', expired: 'মেয়াদ শেষ',
+  rented: 'বুকড', booked: 'বুকড', maintenance: 'রক্ষণাবেক্ষণে', on_trip: 'যাত্রায়',
+  paid: 'পরিশোধিত', refunded: 'ফেরত', countered: 'পাল্টা প্রস্তাব', inactive: 'নিষ্ক্রিয়',
+  sent: 'পাঠানো হয়েছে', received: 'গ্রহণ করা হয়েছে', failed: 'ব্যর্থ', approved: 'অনুমোদিত'
+};
 
 export default function StatusBadge({ status }) {
   const style = STATUS_STYLES[status] || "bg-gray-100 text-gray-700";
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${style}`}>
-      {(status || '').replace(/_/g, ' ')}
+      {STATUS_LABELS[status] || (status || '').replace(/_/g, ' ')}
     </span>
   );
 }

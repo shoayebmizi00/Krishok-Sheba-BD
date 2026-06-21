@@ -31,8 +31,8 @@ export default function MyVehicles() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="font-heading font-bold text-xl">My Vehicles</h2>
-        <Button asChild><Link to="/transport-dashboard/add"><Plus className="w-4 h-4 mr-2" />Add Vehicle</Link></Button>
+        <h2 className="font-heading font-bold text-xl">আমার যানবাহন</h2>
+        <Button asChild><Link to="/transport-dashboard/add"><Plus className="w-4 h-4 mr-2" />যানবাহন যোগ করুন</Link></Button>
       </div>
       {!vehicles.length ? <EmptyState icon={Truck} title="No vehicles" description="Add your first transport vehicle" /> : (
         <div className="grid md:grid-cols-2 gap-4">

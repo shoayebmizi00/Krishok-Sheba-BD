@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import BackButton from '@/components/shared/BackButton';
 import { DISTRICTS } from '@/lib/constants';
 import { Upload } from 'lucide-react';
+import { VEHICLE_TYPES } from '@/lib/constants';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 export default function AddVehicle() {
   const { user } = useOutletContext();
@@ -22,6 +25,8 @@ export default function AddVehicle() {
     district: '',
     description: ''
   });
+  const { options: vehicleTypes } = useAppSettings('vehicle_category', VEHICLE_TYPES);
+  const { options: districts } = useAppSettings('district', DISTRICTS.map((district) => ({ value: district, label: district })));
 
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
@@ -41,10 +46,10 @@ export default function AddVehicle() {
         price_per_km: Number(form.price_per_km) || 0,
         images: image ? [image] : [],
         owner_id: user.id,
-        owner_name: user.full_name || 'Provider',
+        owner_name: user.full_name || 'পরিবহন সেবাদাতা',
         availability: 'available'
       });
-      toast({ title: 'Vehicle added' });
+      toast({ title: 'যানবাহন সফলভাবে যোগ হয়েছে' });
       navigate('/transport-dashboard/vehicles');
     } finally {
       setSaving(false);
@@ -53,31 +58,29 @@ export default function AddVehicle() {
 
   return (
     <form onSubmit={submit} className="space-y-5 max-w-2xl">
-      <h2 className="font-heading font-bold text-xl">Add Vehicle</h2>
+      <BackButton fallback="/transport-dashboard/vehicles" />
+      <h2 className="font-heading font-bold text-xl">যানবাহন যোগ করুন</h2>
       <Select value={form.vehicle_type} onValueChange={(value) => update('vehicle_type', value)}>
         <SelectTrigger><SelectValue /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="truck">Truck</SelectItem>
-          <SelectItem value="mini_truck">Mini Truck</SelectItem>
-          <SelectItem value="pickup_van">Pickup Van</SelectItem>
-          <SelectItem value="three_wheeler">Three Wheeler</SelectItem>
+          {vehicleTypes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
         </SelectContent>
       </Select>
       <div className="grid sm:grid-cols-2 gap-4">
-        <Input value={form.capacity} onChange={(e) => update('capacity', e.target.value)} placeholder="Capacity, e.g. 5 tons" required />
-        <Input type="number" min="0" step="0.01" value={form.price_per_km} onChange={(e) => update('price_per_km', e.target.value)} placeholder="Price per km" required />
+        <Input value={form.capacity} onChange={(e) => update('capacity', e.target.value)} placeholder="ধারণক্ষমতা, যেমন: ৫ টন" required />
+        <Input type="number" min="0" step="0.01" value={form.price_per_km} onChange={(e) => update('price_per_km', e.target.value)} placeholder="প্রতি কিমি ভাড়া" required />
       </div>
       <Select value={form.district} onValueChange={(value) => update('district', value)}>
-        <SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger>
-        <SelectContent>{DISTRICTS.map((district) => <SelectItem key={district} value={district}>{district}</SelectItem>)}</SelectContent>
+        <SelectTrigger><SelectValue placeholder="জেলা নির্বাচন করুন" /></SelectTrigger>
+        <SelectContent>{districts.map((district) => <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>)}</SelectContent>
       </Select>
-      <Textarea value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="Vehicle description" />
+      <Textarea value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="যানবাহনের বিবরণ" />
       <label className="inline-flex items-center gap-2 cursor-pointer text-sm font-medium">
-        <Upload className="w-4 h-4" /> Upload image
+        <Upload className="w-4 h-4" /> ছবি আপলোড করুন
         <input type="file" accept="image/*" onChange={upload} className="hidden" />
       </label>
-      {image && <img src={image} alt="Vehicle preview" className="w-40 h-28 object-cover rounded-md border" />}
-      <Button type="submit" disabled={saving || !form.district}>{saving ? 'Saving...' : 'Add Vehicle'}</Button>
+      {image && <img src={image} alt="যানবাহনের ছবি" className="w-40 h-28 object-cover rounded-md border" />}
+      <Button type="submit" disabled={saving || !form.district}>{saving ? 'সংরক্ষণ হচ্ছে...' : 'যানবাহন যোগ করুন'}</Button>
     </form>
   );
 }

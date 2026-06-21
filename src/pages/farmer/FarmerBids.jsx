@@ -27,7 +27,7 @@ export default function FarmerBids() {
 
   const handleBidAction = async (bid, status) => {
     await apiClient.entities.Bid.update(bid.id, { status });
-    toast({ title: `Bid ${status}` });
+    toast({ title: status === 'accepted' ? 'বিড গ্রহণ করা হয়েছে' : 'বিড প্রত্যাখ্যান করা হয়েছে' });
     load();
   };
 
@@ -41,8 +41,8 @@ export default function FarmerBids() {
       window.location.href = `/messages/${conv.id}`;
     } catch (error) {
       toast({
-        title: 'Could not start conversation',
-        description: error.message || 'Please try again.',
+        title: 'কথোপকথন শুরু করা যায়নি',
+        description: error.message || 'আবার চেষ্টা করুন',
         variant: 'destructive'
       });
       setChattingId(null);
@@ -53,18 +53,18 @@ export default function FarmerBids() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">Bid Requests</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">প্রাপ্ত বিড</h2>
 
       {bids.length === 0 ? (
-        <EmptyState icon={Gavel} title="No bids yet" description="Bids will appear here when buyers make offers on your listings" />
+        <EmptyState icon={Gavel} title="এখনো কোনো বিড নেই" description="ক্রেতারা প্রস্তাব পাঠালে এখানে দেখা যাবে" />
       ) : (
         <div className="space-y-3">
           {bids.map(bid => (
             <div key={bid.id} className="p-4 rounded-xl border border-border bg-card">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-medium text-foreground">{bid.crop_name || 'Crop'}</h3>
-                  <p className="text-sm text-muted-foreground">by {bid.buyer_name} · Qty: {bid.quantity_requested}</p>
+                  <h3 className="font-medium text-foreground">{bid.crop_name || 'ফসল'}</h3>
+                  <p className="text-sm text-muted-foreground">ক্রেতা: {bid.buyer_name} · পরিমাণ: {bid.quantity_requested}</p>
                   {bid.message && <p className="text-xs text-muted-foreground mt-1 italic">"{bid.message}"</p>}
                 </div>
                 <div className="flex items-center gap-3">
@@ -76,15 +76,15 @@ export default function FarmerBids() {
                 {bid.status === 'pending' && (
                   <>
                     <Button size="sm" onClick={() => handleBidAction(bid, 'accepted')} className="bg-green-600 hover:bg-green-700 gap-1">
-                      <Check className="w-3.5 h-3.5" /> Accept
+                      <Check className="w-3.5 h-3.5" /> গ্রহণ করুন
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleBidAction(bid, 'rejected')} className="text-destructive gap-1">
-                      <X className="w-3.5 h-3.5" /> Reject
+                      <X className="w-3.5 h-3.5" /> প্রত্যাখ্যান করুন
                     </Button>
                   </>
                 )}
                 <Button size="sm" variant="ghost" onClick={() => handleMessageBuyer(bid)} disabled={chattingId === bid.id} className="ml-auto gap-1">
-                  <MessageSquare className="w-3.5 h-3.5" /> {chattingId === bid.id ? '...' : 'Message'}
+                  <MessageSquare className="w-3.5 h-3.5" /> {chattingId === bid.id ? '...' : 'বার্তা দিন'}
                 </Button>
               </div>
             </div>

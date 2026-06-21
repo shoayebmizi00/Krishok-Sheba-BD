@@ -28,6 +28,8 @@ const requiredColumns = [
   ['users', 'role'],
   ['crop_listings', 'category'],
   ['crop_listings', 'images'],
+  ['crop_listings', 'remaining_quantity'],
+  ['crop_listings', 'sold_quantity'],
   ['conversations', 'participant_ids'],
   ['messages', 'sender_id'],
   ['messages', 'receiver_id']

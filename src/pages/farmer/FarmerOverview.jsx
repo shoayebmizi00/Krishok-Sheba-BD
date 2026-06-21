@@ -49,9 +49,9 @@ export default function FarmerOverview() {
     <div className="space-y-6">
       <div>
         <h2 className="font-heading font-bold text-xl text-foreground">
-          Welcome back, {user?.full_name || 'Farmer'}! 🌾
+          স্বাগতম, {user?.full_name || 'কৃষক'}! 🌾
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">Here's your farming dashboard overview</p>
+        <p className="text-sm text-muted-foreground mt-1">আপনার কৃষি কার্যক্রমের সারসংক্ষেপ</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -73,7 +73,7 @@ export default function FarmerOverview() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-heading font-semibold text-foreground mb-4">Sales Trend</h3>
+        <h3 className="font-heading font-semibold text-foreground mb-4">বিক্রির প্রবণতা</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
@@ -88,17 +88,17 @@ export default function FarmerOverview() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-heading font-semibold text-foreground mb-4">Recent Orders</h3>
+        <h3 className="font-heading font-semibold text-foreground mb-4">সাম্প্রতিক অর্ডার</h3>
         {recentOrders.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">No orders yet</p>
+          <p className="text-sm text-muted-foreground py-4 text-center">এখনো কোনো অর্ডার নেই</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border">
-                  <th className="pb-3 font-medium">Buyer</th>
-                  <th className="pb-3 font-medium">Amount</th>
-                  <th className="pb-3 font-medium">Status</th>
+                  <th className="pb-3 font-medium">ক্রেতা</th>
+                  <th className="pb-3 font-medium">পরিমাণ</th>
+                  <th className="pb-3 font-medium">অবস্থা</th>
                 </tr>
               </thead>
               <tbody>

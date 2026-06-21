@@ -44,8 +44,8 @@ export default function Navbar({ user }) {
               <Sprout className="w-5 h-5 text-primary-foreground" />
             </div>
             <div className="hidden sm:block">
-              <span className="font-heading font-bold text-lg text-foreground leading-none">KRISHOK-SHEBA</span>
-              <span className="text-xs text-primary font-semibold ml-1">BD</span>
+              <span className="font-heading font-bold text-lg text-foreground leading-none">কৃষক-সেবা</span>
+              <span className="text-xs text-primary font-semibold ml-1">বিডি</span>
             </div>
           </Link>
 

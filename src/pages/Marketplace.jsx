@@ -54,7 +54,7 @@ function CropCard({ crop, type }) {
             <span className="text-lg font-bold text-primary">{formatCurrency(crop.expected_price || crop.price)}</span>
             <span className="text-xs text-muted-foreground">/{crop.unit || 'kg'}</span>
           </div>
-          <span className="text-xs text-muted-foreground">{crop.quantity} {crop.unit || 'kg'}</span>
+          <span className="text-xs text-muted-foreground">অবশিষ্ট: {Number(crop.remaining_quantity ?? crop.quantity).toLocaleString('bn-BD')} {crop.unit || 'কেজি'}</span>
         </div>
       </div>
     </Link>
@@ -112,13 +112,13 @@ export default function Marketplace() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-heading font-bold text-2xl text-foreground">Crop Marketplace</h1>
-          <p className="text-muted-foreground text-sm mt-1">Browse crops from farmers across Bangladesh</p>
+          <h1 className="font-heading font-bold text-2xl text-foreground">ফসল মার্কেটপ্লেস</h1>
+          <p className="text-muted-foreground text-sm mt-1">সারা বাংলাদেশের কৃষকদের সর্বশেষ ফসল দেখুন</p>
         </div>
         {user?.role === 'farmer' && (
           <Link to="/farmer-dashboard/add-listing">
             <Button className="bg-primary hover:bg-primary/90 gap-2">
-              <Plus className="w-4 h-4" /> Add Listing
+              <Plus className="w-4 h-4" /> ফসলের তালিকা যোগ করুন
             </Button>
           </Link>
         )}
@@ -129,7 +129,7 @@ export default function Marketplace() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search crops, districts..."
+            placeholder="ফসল বা জেলা খুঁজুন..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-10"
@@ -138,30 +138,30 @@ export default function Marketplace() {
         <Select value={districtFilter} onValueChange={setDistrictFilter}>
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Districts" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Districts</SelectItem>
+            <SelectItem value="all">সব জেলা</SelectItem>
             {DISTRICTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Categories" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">সব বিভাগ</SelectItem>
             {CROP_CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
       {loading ? (
-        <LoadingSpinner text="Loading marketplace..." />
+        <LoadingSpinner text="ফসলের বাজার লোড হচ্ছে..." />
       ) : error ? (
         <EmptyState icon={Sprout} title="Marketplace unavailable" description={error} />
       ) : (
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="all">All Listings</TabsTrigger>
-            <TabsTrigger value="pre_harvest">Pre-Harvest</TabsTrigger>
-            <TabsTrigger value="ready">Ready to Sell</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="all">সব তালিকা</TabsTrigger>
+            <TabsTrigger value="pre_harvest">আগাম ফসল</TabsTrigger>
+            <TabsTrigger value="ready">বিক্রির জন্য প্রস্তুত</TabsTrigger>
+            <TabsTrigger value="products">পণ্য</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">

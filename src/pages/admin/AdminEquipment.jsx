@@ -23,7 +23,7 @@ export default function AdminEquipment() {
 
   const handleDelete = async (id) => {
     await apiClient.entities.Equipment.delete(id);
-    toast({ title: "Equipment removed" });
+    toast({ title: "যন্ত্রপাতি সরানো হয়েছে" });
     load();
   };
 
@@ -31,7 +31,7 @@ export default function AdminEquipment() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">Equipment Management</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">যন্ত্রপাতি ব্যবস্থাপনা</h2>
 
       {equipment.length === 0 ? (
         <EmptyState icon={Wrench} title="No equipment" />
@@ -40,13 +40,13 @@ export default function AdminEquipment() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3 font-medium text-muted-foreground">Name</th>
-                <th className="p-3 font-medium text-muted-foreground">Type</th>
-                <th className="p-3 font-medium text-muted-foreground">Owner</th>
-                <th className="p-3 font-medium text-muted-foreground">District</th>
-                <th className="p-3 font-medium text-muted-foreground">Rent/Day</th>
-                <th className="p-3 font-medium text-muted-foreground">Status</th>
-                <th className="p-3 font-medium text-muted-foreground">Action</th>
+                <th className="p-3 font-medium text-muted-foreground">নাম</th>
+                <th className="p-3 font-medium text-muted-foreground">ধরন</th>
+                <th className="p-3 font-medium text-muted-foreground">মালিক</th>
+                <th className="p-3 font-medium text-muted-foreground">জেলা</th>
+                <th className="p-3 font-medium text-muted-foreground">দৈনিক ভাড়া</th>
+                <th className="p-3 font-medium text-muted-foreground">অবস্থা</th>
+                <th className="p-3 font-medium text-muted-foreground">পদক্ষেপ</th>
               </tr>
             </thead>
             <tbody>

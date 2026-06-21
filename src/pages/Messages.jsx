@@ -54,7 +54,7 @@ export default function Messages() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">Messages</h1>
+      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">বার্তা</h1>
 
       {conversations.length === 0 ? (
         <EmptyState icon={MessageSquare} title="No messages" description="Start a conversation from a listing or bid" />

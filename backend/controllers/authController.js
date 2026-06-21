@@ -31,18 +31,18 @@ export async function register(req, res, next) {
     const { email, password, full_name = '' } = req.body;
     role = req.body.role || 'farmer';
     if (typeof email !== 'string' || typeof password !== 'string') {
-      return res.status(400).json({ message: 'Email and password are required' });
+      return res.status(400).json({ message: 'ইমেইল ও পাসওয়ার্ড আবশ্যক' });
     }
-    if (password.length < 8) return res.status(400).json({ message: 'Password must be at least 8 characters' });
-    if (!roles.has(role) || role === 'admin') return res.status(400).json({ message: 'Invalid registration role' });
+    if (password.length < 8) return res.status(400).json({ message: 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে' });
+    if (!roles.has(role) || role === 'admin') return res.status(400).json({ message: 'অ্যাকাউন্টের ধরন সঠিক নয়' });
 
     normalizedEmail = email.trim().toLowerCase();
     const normalizedName = typeof full_name === 'string' ? full_name.trim() : '';
     if (!normalizedEmail || !normalizedEmail.includes('@')) {
-      return res.status(400).json({ message: 'Please enter a valid email address' });
+      return res.status(400).json({ message: 'সঠিক ইমেইল ঠিকানা দিন' });
     }
     if (!normalizedName) {
-      return res.status(400).json({ message: 'Full name is required' });
+      return res.status(400).json({ message: 'পূর্ণ নাম আবশ্যক' });
     }
 
     connection = await pool.getConnection();
@@ -54,7 +54,7 @@ export async function register(req, res, next) {
     );
     if (existing.length) {
       await connection.rollback();
-      return res.status(409).json({ message: 'An account with this email already exists' });
+      return res.status(409).json({ message: 'এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট আছে' });
     }
 
     const id = crypto.randomUUID();
@@ -90,12 +90,12 @@ export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
     if (typeof email !== 'string' || typeof password !== 'string') {
-      return res.status(400).json({ message: 'Email and password are required' });
+      return res.status(400).json({ message: 'ইমেইল ও পাসওয়ার্ড আবশ্যক' });
     }
     const [rows] = await pool.execute('SELECT * FROM users WHERE email = ? LIMIT 1', [email.trim().toLowerCase()]);
     const user = rows[0];
     if (!user || !user.is_active || !(await bcrypt.compare(password || '', user.password_hash))) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'ইমেইল বা পাসওয়ার্ড সঠিক নয়' });
     }
     res.json({ token: signToken(user), user: publicUser(user) });
   } catch (error) {
@@ -106,7 +106,7 @@ export async function login(req, res, next) {
 export async function me(req, res, next) {
   try {
     const [rows] = await pool.execute('SELECT * FROM users WHERE id = ? LIMIT 1', [req.user.id]);
-    if (!rows[0]) return res.status(404).json({ message: 'User not found' });
+    if (!rows[0]) return res.status(404).json({ message: 'ব্যবহারকারী পাওয়া যায়নি' });
     res.json(publicUser(rows[0]));
   } catch (error) {
     next(error);
@@ -148,7 +148,7 @@ export async function requestPasswordReset(req, res, next) {
         console.log(`Password reset URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`);
       }
     }
-    const response = { message: 'If the account exists, a password reset link has been generated' };
+    const response = { message: 'অ্যাকাউন্টটি থাকলে পাসওয়ার্ড পুনরুদ্ধারের লিংক তৈরি হয়েছে' };
     if (process.env.NODE_ENV !== 'production' && resetToken) response.resetToken = resetToken;
     res.json(response);
   } catch (error) {
@@ -160,20 +160,20 @@ export async function resetPassword(req, res, next) {
   try {
     const { token, newPassword } = req.body;
     if (!token || !newPassword || newPassword.length < 8) {
-      return res.status(400).json({ message: 'A valid token and password of at least 8 characters are required' });
+      return res.status(400).json({ message: 'সঠিক টোকেন ও কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন' });
     }
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const [rows] = await pool.execute(
       'SELECT id FROM users WHERE reset_password_token = ? AND reset_password_expires > NOW() LIMIT 1',
       [tokenHash]
     );
-    if (!rows[0]) return res.status(400).json({ message: 'Reset token is invalid or expired' });
+    if (!rows[0]) return res.status(400).json({ message: 'পুনরুদ্ধার টোকেন সঠিক নয় বা মেয়াদ শেষ' });
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await pool.execute(
       'UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
       [passwordHash, rows[0].id]
     );
-    res.json({ message: 'Password updated successfully' });
+    res.json({ message: 'পাসওয়ার্ড সফলভাবে হালনাগাদ হয়েছে' });
   } catch (error) {
     next(error);
   }

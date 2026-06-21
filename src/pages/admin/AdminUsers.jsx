@@ -32,7 +32,7 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">User Management</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">ব্যবহারকারী ব্যবস্থাপনা</h2>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -42,7 +42,7 @@ export default function AdminUsers() {
         <Select value={roleFilter} onValueChange={setRoleFilter}>
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Roles" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
+            <SelectItem value="all">সব ভূমিকা</SelectItem>
             {Object.entries(ROLE_LABELS).map(([val, label]) => (
               <SelectItem key={val} value={val}>{label}</SelectItem>
             ))}
@@ -57,10 +57,10 @@ export default function AdminUsers() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3 font-medium text-muted-foreground">Name</th>
-                <th className="p-3 font-medium text-muted-foreground">Email</th>
-                <th className="p-3 font-medium text-muted-foreground">Role</th>
-                <th className="p-3 font-medium text-muted-foreground">Joined</th>
+                <th className="p-3 font-medium text-muted-foreground">নাম</th>
+                <th className="p-3 font-medium text-muted-foreground">ইমেইল</th>
+                <th className="p-3 font-medium text-muted-foreground">ভূমিকা</th>
+                <th className="p-3 font-medium text-muted-foreground">যোগদানের তারিখ</th>
               </tr>
             </thead>
             <tbody>

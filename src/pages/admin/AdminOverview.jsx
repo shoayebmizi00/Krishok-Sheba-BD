@@ -53,7 +53,7 @@ export default function AdminOverview() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">Admin Dashboard</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">প্রশাসক ড্যাশবোর্ড</h2>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard icon={Users} label="Users" value={stats.users} color="text-blue-600" bgColor="bg-blue-100" />
@@ -66,7 +66,7 @@ export default function AdminOverview() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-heading font-semibold text-foreground mb-4">Monthly Revenue</h3>
+          <h3 className="font-heading font-semibold text-foreground mb-4">মাসিক আয়</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={MONTHLY_DATA}>
@@ -81,7 +81,7 @@ export default function AdminOverview() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-heading font-semibold text-foreground mb-4">User Distribution</h3>
+          <h3 className="font-heading font-semibold text-foreground mb-4">ব্যবহারকারীর বণ্টন</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -95,7 +95,7 @@ export default function AdminOverview() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
-          <h3 className="font-heading font-semibold text-foreground mb-4">Order Trends</h3>
+          <h3 className="font-heading font-semibold text-foreground mb-4">অর্ডারের প্রবণতা</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={MONTHLY_DATA}>

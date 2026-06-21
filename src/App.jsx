@@ -78,7 +78,7 @@ const AuthenticatedApp = () => {
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-sm text-muted-foreground">Loading KRISHOK-SHEBA BD...</p>
+          <p className="text-sm text-muted-foreground">কৃষক-সেবা বিডি লোড হচ্ছে...</p>
         </div>
       </div>
     );
@@ -132,6 +132,7 @@ const AuthenticatedApp = () => {
           <Route path="transactions" element={<FarmerTransactions />} />
           <Route path="harvest-reminders" element={<HarvestReminders />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="share-story" element={<ShareStory />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />
           <Route path="messages/:id" element={<ConversationDetail />} />
@@ -159,6 +160,7 @@ const AuthenticatedApp = () => {
           <Route path="add" element={<AddEquipment />} />
           <Route path="bookings" element={<OwnerBookings />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="share-story" element={<ShareStory />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />
           <Route path="messages/:id" element={<ConversationDetail />} />
@@ -173,6 +175,7 @@ const AuthenticatedApp = () => {
           <Route path="add" element={<AddVehicle />} />
           <Route path="bookings" element={<TransportBookings />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="share-story" element={<ShareStory />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />
           <Route path="messages/:id" element={<ConversationDetail />} />

@@ -23,7 +23,7 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">All Orders</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">সব অর্ডার</h2>
 
       {orders.length === 0 ? (
         <EmptyState icon={Package} title="No orders" />
@@ -32,12 +32,12 @@ export default function AdminOrders() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left">
-                <th className="p-3 font-medium text-muted-foreground">Order ID</th>
-                <th className="p-3 font-medium text-muted-foreground">Buyer</th>
-                <th className="p-3 font-medium text-muted-foreground">Seller</th>
-                <th className="p-3 font-medium text-muted-foreground">Amount</th>
-                <th className="p-3 font-medium text-muted-foreground">Status</th>
-                <th className="p-3 font-medium text-muted-foreground">Date</th>
+                <th className="p-3 font-medium text-muted-foreground">অর্ডার আইডি</th>
+                <th className="p-3 font-medium text-muted-foreground">ক্রেতা</th>
+                <th className="p-3 font-medium text-muted-foreground">বিক্রেতা</th>
+                <th className="p-3 font-medium text-muted-foreground">টাকার পরিমাণ</th>
+                <th className="p-3 font-medium text-muted-foreground">অবস্থা</th>
+                <th className="p-3 font-medium text-muted-foreground">তারিখ</th>
               </tr>
             </thead>
             <tbody>

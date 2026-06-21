@@ -37,14 +37,14 @@ export default function Notifications() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
         <EmptyState icon={Bell} title="Login required" description="Please login to view your notifications." />
-        <Button asChild className="mt-4"><Link to="/login">Go to Login</Link></Button>
+        <Button asChild className="mt-4"><Link to="/login">লগইন করুন</Link></Button>
       </div>
     );
   }
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">Notifications</h1>
+      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">নোটিফিকেশন</h1>
 
       {notifications.length === 0 ? (
         <EmptyState icon={Bell} title="No notifications" description="You're all caught up!" />

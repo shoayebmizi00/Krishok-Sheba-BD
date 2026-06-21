@@ -48,24 +48,143 @@ function parseJsonArray(value) {
 
 async function validateCropListing(data, user) {
   if (!data.category || String(data.category).length > 100) {
-    return { error: 'Please select a valid crop category' };
+    return { error: 'সঠিক ফসলের বিভাগ নির্বাচন করুন' };
   }
   if (!data.crop_name || Number(data.quantity) <= 0 || Number(data.expected_price) <= 0 || !data.district) {
-    return { error: 'Crop name, quantity, price, and district are required' };
+    return { error: 'ফসলের নাম, পরিমাণ, মূল্য ও জেলা আবশ্যক' };
+  }
+  if (data.listing_type === 'pre_harvest' && !data.expected_harvest_date) {
+    return { error: 'আগাম ফসলের জন্য সম্ভাব্য ফসল কাটার তারিখ আবশ্যক' };
   }
   if (data.images !== undefined && !Array.isArray(data.images)) {
-    return { error: 'Crop images must be a list of image URLs' };
+    return { error: 'ফসলের ছবিগুলো সঠিকভাবে দিন' };
   }
   const [users] = await pool.execute('SELECT full_name FROM users WHERE id = ? LIMIT 1', [user.id]);
   return {
     data: {
       ...data,
-      expected_harvest_date: data.expected_harvest_date || null,
+      total_quantity: Number(data.total_quantity || data.quantity),
+      sold_quantity: Number(data.sold_quantity || 0),
+      remaining_quantity: Number(data.remaining_quantity ?? data.quantity),
+      expected_harvest_date: data.listing_type === 'pre_harvest' ? data.expected_harvest_date : null,
       location: data.location?.trim() || null,
       description: data.description?.trim() || null,
-      farmer_name: users[0]?.full_name || 'Farmer'
+      farmer_name: users[0]?.full_name || 'কৃষক'
     }
   };
+}
+
+async function createOrder(req, res) {
+  const bidId = req.body.bid_id;
+  const quantity = Number(req.body.items?.[0]?.quantity);
+  if (!bidId || !Number.isFinite(quantity) || quantity <= 0) {
+    return res.status(400).json({ message: 'সঠিক বিড ও অর্ডারের পরিমাণ দিন' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [bids] = await connection.execute(
+      `SELECT bid.*, listing.unit, listing.expected_price, listing.remaining_quantity,
+              listing.status AS listing_status, listing.farmer_name
+       FROM bids AS bid
+       JOIN crop_listings AS listing ON listing.id = bid.listing_id
+       WHERE bid.id = ? AND bid.buyer_id = ? FOR UPDATE`,
+      [bidId, req.user.id]
+    );
+    const bid = bids[0];
+    if (!bid || bid.status !== 'accepted') {
+      await connection.rollback();
+      return res.status(400).json({ message: 'শুধু গৃহীত বিড থেকে অর্ডার করা যাবে' });
+    }
+    if (['sold', 'sold_out'].includes(bid.listing_status) || Number(bid.remaining_quantity) <= 0) {
+      await connection.rollback();
+      return res.status(409).json({ message: 'এই ফসলটি বিক্রি শেষ' });
+    }
+    if (quantity > Number(bid.remaining_quantity)) {
+      await connection.rollback();
+      return res.status(409).json({ message: `সর্বোচ্চ ${bid.remaining_quantity} ${bid.unit} অর্ডার করা যাবে` });
+    }
+    const [existing] = await connection.execute('SELECT id FROM orders WHERE bid_id = ? LIMIT 1', [bidId]);
+    if (existing.length) {
+      await connection.rollback();
+      return res.status(409).json({ message: 'এই বিড থেকে ইতিমধ্যে অর্ডার তৈরি হয়েছে' });
+    }
+
+    const remaining = Number(bid.remaining_quantity) - quantity;
+    const totalAmount = quantity * Number(bid.bid_amount);
+    const orderId = crypto.randomUUID();
+    const items = [{
+      listing_id: bid.listing_id,
+      name: bid.crop_name,
+      quantity,
+      unit: bid.unit,
+      price: Number(bid.bid_amount)
+    }];
+    await connection.execute(
+      `INSERT INTO orders
+        (id, buyer_id, buyer_name, seller_id, seller_name, items, total_amount, status,
+         delivery_address, delivery_district, payment_status, bid_id, payment_method)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, 'pending', ?, ?)`,
+      [
+        orderId, req.user.id, req.body.buyer_name || 'ক্রেতা', bid.farmer_id,
+        bid.farmer_name || 'কৃষক', JSON.stringify(items), totalAmount,
+        req.body.delivery_address, req.body.delivery_district, bidId, req.body.payment_method
+      ]
+    );
+    await connection.execute(
+      `UPDATE crop_listings
+       SET sold_quantity = sold_quantity + ?,
+           remaining_quantity = ?,
+           status = IF(? <= 0, 'sold_out', 'active')
+       WHERE id = ?`,
+      [quantity, remaining, remaining, bid.listing_id]
+    );
+    await createNotification(connection, {
+      userId: bid.farmer_id,
+      title: 'নতুন অর্ডার',
+      message: `${bid.crop_name}-এর ${quantity} ${bid.unit} অর্ডার হয়েছে।`,
+      type: 'order',
+      link: '/farmer-dashboard/orders'
+    });
+    const [orders] = await connection.execute('SELECT * FROM orders WHERE id = ?', [orderId]);
+    await connection.commit();
+    orders[0].items = parseJsonArray(orders[0].items);
+    return res.status(201).json(orders[0]);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function createEquipmentBooking(req, res) {
+  const { equipment_id, start_date, end_date } = req.body;
+  if (!equipment_id || !start_date || !end_date || end_date < start_date) {
+    return res.status(400).json({ message: 'সঠিক বুকিং তারিখ দিন' });
+  }
+  const [conflicts] = await pool.execute(
+    `SELECT id FROM equipment_bookings
+     WHERE equipment_id = ? AND status IN ('pending','confirmed','active')
+       AND start_date <= ? AND end_date >= ? LIMIT 1`,
+    [equipment_id, end_date, start_date]
+  );
+  if (conflicts.length) return res.status(409).json({ message: 'নির্বাচিত তারিখে যন্ত্রপাতিটি উপলব্ধ নয়' });
+  return null;
+}
+
+async function createTransportBooking(req, res) {
+  const { vehicle_id, pickup_date } = req.body;
+  if (!vehicle_id || !pickup_date) return res.status(400).json({ message: 'পিকআপের তারিখ দিন' });
+  const [conflicts] = await pool.execute(
+    `SELECT id FROM transport_bookings
+     WHERE vehicle_id = ? AND pickup_date = ?
+       AND status IN ('pending','confirmed','in_transit') LIMIT 1`,
+    [vehicle_id, pickup_date]
+  );
+  if (conflicts.length) return res.status(409).json({ message: 'নির্বাচিত তারিখে যানবাহনটি উপলব্ধ নয়' });
+  return null;
 }
 
 async function canWriteRow(config, user, row) {
@@ -244,12 +363,35 @@ export function createResourceController(model, config) {
         }
         if (config.route === 'conversations') return createConversation(req, res);
         if (config.route === 'messages') return createMessage(req, res);
+        if (config.route === 'orders') return createOrder(req, res);
 
         let data = { ...req.body };
+        if (config.route === 'equipment-bookings') {
+          const conflictResponse = await createEquipmentBooking(req, res);
+          if (conflictResponse) return conflictResponse;
+        }
+        if (config.route === 'transport-bookings') {
+          const conflictResponse = await createTransportBooking(req, res);
+          if (conflictResponse) return conflictResponse;
+        }
         if (config.route === 'crop-listings') {
           const validation = await validateCropListing(data, req.user);
           if (validation.error) return res.status(400).json({ message: validation.error });
           data = validation.data;
+        }
+        if (config.route === 'bids') {
+          const [listings] = await pool.execute(
+            'SELECT remaining_quantity, unit, status FROM crop_listings WHERE id = ? LIMIT 1',
+            [data.listing_id]
+          );
+          const listing = listings[0];
+          const requested = Number(data.quantity_requested || 0);
+          if (!listing || ['sold', 'sold_out'].includes(listing.status) || Number(listing.remaining_quantity) <= 0) {
+            return res.status(409).json({ message: 'এই ফসলটি বিক্রি শেষ' });
+          }
+          if (requested <= 0 || requested > Number(listing.remaining_quantity)) {
+            return res.status(400).json({ message: `সর্বোচ্চ ${listing.remaining_quantity} ${listing.unit} বিড করা যাবে` });
+          }
         }
         if (config.route === 'stories') {
           data.status = req.user.role === 'admin' ? (data.status || 'approved') : 'pending';

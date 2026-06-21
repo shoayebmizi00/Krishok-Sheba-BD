@@ -12,7 +12,7 @@ export const resources = {
   cropListings: {
     table: 'crop_listings',
     route: 'crop-listings',
-    columns: ['crop_name', 'category', 'quantity', 'unit', 'expected_harvest_date', 'expected_price', 'location', 'district', 'description', 'images', 'status', 'farmer_name', 'farmer_id', 'listing_type', ...timestamps],
+    columns: ['crop_name', 'category', 'quantity', 'total_quantity', 'sold_quantity', 'remaining_quantity', 'unit', 'expected_harvest_date', 'expected_price', 'location', 'district', 'description', 'images', 'status', 'farmer_name', 'farmer_id', 'listing_type', ...timestamps],
     json: ['images'],
     publicRead: true,
     ownerFields: ['farmer_id'],
@@ -98,7 +98,7 @@ export const resources = {
   products: {
     table: 'products',
     route: 'products',
-    columns: ['name', 'category', 'price', 'quantity', 'unit', 'district', 'description', 'images', 'seller_id', 'seller_name', 'status', ...timestamps],
+    columns: ['name', 'category', 'price', 'quantity', 'total_quantity', 'sold_quantity', 'remaining_quantity', 'unit', 'district', 'description', 'images', 'seller_id', 'seller_name', 'status', ...timestamps],
     json: ['images'],
     publicRead: true,
     ownerFields: ['seller_id'],

@@ -8,12 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AuthLayout from '@/components/AuthLayout';
 import { useTranslation } from '@/lib/useTranslation';
+import { dashboardPathForRole } from '@/lib/roleRoutes';
+import { useToast } from '@/components/ui/use-toast';
 
 const registrationRoles = [
-  ['farmer', 'Farmer'],
-  ['buyer', 'Buyer'],
-  ['equipment_owner', 'Equipment Owner'],
-  ['transport_provider', 'Transport Provider']
+  ['farmer', 'কৃষক'],
+  ['buyer', 'ক্রেতা'],
+  ['equipment_owner', 'যন্ত্রপাতির মালিক'],
+  ['transport_provider', 'পরিবহন সেবাদাতা']
 ];
 
 export default function Register() {
@@ -27,6 +29,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const t = useTranslation();
+  const { toast } = useToast();
 
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
@@ -34,28 +37,29 @@ export default function Register() {
     event.preventDefault();
     setError('');
     if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match');
+      setError('দুটি পাসওয়ার্ড একই নয়');
       return;
     }
     if (!form.full_name.trim()) {
-      setError('Full name is required');
+      setError('পূর্ণ নাম আবশ্যক');
       return;
     }
     if (form.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে');
       return;
     }
     setLoading(true);
     try {
-      await apiClient.auth.register({
+      const result = await apiClient.auth.register({
         full_name: form.full_name,
         email: form.email,
         password: form.password,
         role: form.role
       });
-      window.location.assign('/');
+      toast({ title: 'সফলভাবে নিবন্ধন সম্পন্ন হয়েছে' });
+      window.setTimeout(() => window.location.assign(dashboardPathForRole(result.user.role)), 200);
     } catch (err) {
-      setError(err.message || 'Registration failed');
+      setError(err.message || 'নিবন্ধন সম্পন্ন হয়নি');
     } finally {
       setLoading(false);
     }
@@ -77,7 +81,7 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="full_name">Full name</Label>
+          <Label htmlFor="full_name">পূর্ণ নাম</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input id="full_name" value={form.full_name} onChange={(e) => update('full_name', e.target.value)} className="pl-10 h-12" required />
@@ -91,7 +95,7 @@ export default function Register() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Account type</Label>
+          <Label>অ্যাকাউন্টের ধরন</Label>
           <Select value={form.role} onValueChange={(value) => update('role', value)}>
             <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
             <SelectContent>

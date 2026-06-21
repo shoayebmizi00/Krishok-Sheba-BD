@@ -11,6 +11,7 @@ import { createResourceController } from './controllers/resourceController.js';
 import { createResourceRouter } from './routes/resourceRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import availabilityRoutes from './routes/availabilityRoutes.js';
 
 dotenv.config();
 
@@ -97,6 +98,7 @@ app.get('/', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 for (const [name, config] of Object.entries(resources)) {
   const controller = createResourceController(models[name], config);

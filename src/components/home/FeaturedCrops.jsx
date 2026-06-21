@@ -6,8 +6,9 @@ import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/constants';
+import defaultCropImage from '@/assets/hero/hero-rice.jpg';
 
-const DEFAULT_CROP_IMAGE = 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?auto=format&fit=crop&w=900&q=75';
+const DEFAULT_CROP_IMAGE = defaultCropImage;
 
 export default function FeaturedCrops() {
   const { data: crops = [], isLoading } = useQuery({
@@ -51,7 +52,7 @@ export default function FeaturedCrops() {
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="font-bold text-primary">{formatCurrency(crop.expected_price)}/{crop.unit}</span>
-                  <span className="text-xs text-muted-foreground">{crop.quantity} {crop.unit}</span>
+                  <span className="text-xs text-muted-foreground">অবশিষ্ট: {Number(crop.remaining_quantity ?? crop.quantity).toLocaleString('bn-BD')} {crop.unit}</span>
                 </div>
               </div>
             </Link>

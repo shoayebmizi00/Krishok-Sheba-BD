@@ -26,7 +26,7 @@ export default function MyListings() {
 
   const handleDelete = async (id) => {
     await apiClient.entities.CropListing.delete(id);
-    toast({ title: "Listing deleted" });
+    toast({ title: "তালিকা মুছে ফেলা হয়েছে" });
     load();
   };
 
@@ -35,18 +35,18 @@ export default function MyListings() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-heading font-bold text-xl text-foreground">My Crop Listings</h2>
+        <h2 className="font-heading font-bold text-xl text-foreground">আমার ফসলের তালিকা</h2>
         <Link to="/farmer-dashboard/add-listing">
-          <Button className="bg-primary hover:bg-primary/90 gap-2"><Plus className="w-4 h-4" /> Add New</Button>
+          <Button className="bg-primary hover:bg-primary/90 gap-2"><Plus className="w-4 h-4" /> নতুন তালিকা</Button>
         </Link>
       </div>
 
       {listings.length === 0 ? (
         <EmptyState
           icon={Sprout}
-          title="No listings yet"
-          description="Start selling your crops by adding a listing"
-          action={<Link to="/farmer-dashboard/add-listing"><Button className="bg-primary hover:bg-primary/90">Add Listing</Button></Link>}
+          title="এখনো কোনো তালিকা নেই"
+          description="ফসল বিক্রি শুরু করতে নতুন তালিকা যোগ করুন"
+          action={<Link to="/farmer-dashboard/add-listing"><Button className="bg-primary hover:bg-primary/90">তালিকা যোগ করুন</Button></Link>}
         />
       ) : (
         <div className="space-y-3">
@@ -60,7 +60,7 @@ export default function MyListings() {
                 </div>
                 <div>
                   <h3 className="font-medium text-foreground">{listing.crop_name}</h3>
-                  <p className="text-xs text-muted-foreground">{listing.district} · {listing.quantity} {listing.unit || 'kg'}</p>
+                  <p className="text-xs text-muted-foreground">{listing.district} · অবশিষ্ট {Number(listing.remaining_quantity ?? listing.quantity).toLocaleString('bn-BD')} {listing.unit || 'কেজি'}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <StatusBadge status={listing.status} />
                     <span className="text-xs text-muted-foreground capitalize">{listing.category || 'other'}</span>

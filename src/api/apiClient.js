@@ -103,6 +103,10 @@ const entities = Object.fromEntries(
 
 const remoteApi = {
   entities,
+  availability: {
+    equipment: (id, startDate, endDate) => request(`/availability/equipment/${id}?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
+    transport: (id, pickupDate) => request(`/availability/transport/${id}?pickup_date=${encodeURIComponent(pickupDate)}`)
+  },
   auth: {
     async register(data) {
       const result = await request('/auth/register', { method: 'POST', body: JSON.stringify(data) });

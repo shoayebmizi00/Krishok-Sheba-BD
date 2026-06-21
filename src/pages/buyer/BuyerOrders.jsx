@@ -39,38 +39,38 @@ export default function BuyerOrders() {
 
   const createOrder = async () => {
     if (!selectedBid || !form.quantity || !form.delivery_address || !form.delivery_district) return;
-    await apiClient.entities.Order.create({
-      bid_id: selectedBid.id,
-      buyer_name: user.full_name,
-      seller_id: selectedBid.farmer_id,
-      seller_name: 'কৃষক',
-      items: [{ name: selectedBid.crop_name, quantity: Number(form.quantity), unit: 'kg' }],
-      total_amount: Number(form.quantity) * Number(selectedBid.bid_amount),
-      delivery_address: form.delivery_address,
-      delivery_district: form.delivery_district,
-      payment_method: form.payment_method,
-      status: 'pending',
-      payment_status: 'pending'
-    });
-    toast({ title: 'অর্ডার তৈরি হয়েছে' });
-    window.location.reload();
+    try {
+      await apiClient.entities.Order.create({
+        bid_id: selectedBid.id,
+        buyer_name: user.full_name,
+        items: [{ name: selectedBid.crop_name, quantity: Number(form.quantity) }],
+        delivery_address: form.delivery_address,
+        delivery_district: form.delivery_district,
+        payment_method: form.payment_method
+      });
+      toast({ title: 'সফলভাবে অর্ডার নিশ্চিত হয়েছে' });
+      setSelectedBid(null);
+      window.setTimeout(() => window.location.reload(), 300);
+    } catch (error) {
+      toast({ title: 'অর্ডার তৈরি হয়নি', description: error.message || 'কিছু ভুল হয়েছে, আবার চেষ্টা করুন', variant: 'destructive' });
+    }
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">My Orders</h2>
+      <h2 className="font-heading font-bold text-xl text-foreground">আমার অর্ডার</h2>
 
       {acceptedBids.length > 0 && <div className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="font-semibold">গৃহীত বিড থেকে অর্ডার তৈরি করুন</h3><div className="mt-3 space-y-2">{acceptedBids.map((bid) => <div key={bid.id} className="flex items-center justify-between rounded-lg bg-card p-3"><span>{bid.crop_name} · {formatCurrency(bid.bid_amount)}</span><Button size="sm" onClick={() => { setSelectedBid(bid); setForm((current) => ({ ...current, quantity: bid.quantity_requested || '' })); }}>অর্ডার তৈরি করুন</Button></div>)}</div></div>}
 
       {orders.length === 0 ? (
-        <EmptyState icon={Package} title="No orders yet" description="Your purchases will appear here" />
+        <EmptyState icon={Package} title="এখনো কোনো অর্ডার নেই" description="আপনার নিশ্চিত করা অর্ডার এখানে দেখা যাবে" />
       ) : (
         <div className="space-y-3">
           {orders.map(order => (
             <div key={order.id} className="p-4 rounded-xl border border-border bg-card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="font-medium text-foreground">Order #{order.id?.slice(-6)}</h3>
-                <p className="text-sm text-muted-foreground">Seller: {order.seller_name || 'Farmer'}</p>
+                <h3 className="font-medium text-foreground">অর্ডার #{order.id?.slice(-6)}</h3>
+                <p className="text-sm text-muted-foreground">বিক্রেতা: {order.seller_name || 'কৃষক'}</p>
                 <p className="text-xs text-muted-foreground">{formatDate(order.created_date)}</p>
               </div>
               <div className="flex items-center gap-3">
