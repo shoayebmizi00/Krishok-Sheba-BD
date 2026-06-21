@@ -146,8 +146,6 @@ const AuthenticatedApp = () => {
       <Route element={<DashboardLayout />}>
         <Route path="/buyer-dashboard" element={<BuyerDashboard />}>
           <Route index element={<BuyerOverview />} />
-          <Route path="marketplace" element={<Marketplace />} />
-          <Route path="listing/:id" element={<ListingDetail />} />
           <Route path="orders" element={<BuyerOrders />} />
           <Route path="transactions" element={<BuyerTransactions />} />
           <Route path="profile" element={<Profile />} />

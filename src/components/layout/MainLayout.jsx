@@ -9,23 +9,11 @@ export default function MainLayout() {
   const { user, setUser } = useAuth();
   const location = useLocation();
 
-  if (user?.role === 'buyer') {
-    const buyerRouteMap = [
-      [/^\/marketplace$/, '/buyer-dashboard/marketplace'],
-      [/^\/listing\/([^/]+)$/, '/buyer-dashboard/listing/$1'],
-      [/^\/messages\/([^/]+)$/, '/buyer-dashboard/messages/$1'],
-      [/^\/messages$/, '/buyer-dashboard/messages'],
-      [/^\/notifications$/, '/buyer-dashboard/notifications'],
-      [/^\/profile$/, '/buyer-dashboard/profile']
-    ];
-    const matchedRoute = buyerRouteMap.find(([pattern]) => pattern.test(location.pathname));
-    const destination = matchedRoute
-      ? location.pathname.replace(matchedRoute[0], matchedRoute[1])
-      : '/buyer-dashboard';
-    return <Navigate to={destination} replace state={{ from: location.pathname }} />;
-  }
-  if (user) {
+  if (user && user.role !== 'buyer') {
     return <Navigate to={dashboardPathForRole(user.role)} replace state={{ from: location.pathname }} />;
+  }
+  if (user?.role === 'buyer' && location.pathname === '/') {
+    return <Navigate to="/buyer-dashboard" replace />;
   }
 
   return (
