@@ -4,6 +4,7 @@ import { LayoutDashboard, Sprout, Plus, Gavel, Package, Wrench, Truck, History, 
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useTranslation } from '@/lib/useTranslation';
+import { dashboardPathForRole } from '@/lib/roleRoutes';
 
 export default function FarmerDashboard() {
   const { user } = useOutletContext();
@@ -12,7 +13,7 @@ export default function FarmerDashboard() {
   const t = useTranslation();
 
   if (user?.role !== 'farmer') {
-    return <Navigate to={user?.role === 'buyer' ? '/buyer-dashboard' : '/'} replace />;
+    return <Navigate to={dashboardPathForRole(user?.role)} replace />;
   }
 
   const SIDEBAR_LINKS = [

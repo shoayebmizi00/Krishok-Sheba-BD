@@ -330,6 +330,15 @@ export function createResourceController(model, config) {
     async list(req, res, next) {
       try {
         const { sort, limit, page, ...filters } = req.query;
+        if (config.route === 'crop-listings' && req.user?.role !== 'admin' && !filters.farmer_id) {
+          filters.status = filters.status || 'active';
+        }
+        if (config.route === 'equipment' && req.user?.role !== 'admin' && !filters.owner_id) {
+          filters.approval_status = 'approved';
+        }
+        if (config.route === 'vehicles' && req.user?.role !== 'admin' && !filters.owner_id) {
+          filters.approval_status = 'approved';
+        }
         if (
           config.route === 'stories'
           && req.user?.role !== 'admin'
@@ -377,7 +386,13 @@ export function createResourceController(model, config) {
         if (config.route === 'crop-listings') {
           const validation = await validateCropListing(data, req.user);
           if (validation.error) return res.status(400).json({ message: validation.error });
-          data = validation.data;
+          data = { ...validation.data, status: req.user.role === 'admin' ? (data.status || 'active') : 'pending' };
+        }
+        if (config.route === 'equipment') {
+          data.approval_status = req.user.role === 'admin' ? (data.approval_status || 'approved') : 'pending';
+        }
+        if (config.route === 'vehicles') {
+          data.approval_status = req.user.role === 'admin' ? (data.approval_status || 'approved') : 'pending';
         }
         if (config.route === 'bids') {
           const [listings] = await pool.execute(
@@ -457,6 +472,49 @@ export function createResourceController(model, config) {
             type: 'bid',
             link: '/buyer-dashboard/orders'
           });
+        }
+        if (config.userResource && Object.hasOwn(changes, 'is_active') && existing.is_active !== changes.is_active) {
+          await createNotification(pool, {
+            userId: existing.id,
+            title: changes.is_active ? 'অ্যাকাউন্ট সক্রিয় করা হয়েছে' : 'অ্যাকাউন্ট সাময়িকভাবে স্থগিত',
+            message: changes.is_active
+              ? 'প্রশাসক আপনার অ্যাকাউন্ট সক্রিয় করেছেন।'
+              : 'প্রশাসক আপনার অ্যাকাউন্ট সাময়িকভাবে স্থগিত করেছেন।',
+            type: 'system',
+            link: changes.is_active ? '/profile' : '/login'
+          });
+        }
+        if (config.route === 'transactions' && changes.status && changes.status !== existing.status) {
+          const recipientId = changes.status === 'verified' ? existing.buyer_id : existing.seller_id;
+          await createNotification(pool, {
+            userId: recipientId,
+            title: changes.status === 'verified' ? 'পেমেন্ট যাচাই হয়েছে' : 'লেনদেনের অবস্থা পরিবর্তন হয়েছে',
+            message: `${existing.amount || 0} টাকার লেনদেনটি এখন ${changes.status} অবস্থায় আছে।`,
+            type: 'payment',
+            link: recipientId === existing.buyer_id ? '/buyer-dashboard/transactions' : '/farmer-dashboard/transactions'
+          });
+        }
+        if (['equipment-bookings', 'transport-bookings'].includes(config.route) && changes.status && changes.status !== existing.status) {
+          const userId = existing.farmer_id;
+          await createNotification(pool, {
+            userId,
+            title: 'বুকিংয়ের অবস্থা পরিবর্তন হয়েছে',
+            message: `আপনার বুকিংটি এখন ${changes.status} অবস্থায় আছে।`,
+            type: 'booking',
+            link: config.route === 'equipment-bookings'
+              ? '/farmer-dashboard/equipment-bookings'
+              : '/farmer-dashboard/transport-requests'
+          });
+        }
+        if (config.route === 'government-notices' && changes.is_active === true && !existing.is_active) {
+          const [users] = await pool.execute('SELECT id FROM users WHERE is_active = TRUE');
+          await Promise.all(users.map((user) => createNotification(pool, {
+            userId: user.id,
+            title: 'নতুন সরকারি নোটিশ',
+            message: changes.title || existing.title,
+            type: 'notice',
+            link: '/notices'
+          })));
         }
         if (config.route === 'conversations') {
           for (const field of ['participant_ids', 'participant_names', 'listing_id', 'last_message', 'last_message_by', 'last_message_date']) {

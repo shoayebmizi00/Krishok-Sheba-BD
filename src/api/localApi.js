@@ -44,6 +44,21 @@ function makeError(message, status = 400) {
   return error;
 }
 
+function addNotification(userId, title, message, type = 'system', link = '/notifications') {
+  if (!userId) return;
+  database.Notification = [{
+    id: `notification-${crypto.randomUUID()}`,
+    user_id: userId,
+    title,
+    message,
+    type,
+    link,
+    is_read: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }, ...(database.Notification || [])];
+}
+
 function normalizeSortField(field) {
   if (field === 'created_date') return 'created_at';
   if (field === 'updated_date') return 'updated_at';
@@ -83,9 +98,12 @@ function entityClient(name) {
         data = {
           ...data,
           farmer_id: currentUser.id,
-          farmer_name: currentUser.full_name || 'Farmer'
+          farmer_name: currentUser.full_name || 'কৃষক',
+          status: 'pending'
         };
       }
+      if (name === 'Equipment') data = { ...data, owner_id: currentUser?.id, owner_name: currentUser?.full_name, approval_status: currentUser?.role === 'admin' ? 'approved' : 'pending' };
+      if (name === 'Vehicle') data = { ...data, owner_id: currentUser?.id, owner_name: currentUser?.full_name, approval_status: currentUser?.role === 'admin' ? 'approved' : 'pending' };
       if (name === 'Bid') {
         const listing = database.CropListing.find((item) => item.id === data.listing_id);
         const remaining = Number(listing?.remaining_quantity ?? listing?.quantity ?? 0);
@@ -164,6 +182,11 @@ function entityClient(name) {
         updated_at: new Date().toISOString()
       };
       database[name] = [created, ...(database[name] || [])];
+      if (name === 'Bid') addNotification(created.farmer_id, 'নতুন বিড এসেছে', `${created.crop_name || 'আপনার ফসল'}-এর জন্য নতুন বিড এসেছে।`, 'bid', '/farmer-dashboard/bids');
+      if (name === 'Order') addNotification(created.seller_id, 'নতুন অর্ডার', `${created.buyer_name || 'একজন ক্রেতা'} নতুন অর্ডার করেছেন।`, 'order', '/farmer-dashboard/orders');
+      if (name === 'EquipmentBooking') addNotification(created.owner_id, 'নতুন যন্ত্রপাতি বুকিং', `${created.equipment_name || 'যন্ত্রপাতি'} বুকিংয়ের অনুরোধ এসেছে।`, 'booking', '/equipment-owner-dashboard/bookings');
+      if (name === 'TransportBooking') addNotification(created.provider_id, 'নতুন পরিবহন বুকিং', 'একটি নতুন পরিবহন বুকিং অনুরোধ এসেছে।', 'booking', '/transport-dashboard/bookings');
+      if (name === 'Transaction') addNotification(created.seller_id, 'নতুন পেমেন্ট রেকর্ড', `${created.amount || 0} টাকার একটি লেনদেন পাঠানো হয়েছে।`, 'payment', '/farmer-dashboard/transactions');
       if (name === 'Message') {
         const conversation = database.Conversation.find((item) => item.id === created.conversation_id);
         if (conversation) {
@@ -172,6 +195,7 @@ function entityClient(name) {
           conversation.last_message_date = created.created_at;
           conversation.updated_at = created.created_at;
         }
+        addNotification(created.receiver_id, 'নতুন বার্তা', `${created.sender_name} আপনাকে একটি বার্তা পাঠিয়েছেন।`, 'message', `/messages/${created.conversation_id}`);
       }
       saveDatabase();
       return clone(normalizeRecord(created));
@@ -179,11 +203,24 @@ function entityClient(name) {
     async update(id, data) {
       const index = (database[name] || []).findIndex((record) => record.id === id);
       if (index < 0) throw makeError(`${name} not found`, 404);
+      const previous = database[name][index];
       database[name][index] = {
         ...database[name][index],
         ...clone(data),
         updated_at: new Date().toISOString()
       };
+      if (name === 'Bid' && data.status && data.status !== previous.status) {
+        addNotification(previous.buyer_id, data.status === 'accepted' ? 'বিড গ্রহণ করা হয়েছে' : 'বিডের অবস্থা পরিবর্তন হয়েছে', `${previous.crop_name || 'ফসল'}-এর বিড ${data.status === 'accepted' ? 'গ্রহণ' : 'আপডেট'} করা হয়েছে।`, 'bid', '/buyer-dashboard/orders');
+      }
+      if (['EquipmentBooking', 'TransportBooking'].includes(name) && data.status && data.status !== previous.status) {
+        addNotification(previous.farmer_id, 'বুকিংয়ের অবস্থা পরিবর্তন হয়েছে', `আপনার বুকিংটি এখন ${data.status} অবস্থায় আছে।`, 'booking', name === 'EquipmentBooking' ? '/farmer-dashboard/equipment-bookings' : '/farmer-dashboard/transport-requests');
+      }
+      if (name === 'Transaction' && data.status && data.status !== previous.status) {
+        addNotification(previous.buyer_id, 'লেনদেনের অবস্থা পরিবর্তন হয়েছে', `${previous.amount || 0} টাকার লেনদেনটি এখন ${data.status} অবস্থায় আছে।`, 'payment', '/buyer-dashboard/transactions');
+      }
+      if (name === 'User' && Object.hasOwn(data, 'is_active') && data.is_active !== previous.is_active) {
+        addNotification(previous.id, data.is_active ? 'অ্যাকাউন্ট সক্রিয় করা হয়েছে' : 'অ্যাকাউন্ট স্থগিত করা হয়েছে', data.is_active ? 'প্রশাসক আপনার অ্যাকাউন্ট সক্রিয় করেছেন।' : 'প্রশাসক আপনার অ্যাকাউন্ট সাময়িকভাবে স্থগিত করেছেন।');
+      }
       saveDatabase();
       return clone(normalizeRecord(database[name][index]));
     },

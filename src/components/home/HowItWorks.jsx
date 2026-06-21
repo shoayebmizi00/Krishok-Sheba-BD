@@ -1,23 +1,20 @@
 import React from 'react';
 import { UserPlus, ListPlus, Handshake, Banknote } from 'lucide-react';
-import { useTranslation } from '@/lib/useTranslation';
 
 export default function HowItWorks() {
-  const t = useTranslation();
-
   const steps = [
-    { icon: UserPlus, step: "01", title: t('step1Title'), desc: t('step1Desc') },
-    { icon: ListPlus, step: "02", title: t('step2Title'), desc: t('step2Desc') },
-    { icon: Handshake, step: "03", title: t('step3Title'), desc: t('step3Desc') },
-    { icon: Banknote, step: "04", title: t('step4Title'), desc: t('step4Desc') },
+    { icon: UserPlus, step: "০১", title: 'নিবন্ধন করুন', desc: 'আপনার প্রয়োজন অনুযায়ী কৃষক, ক্রেতা অথবা সেবাদাতা হিসেবে অ্যাকাউন্ট খুলুন।' },
+    { icon: ListPlus, step: "০২", title: 'তালিকা দিন বা খুঁজুন', desc: 'ফসল, কৃষিযন্ত্র ও পরিবহন সেবা প্রকাশ করুন অথবা প্রয়োজনীয় সেবা খুঁজে নিন।' },
+    { icon: Handshake, step: "০৩", title: 'যোগাযোগ ও দর প্রস্তাব', desc: 'সরাসরি যোগাযোগ করুন, বিড দিন এবং উভয় পক্ষের সম্মতিতে ন্যায্য দাম নির্ধারণ করুন।' },
+    { icon: Banknote, step: "০৪", title: 'লেনদেন সম্পন্ন করুন', desc: 'অর্ডার নিশ্চিত করে পেমেন্ট রেকর্ড, বুকিং এবং ডেলিভারির অগ্রগতি অনুসরণ করুন।' },
   ];
 
   return (
     <section className="py-16 md:py-20 bg-secondary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
-          <h2 className="font-heading font-bold text-3xl text-foreground">{t('howItWorks')}</h2>
-          <p className="text-muted-foreground mt-3">{t('howItWorksDesc')}</p>
+          <h2 className="font-heading font-bold text-3xl text-foreground">কীভাবে কাজ করে</h2>
+          <p className="text-muted-foreground mt-3">সহজ চারটি ধাপে কৃষক-সেবা বিডি ব্যবহার করুন</p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">

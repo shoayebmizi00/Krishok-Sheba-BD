@@ -12,7 +12,7 @@ export const resources = {
   cropListings: {
     table: 'crop_listings',
     route: 'crop-listings',
-    columns: ['crop_name', 'category', 'quantity', 'total_quantity', 'sold_quantity', 'remaining_quantity', 'unit', 'expected_harvest_date', 'expected_price', 'location', 'district', 'description', 'images', 'status', 'farmer_name', 'farmer_id', 'listing_type', ...timestamps],
+    columns: ['crop_name', 'category', 'quantity', 'total_quantity', 'sold_quantity', 'remaining_quantity', 'unit', 'expected_harvest_date', 'expected_price', 'location', 'district', 'description', 'images', 'status', 'is_featured', 'farmer_name', 'farmer_id', 'listing_type', ...timestamps],
     json: ['images'],
     publicRead: true,
     ownerFields: ['farmer_id'],
@@ -50,7 +50,7 @@ export const resources = {
   equipment: {
     table: 'equipment',
     route: 'equipment',
-    columns: ['name', 'type', 'description', 'rent_price_per_day', 'sale_price', 'is_for_rent', 'is_for_sale', 'district', 'images', 'owner_id', 'owner_name', 'availability', ...timestamps],
+    columns: ['name', 'type', 'description', 'rent_price_per_day', 'sale_price', 'is_for_rent', 'is_for_sale', 'district', 'images', 'owner_id', 'owner_name', 'availability', 'approval_status', ...timestamps],
     json: ['images'],
     publicRead: true,
     ownerFields: ['owner_id'],
@@ -69,7 +69,7 @@ export const resources = {
   vehicles: {
     table: 'vehicles',
     route: 'vehicles',
-    columns: ['vehicle_type', 'capacity', 'price_per_km', 'district', 'description', 'images', 'owner_id', 'owner_name', 'availability', ...timestamps],
+    columns: ['vehicle_type', 'capacity', 'price_per_km', 'district', 'description', 'images', 'owner_id', 'owner_name', 'availability', 'approval_status', ...timestamps],
     json: ['images'],
     publicRead: true,
     ownerFields: ['owner_id'],
@@ -138,7 +138,7 @@ export const resources = {
   stories: {
     table: 'stories',
     route: 'stories',
-    columns: ['title', 'content', 'image', 'category', 'district', 'author_id', 'author_name', 'status', ...timestamps],
+    columns: ['title', 'content', 'image', 'category', 'district', 'author_id', 'author_name', 'status', 'is_featured', ...timestamps],
     publicRead: true,
     ownerFields: ['author_id'],
     creatorField: 'author_id',

@@ -4,13 +4,14 @@ import { LayoutDashboard, Wrench, Plus, Calendar, Bell, UserCircle, MessageSquar
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useTranslation } from '@/lib/useTranslation';
+import { dashboardPathForRole } from '@/lib/roleRoutes';
 
 export default function EquipmentOwnerDashboard() {
   const { user } = useOutletContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
-  if (user?.role !== 'equipment_owner') return <Navigate to="/" replace />;
+  if (user?.role !== 'equipment_owner') return <Navigate to={dashboardPathForRole(user?.role)} replace />;
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/equipment-owner-dashboard" },

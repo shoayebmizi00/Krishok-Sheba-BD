@@ -4,13 +4,14 @@ import { LayoutDashboard, Package, History, Bell, UserCircle, Search, MessageSqu
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useTranslation } from '@/lib/useTranslation';
+import { dashboardPathForRole } from '@/lib/roleRoutes';
 
 export default function BuyerDashboard() {
   const { user } = useOutletContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
-  if (user?.role !== 'buyer') return <Navigate to="/" replace />;
+  if (user?.role !== 'buyer') return <Navigate to={dashboardPathForRole(user?.role)} replace />;
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/buyer-dashboard" },

@@ -4,13 +4,14 @@ import { LayoutDashboard, Truck, Plus, Calendar, Bell, UserCircle, MessageSquare
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useTranslation } from '@/lib/useTranslation';
+import { dashboardPathForRole } from '@/lib/roleRoutes';
 
 export default function TransportDashboard() {
   const { user } = useOutletContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
-  if (user?.role !== 'transport_provider') return <Navigate to="/" replace />;
+  if (user?.role !== 'transport_provider') return <Navigate to={dashboardPathForRole(user?.role)} replace />;
 
   const SIDEBAR_LINKS = [
     { icon: LayoutDashboard, label: t('overview'), path: "/transport-dashboard" },

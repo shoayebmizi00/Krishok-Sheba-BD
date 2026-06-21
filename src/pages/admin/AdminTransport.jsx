@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/api/apiClient';
-import { Truck, Trash2 } from 'lucide-react';
+import { Check, Truck, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -26,6 +26,11 @@ export default function AdminTransport() {
     toast({ title: "যানবাহন সরানো হয়েছে" });
     load();
   };
+  const update = async (id, changes, title) => {
+    await apiClient.entities.Vehicle.update(id, changes);
+    toast({ title });
+    load();
+  };
 
   if (loading) return <LoadingSpinner />;
 
@@ -46,6 +51,7 @@ export default function AdminTransport() {
                 <th className="p-3 font-medium text-muted-foreground">ধারণক্ষমতা</th>
                 <th className="p-3 font-medium text-muted-foreground">প্রতি কিমি ভাড়া</th>
                 <th className="p-3 font-medium text-muted-foreground">অবস্থা</th>
+                <th className="p-3 font-medium text-muted-foreground">অনুমোদন</th>
                 <th className="p-3 font-medium text-muted-foreground">পদক্ষেপ</th>
               </tr>
             </thead>
@@ -58,7 +64,14 @@ export default function AdminTransport() {
                   <td className="p-3 text-muted-foreground">{v.capacity || 'N/A'}</td>
                   <td className="p-3 text-primary font-medium">{formatCurrency(v.price_per_km)}</td>
                   <td className="p-3"><StatusBadge status={v.availability || 'available'} /></td>
+                  <td className="p-3"><StatusBadge status={v.approval_status || 'pending'} /></td>
                   <td className="p-3">
+                    <Button variant="ghost" size="icon" onClick={() => update(v.id, { approval_status: 'approved' }, 'যানবাহনের পোস্ট অনুমোদিত হয়েছে')} aria-label="অনুমোদন">
+                      <Check className="w-4 h-4 text-green-600" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => update(v.id, { approval_status: 'rejected' }, 'যানবাহনের পোস্ট প্রত্যাখ্যান করা হয়েছে')} aria-label="প্রত্যাখ্যান">
+                      <X className="w-4 h-4 text-red-600" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)} className="text-destructive">
                       <Trash2 className="w-4 h-4" />
                     </Button>

@@ -62,13 +62,16 @@ const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 const AdminOverview = lazy(() => import('@/pages/admin/AdminOverview'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminCrops = lazy(() => import('@/pages/admin/AdminCrops'));
+const AdminBids = lazy(() => import('@/pages/admin/AdminBids'));
 const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
+const AdminBookings = lazy(() => import('@/pages/admin/AdminBookings'));
 const AdminNotices = lazy(() => import('@/pages/admin/AdminNotices'));
 const AdminTransactions = lazy(() => import('@/pages/admin/AdminTransactions'));
 const AdminEquipment = lazy(() => import('@/pages/admin/AdminEquipment'));
 const AdminTransport = lazy(() => import('@/pages/admin/AdminTransport'));
 const AdminStories = lazy(() => import('@/pages/admin/AdminStories'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
+const AdminReports = lazy(() => import('@/pages/admin/AdminReports'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -188,13 +191,16 @@ const AuthenticatedApp = () => {
           <Route index element={<AdminOverview />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="crops" element={<AdminCrops />} />
+          <Route path="bids" element={<AdminBids />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="bookings" element={<AdminBookings />} />
           <Route path="equipment" element={<AdminEquipment />} />
           <Route path="transport" element={<AdminTransport />} />
           <Route path="notices" element={<AdminNotices />} />
           <Route path="transactions" element={<AdminTransactions />} />
           <Route path="stories" element={<AdminStories />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="reports" element={<AdminReports />} />
         </Route>
       </Route>
 

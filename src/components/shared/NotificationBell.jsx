@@ -42,6 +42,11 @@ export default function NotificationBell({ user, link = '/notifications' }) {
     await Promise.all(items.filter((item) => !item.is_read).map((item) => apiClient.entities.Notification.update(item.id, { is_read: true })));
     setItems((current) => current.map((item) => ({ ...item, is_read: true })));
   };
+  const markRead = async (item) => {
+    if (item.is_read) return;
+    await apiClient.entities.Notification.update(item.id, { is_read: true });
+    setItems((current) => current.map((notification) => notification.id === item.id ? { ...notification, is_read: true } : notification));
+  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -53,7 +58,7 @@ export default function NotificationBell({ user, link = '/notifications' }) {
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b p-3"><strong className="text-sm">নতুন নোটিফিকেশন</strong><Button variant="ghost" size="sm" onClick={markAll}><CheckCheck className="mr-1 h-4 w-4" /> সব পড়া হয়েছে</Button></div>
         <div className="max-h-80 overflow-y-auto">
-          {items.length === 0 ? <p className="p-6 text-center text-sm text-muted-foreground">কোনো নোটিফিকেশন নেই</p> : items.map((item) => <Link key={item.id} to={item.link || link} className={`block border-b p-3 text-sm hover:bg-muted ${item.is_read ? '' : 'bg-primary/5'}`}><strong>{item.title}</strong><p className="mt-1 text-xs text-muted-foreground">{item.message}</p></Link>)}
+          {items.length === 0 ? <p className="p-6 text-center text-sm text-muted-foreground">কোনো নোটিফিকেশন নেই</p> : items.map((item) => <Link key={item.id} to={item.link || link} onClick={() => markRead(item)} className={`block border-b p-3 text-sm hover:bg-muted ${item.is_read ? '' : 'bg-primary/5'}`}><strong>{item.title}</strong><p className="mt-1 text-xs text-muted-foreground">{item.message}</p></Link>)}
         </div>
         <Link to={link} className="block p-3 text-center text-sm font-medium text-primary">সব নোটিফিকেশন দেখুন</Link>
       </DropdownMenuContent>
