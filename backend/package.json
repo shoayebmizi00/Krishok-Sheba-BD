@@ -7,7 +7,7 @@
     "node": "22.x"
   },
   "scripts": {
-    "start": "npm run migrate && node server.js",
+    "start": "npm run migrate && node scripts/create-admin.js --if-configured && node server.js",
     "dev": "node --watch server.js",
     "check": "node --check server.js",
     "migrate": "node scripts/migrate.js",

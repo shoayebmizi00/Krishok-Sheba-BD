@@ -9,8 +9,13 @@ dotenv.config();
 const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const password = String(process.env.ADMIN_PASSWORD || '');
 const fullName = String(process.env.ADMIN_NAME || 'সুপার অ্যাডমিন').trim();
+const optionalBootstrap = process.argv.includes('--if-configured');
 
 if (!email || !email.includes('@')) {
+  if (optionalBootstrap && !email && !password) {
+    console.log('Admin bootstrap skipped: ADMIN_EMAIL and ADMIN_PASSWORD are not configured.');
+    process.exit(0);
+  }
   throw new Error('ADMIN_EMAIL পরিবেশ ভেরিয়েবলে একটি সঠিক ইমেইল দিন।');
 }
 if (password.length < 8) {
