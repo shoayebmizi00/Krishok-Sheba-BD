@@ -12,9 +12,6 @@ export default function MainLayout() {
   if (user && user.role !== 'buyer') {
     return <Navigate to={dashboardPathForRole(user.role)} replace state={{ from: location.pathname }} />;
   }
-  if (user?.role === 'buyer' && location.pathname === '/') {
-    return <Navigate to="/buyer-dashboard" replace />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
