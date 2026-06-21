@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/constants';
 import StatusBadge from '@/components/shared/StatusBadge';
+import defaultTransportImage from '@/assets/hero/hero-equipment.jpg';
 
-const FALLBACK = 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=900&q=75';
+const FALLBACK = defaultTransportImage;
 
 export default function ServicePreviewSection({ type }) {
   const equipment = type === 'equipment';
@@ -37,9 +38,22 @@ export default function ServicePreviewSection({ type }) {
           {!isLoading && items.map((item) => (
             <Link key={item.id} to={`${route}?item=${item.id}`} className="group overflow-hidden rounded-2xl border bg-card hover:shadow-lg">
               {item.images?.[0] ? (
-                <img src={item.images[0]} alt="" loading="lazy" className="h-36 w-full object-cover" />
+                <img
+                  src={item.images[0]}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = FALLBACK;
+                  }}
+                  alt={equipment ? item.name : `${(item.vehicle_type || 'পরিবহন').replaceAll('_', ' ')} যানবাহন`}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-36 w-full object-cover"
+                />
               ) : (
-                <div className="flex h-36 items-center justify-center bg-primary/5"><Icon className="h-12 w-12 text-primary/50" /></div>
+                <div className="relative h-36 overflow-hidden bg-primary/5">
+                  <img src={FALLBACK} alt="" className="h-full w-full object-cover opacity-80" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/10"><Icon className="h-12 w-12 text-white drop-shadow" /></div>
+                </div>
               )}
               <div className="space-y-2 p-4">
                 <div className="flex justify-between gap-2">

@@ -7,6 +7,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { formatCurrency } from '@/lib/constants';
+import defaultTransportImage from '@/assets/hero/hero-equipment.jpg';
 
 export default function MyVehicles() {
   const { user } = useOutletContext();
@@ -37,7 +38,17 @@ export default function MyVehicles() {
       {!vehicles.length ? <EmptyState icon={Truck} title="No vehicles" description="Add your first transport vehicle" /> : (
         <div className="grid md:grid-cols-2 gap-4">
           {vehicles.map((vehicle) => (
-            <div key={vehicle.id} className="border rounded-lg bg-card p-4">
+            <div key={vehicle.id} className="overflow-hidden rounded-lg border bg-card">
+              <img
+                src={vehicle.images?.[0] || defaultTransportImage}
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = defaultTransportImage;
+                }}
+                alt={`${vehicle.vehicle_type.replaceAll('_', ' ')} যানবাহন`}
+                className="h-36 w-full object-cover"
+              />
+              <div className="p-4">
               <div className="flex justify-between gap-3">
                 <div>
                   <h3 className="font-semibold capitalize">{vehicle.vehicle_type.replace('_', ' ')}</h3>
@@ -49,6 +60,7 @@ export default function MyVehicles() {
               <Button variant="ghost" size="sm" className="text-destructive mt-3" onClick={() => remove(vehicle.id)}>
                 <Trash2 className="w-4 h-4 mr-1" /> Delete
               </Button>
+              </div>
             </div>
           ))}
         </div>

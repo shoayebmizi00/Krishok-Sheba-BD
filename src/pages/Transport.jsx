@@ -13,6 +13,9 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import SimplePagination from '@/components/shared/SimplePagination';
+import defaultTransportImage from '@/assets/hero/hero-equipment.jpg';
+
+const DEFAULT_TRANSPORT_IMAGE = defaultTransportImage;
 
 function TransportBookingDialog({ vehicle, user }) {
   const { toast } = useToast();
@@ -52,7 +55,12 @@ function TransportBookingDialog({ vehicle, user }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="bg-primary hover:bg-primary/90 gap-1"><Calendar className="w-3.5 h-3.5" /> এখনই বুক করুন</Button>
+        <button
+          type="button"
+          className="relative z-10 inline-flex min-h-10 cursor-pointer touch-manipulation items-center justify-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Calendar className="pointer-events-none h-4 w-4" /> এখনই বুক করুন
+        </button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>পরিবহন বুক করুন</DialogTitle></DialogHeader>
@@ -145,9 +153,17 @@ export default function Transport() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map(v => (
             <div key={v.id} className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-36 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-                <span className="text-5xl">🚛</span>
-              </div>
+              <img
+                src={v.images?.[0] || DEFAULT_TRANSPORT_IMAGE}
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = DEFAULT_TRANSPORT_IMAGE;
+                }}
+                alt={`${(v.vehicle_type || 'পরিবহন').replaceAll('_', ' ')} যানবাহন`}
+                loading="lazy"
+                decoding="async"
+                className="h-40 w-full bg-muted object-cover"
+              />
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-heading font-semibold text-foreground capitalize">{(v.vehicle_type || '').replace('_', ' ')}</h3>

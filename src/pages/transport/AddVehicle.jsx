@@ -75,9 +75,9 @@ export default function AddVehicle() {
         <SelectContent>{districts.map((district) => <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>)}</SelectContent>
       </Select>
       <Textarea value={form.description} onChange={(e) => update('description', e.target.value)} placeholder="যানবাহনের বিবরণ" />
-      <label className="inline-flex items-center gap-2 cursor-pointer text-sm font-medium">
-        <Upload className="w-4 h-4" /> ছবি আপলোড করুন
-        <input type="file" accept="image/*" onChange={upload} className="hidden" />
+      <label className="relative inline-flex min-h-10 cursor-pointer touch-manipulation items-center justify-center gap-2 overflow-hidden rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent">
+        <Upload className="pointer-events-none h-4 w-4" /> ছবি আপলোড করুন
+        <input type="file" accept="image/*" onChange={upload} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
       </label>
       {image && <img src={image} alt="যানবাহনের ছবি" className="w-40 h-28 object-cover rounded-md border" />}
       <Button type="submit" disabled={saving || !form.district}>{saving ? 'সংরক্ষণ হচ্ছে...' : 'যানবাহন যোগ করুন'}</Button>
