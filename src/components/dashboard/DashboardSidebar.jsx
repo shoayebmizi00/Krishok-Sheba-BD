@@ -23,7 +23,7 @@ export default function DashboardSidebar({ links, mobileOpen, setMobileOpen }) {
 
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {links.map(link => {
-          const isActive = location.pathname === link.path;
+          const isActive = location.pathname === link.path || link.aliases?.includes(location.pathname);
           return (
             <Link
               key={link.path}

@@ -22,8 +22,8 @@ export default function FarmerDashboard() {
     { icon: Plus, label: t('addListing'), path: "/farmer-dashboard/add-listing" },
     { icon: Gavel, label: t('bids'), path: "/farmer-dashboard/bids" },
     { icon: Package, label: t('orders'), path: "/farmer-dashboard/orders" },
-    { icon: Wrench, label: t('equipmentBookings'), path: "/farmer-dashboard/equipment-bookings" },
-    { icon: Truck, label: t('transportRequests'), path: "/farmer-dashboard/transport-requests" },
+    { icon: Wrench, label: 'যন্ত্রপাতি বুকিং', path: "/farmer/equipment-booking", aliases: ['/farmer-dashboard/equipment-bookings'] },
+    { icon: Truck, label: 'পরিবহন অনুরোধ', path: "/farmer/transport-request", aliases: ['/farmer-dashboard/transport-requests'] },
     { icon: History, label: t('transactions'), path: "/farmer-dashboard/transactions" },
     { icon: Clock, label: t('harvestReminders'), path: "/farmer-dashboard/harvest-reminders" },
     { icon: Bell, label: t('notifications'), path: "/farmer-dashboard/notifications" },
@@ -31,7 +31,7 @@ export default function FarmerDashboard() {
     { icon: UserCircle, label: t('profile'), path: "/farmer-dashboard/profile" },
   ];
 
-  const pageTitle = SIDEBAR_LINKS.find(l => l.path === location.pathname)?.label || t('overview');
+  const pageTitle = SIDEBAR_LINKS.find((link) => link.path === location.pathname || link.aliases?.includes(location.pathname))?.label || t('overview');
 
   return (
     <div className="flex min-h-screen bg-muted/30">

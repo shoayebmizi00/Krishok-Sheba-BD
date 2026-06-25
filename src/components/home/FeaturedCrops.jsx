@@ -13,7 +13,7 @@ const DEFAULT_CROP_IMAGE = defaultCropImage;
 export default function FeaturedCrops() {
   const { data: crops = [], isLoading } = useQuery({
     queryKey: ['home', 'crops'],
-    queryFn: () => apiClient.entities.CropListing.list('-created_date', 4)
+    queryFn: () => apiClient.entities.CropListing.list('-created_date', 6)
   });
 
   return (
@@ -29,8 +29,8 @@ export default function FeaturedCrops() {
           </Button>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {isLoading && [1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-72 rounded-2xl" />)}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading && [1, 2, 3, 4, 5, 6].map((item) => <Skeleton key={item} className="h-72 rounded-2xl" />)}
           {!isLoading && crops.map((crop) => (
             <Link
               key={crop.id}

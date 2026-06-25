@@ -60,7 +60,7 @@ export const resources = {
   equipmentBookings: {
     table: 'equipment_bookings',
     route: 'equipment-bookings',
-    columns: ['equipment_id', 'equipment_name', 'farmer_id', 'farmer_name', 'owner_id', 'start_date', 'end_date', 'total_cost', 'status', ...timestamps],
+    columns: ['equipment_id', 'equipment_name', 'farmer_id', 'farmer_name', 'owner_id', 'owner_name', 'start_date', 'end_date', 'rental_days', 'quantity', 'pickup_location', 'notes', 'total_cost', 'status', ...timestamps],
     publicRead: false,
     ownerFields: ['farmer_id', 'owner_id'],
     creatorField: 'farmer_id',
@@ -79,7 +79,7 @@ export const resources = {
   transportBookings: {
     table: 'transport_bookings',
     route: 'transport-bookings',
-    columns: ['vehicle_id', 'vehicle_type', 'farmer_id', 'farmer_name', 'provider_id', 'pickup_location', 'delivery_location', 'pickup_date', 'estimated_cost', 'status', 'cargo_description', ...timestamps],
+    columns: ['vehicle_id', 'vehicle_type', 'farmer_id', 'farmer_name', 'provider_id', 'provider_name', 'pickup_location', 'delivery_location', 'pickup_date', 'preferred_time', 'product_name', 'quantity', 'estimated_cost', 'status', 'cargo_description', 'additional_instructions', ...timestamps],
     publicRead: false,
     ownerFields: ['farmer_id', 'provider_id'],
     creatorField: 'farmer_id',
@@ -107,7 +107,7 @@ export const resources = {
   transactions: {
     table: 'transactions',
     route: 'transactions',
-    columns: ['user_id', 'order_id', 'amount', 'type', 'status', 'description', 'counterparty_name', 'buyer_id', 'seller_id', 'payment_method', 'sender_account', 'receiver_account', 'reference', ...timestamps],
+    columns: ['transaction_code', 'user_id', 'order_id', 'amount', 'type', 'status', 'description', 'counterparty_name', 'buyer_id', 'seller_id', 'payment_method', 'sender_account', 'receiver_account', 'reference', 'sender_number', 'receiver_number', 'sender_bank', 'receiver_bank', 'transaction_reference', 'screenshot_url', 'note', ...timestamps],
     publicRead: false,
     ownerFields: ['user_id', 'buyer_id', 'seller_id'],
     creatorField: 'buyer_id',

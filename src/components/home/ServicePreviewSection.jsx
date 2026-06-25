@@ -20,7 +20,7 @@ export default function ServicePreviewSection({ type }) {
   const Icon = equipment ? Wrench : Truck;
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['home', type],
-    queryFn: () => entity.list('-created_date', 3)
+    queryFn: () => entity.list('-created_date', 4)
   });
 
   return (
@@ -33,8 +33,8 @@ export default function ServicePreviewSection({ type }) {
           </div>
           <Button asChild variant="outline"><Link to={route}>সব দেখুন <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
         </div>
-        <div className="grid gap-5 md:grid-cols-3">
-          {isLoading && [1, 2, 3].map((item) => <Skeleton key={item} className="h-64 rounded-2xl" />)}
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {isLoading && [1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-64 rounded-2xl" />)}
           {!isLoading && items.map((item) => (
             <Link key={item.id} to={`${route}?item=${item.id}`} className="group overflow-hidden rounded-2xl border bg-card hover:shadow-lg">
               {item.images?.[0] ? (

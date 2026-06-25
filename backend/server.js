@@ -12,6 +12,9 @@ import { createResourceRouter } from './routes/resourceRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import availabilityRoutes from './routes/availabilityRoutes.js';
+import { adminTransactionRouter, transactionRouter } from './routes/transactionRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import { equipmentBookingRouter, transportBookingRouter } from './routes/bookingRoutes.js';
 
 dotenv.config();
 
@@ -99,6 +102,11 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/transactions', transactionRouter);
+app.use('/api/admin/transactions', adminTransactionRouter);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/equipment-bookings', equipmentBookingRouter);
+app.use('/api/transport-bookings', transportBookingRouter);
 
 for (const [name, config] of Object.entries(resources)) {
   const controller = createResourceController(models[name], config);

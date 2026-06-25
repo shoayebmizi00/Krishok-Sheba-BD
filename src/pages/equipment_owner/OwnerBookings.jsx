@@ -29,7 +29,7 @@ export default function OwnerBookings() {
 
   const updateStatus = async (id, status) => {
     await apiClient.entities.EquipmentBooking.update(id, { status });
-    toast({ title: status === 'confirmed' ? t('bookingConfirmed') : t('bookingCancelled') });
+    toast({ title: status === 'approved' ? 'বুকিং অনুমোদন করা হয়েছে' : status === 'rejected' ? 'বুকিং প্রত্যাখ্যান করা হয়েছে' : t('bookingCancelled') });
     load();
   };
 
@@ -59,10 +59,10 @@ export default function OwnerBookings() {
               <div className="flex gap-2 mt-3 pt-3 border-t border-border flex-wrap">
                 {b.status === 'pending' && (
                   <>
-                    <Button size="sm" onClick={() => updateStatus(b.id, 'confirmed')} className="bg-green-600 hover:bg-green-700 gap-1">
-                      <Check className="w-3.5 h-3.5" /> নিশ্চিত করুন
+                    <Button size="sm" onClick={() => updateStatus(b.id, 'approved')} className="bg-green-600 hover:bg-green-700 gap-1">
+                      <Check className="w-3.5 h-3.5" /> অনুমোদন করুন
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, 'cancelled')} className="text-destructive gap-1">
+                    <Button size="sm" variant="outline" onClick={() => updateStatus(b.id, 'rejected')} className="text-destructive gap-1">
                       <X className="w-3.5 h-3.5" /> প্রত্যাখ্যান করুন
                     </Button>
                   </>

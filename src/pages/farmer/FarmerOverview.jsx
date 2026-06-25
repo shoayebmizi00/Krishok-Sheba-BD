@@ -1,119 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
+import { Banknote, CheckCircle2, Clock, Package, Sprout, Truck, Wrench } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { apiClient } from '@/api/apiClient';
-import { Sprout, Package, Banknote, Clock } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import StatCard from '@/components/dashboard/StatCard';
-import { formatCurrency } from '@/lib/constants';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/shared/StatusBadge';
+import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
+import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/constants';
 
 export default function FarmerOverview() {
   const { user } = useOutletContext();
-  const [stats, setStats] = useState({ listings: 0, orders: 0, pending: 0, revenue: 0 });
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [bids, setBids] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      const [listings, orders, transactions, bidData] = await Promise.all([
-        apiClient.entities.CropListing.filter({ farmer_id: user.id }),
-        apiClient.entities.Order.filter({ seller_id: user.id }),
-        apiClient.entities.Transaction.filter({ user_id: user.id }),
-        apiClient.entities.Bid.filter({ farmer_id: user.id }, '-created_date', 5)
-      ]);
-      const activeListings = listings.filter(l => l.status === 'active').length;
-      const pendingOrders = orders.filter(o => o.status === 'pending').length;
-      const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-
-      setStats({ listings: activeListings, orders: orders.length, pending: pendingOrders, revenue: totalRevenue });
-      setRecentOrders(orders.slice(0, 5));
-      setBids(bidData);
-      setLoading(false);
-    };
-    load();
-  }, [user]);
-
-  const chartData = [
-    { month: 'Jan', sales: 12000 }, { month: 'Feb', sales: 18000 },
-    { month: 'Mar', sales: 22000 }, { month: 'Apr', sales: 15000 },
-    { month: 'May', sales: 28000 }, { month: 'Jun', sales: 35000 },
-  ];
-
-  if (loading) return <LoadingSpinner />;
-
+  const [data, setData] = useState(null);
+  useEffect(() => { apiClient.dashboard.farmerSummary().then(setData).catch(() => setData({ summary: {}, recentOrders: [], recentBids: [], months: [] })); }, []);
+  if (!data) return <TransactionSkeleton />;
+  const stats = data.summary || {};
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-heading font-bold text-xl text-foreground">
-          স্বাগতম, {user?.full_name || 'কৃষক'}! 🌾
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">আপনার কৃষি কার্যক্রমের সারসংক্ষেপ</p>
+      <div><h2 className="font-heading text-xl font-bold">স্বাগতম, {user?.full_name || 'কৃষক'}! 🌾</h2><p className="text-sm text-muted-foreground">আপনার কৃষি কার্যক্রমের দ্রুত সারসংক্ষেপ</p></div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard icon={Sprout} label="সক্রিয় তালিকা" value={Number(stats.active_listings || 0).toLocaleString('bn-BD')} color="text-green-600" bgColor="bg-green-100" />
+        <StatCard icon={Package} label="মোট অর্ডার" value={Number(stats.total_orders || 0).toLocaleString('bn-BD')} color="text-blue-600" bgColor="bg-blue-100" />
+        <StatCard icon={Clock} label="অপেক্ষমাণ অর্ডার" value={Number(stats.pending_orders || 0).toLocaleString('bn-BD')} color="text-yellow-600" bgColor="bg-yellow-100" />
+        <StatCard icon={Banknote} label="যাচাইকৃত আয়" value={formatCurrency(stats.revenue || 0)} color="text-primary" bgColor="bg-primary/10" />
       </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Sprout} label="Active Listings" value={stats.listings} color="text-green-600" bgColor="bg-green-100" />
-        <StatCard icon={Package} label="Total Orders" value={stats.orders} color="text-blue-600" bgColor="bg-blue-100" />
-        <StatCard icon={Clock} label="Pending Orders" value={stats.pending} color="text-yellow-600" bgColor="bg-yellow-100" />
-        <StatCard icon={Banknote} label="Revenue" value={formatCurrency(stats.revenue)} color="text-primary" bgColor="bg-primary/10" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link to="/farmer/equipment-booking" className="group rounded-2xl border bg-card p-5 transition hover:border-primary/40 hover:shadow-md">
+          <div className="flex items-center justify-between"><div className="flex items-center gap-3"><span className="rounded-xl bg-orange-100 p-3 text-orange-700"><Wrench className="h-6 w-6" /></span><div><h3 className="font-heading font-semibold">যন্ত্রপাতি বুকিং</h3><p className="text-xs text-muted-foreground">যন্ত্রপাতি খুঁজুন ও বুকিং পরিচালনা করুন</p></div></div><span className="text-sm font-medium text-primary group-hover:underline">খুলুন</span></div>
+          <div className="mt-4 grid grid-cols-3 gap-3 text-center"><div className="rounded-xl bg-muted p-3"><strong className="block text-xl">{Number(stats.equipment_bookings || 0).toLocaleString('bn-BD')}</strong><span className="text-xs text-muted-foreground">মোট বুকিং</span></div><div className="rounded-xl bg-amber-50 p-3 text-amber-800"><Clock className="mx-auto mb-1 h-4 w-4" /><strong>{Number(stats.equipment_pending || 0).toLocaleString('bn-BD')}</strong><span className="block text-xs">অপেক্ষমাণ</span></div><div className="rounded-xl bg-green-50 p-3 text-green-800"><CheckCircle2 className="mx-auto mb-1 h-4 w-4" /><strong>{Number(stats.equipment_approved || 0).toLocaleString('bn-BD')}</strong><span className="block text-xs">অনুমোদিত</span></div></div>
+        </Link>
+        <Link to="/farmer/transport-request" className="group rounded-2xl border bg-card p-5 transition hover:border-primary/40 hover:shadow-md">
+          <div className="flex items-center justify-between"><div className="flex items-center gap-3"><span className="rounded-xl bg-blue-100 p-3 text-blue-700"><Truck className="h-6 w-6" /></span><div><h3 className="font-heading font-semibold">পরিবহন অনুরোধ</h3><p className="text-xs text-muted-foreground">যানবাহন খুঁজুন ও অনুরোধ পরিচালনা করুন</p></div></div><span className="text-sm font-medium text-primary group-hover:underline">খুলুন</span></div>
+          <div className="mt-4 grid grid-cols-3 gap-3 text-center"><div className="rounded-xl bg-muted p-3"><strong className="block text-xl">{Number(stats.transport_requests || 0).toLocaleString('bn-BD')}</strong><span className="text-xs text-muted-foreground">মোট অনুরোধ</span></div><div className="rounded-xl bg-amber-50 p-3 text-amber-800"><Clock className="mx-auto mb-1 h-4 w-4" /><strong>{Number(stats.transport_pending || 0).toLocaleString('bn-BD')}</strong><span className="block text-xs">অপেক্ষমাণ</span></div><div className="rounded-xl bg-green-50 p-3 text-green-800"><CheckCircle2 className="mx-auto mb-1 h-4 w-4" /><strong>{Number(stats.transport_accepted || 0).toLocaleString('bn-BD')}</strong><span className="block text-xs">গৃহীত</span></div></div>
+        </Link>
       </div>
-
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="mb-4 flex items-center justify-between"><h3 className="font-heading font-semibold">সর্বশেষ বিড</h3><Button asChild variant="outline" size="sm"><Link to="/farmer-dashboard/bids">সব বিড দেখুন</Link></Button></div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatCard icon={Clock} label="মোট বিড" value={bids.length} color="text-blue-600" bgColor="bg-blue-100" />
-          <StatCard icon={Clock} label="অপেক্ষমাণ" value={bids.filter((bid) => bid.status === 'pending').length} color="text-yellow-600" bgColor="bg-yellow-100" />
-          <StatCard icon={Clock} label="গৃহীত" value={bids.filter((bid) => bid.status === 'accepted').length} color="text-green-600" bgColor="bg-green-100" />
-          <StatCard icon={Clock} label="প্রত্যাখ্যাত" value={bids.filter((bid) => bid.status === 'rejected').length} color="text-red-600" bgColor="bg-red-100" />
-        </div>
-        <div className="mt-4 space-y-2">{bids.slice(0, 3).map((bid) => <div key={bid.id} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{bid.crop_name} · {bid.buyer_name}</span><StatusBadge status={bid.status} /></div>)}</div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border bg-card p-5"><h3 className="mb-4 font-semibold">মাসিক বিক্রি</h3><div className="h-64">{data.months.length ? <ResponsiveContainer><BarChart data={data.months}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" /><YAxis /><Tooltip /><Bar dataKey="sales" fill="#15803d" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center text-sm text-muted-foreground">যাচাইকৃত বিক্রির তথ্য এখনো নেই</div>}</div></div>
+        <div className="rounded-2xl border bg-card p-5"><div className="mb-4 flex justify-between"><h3 className="font-semibold">সর্বশেষ বিড</h3><Button asChild size="sm" variant="outline"><Link to="/farmer-dashboard/bids">সব দেখুন</Link></Button></div><div className="space-y-2">{data.recentBids.length ? data.recentBids.map((bid) => <div key={bid.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><span>{bid.crop_name} · {bid.buyer_name}</span><StatusBadge status={bid.status} /></div>) : <p className="py-8 text-center text-sm text-muted-foreground">কোনো বিড নেই</p>}</div></div>
       </div>
-
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-heading font-semibold text-foreground mb-4">বিক্রির প্রবণতা</h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="month" className="text-xs" />
-              <YAxis className="text-xs" />
-              <Tooltip />
-              <Bar dataKey="sales" fill="hsl(142, 72%, 29%)" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-heading font-semibold text-foreground mb-4">সাম্প্রতিক অর্ডার</h3>
-        {recentOrders.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">এখনো কোনো অর্ডার নেই</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground border-b border-border">
-                  <th className="pb-3 font-medium">ক্রেতা</th>
-                  <th className="pb-3 font-medium">পরিমাণ</th>
-                  <th className="pb-3 font-medium">অবস্থা</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map(order => (
-                  <tr key={order.id} className="border-b border-border last:border-0">
-                    <td className="py-3">{order.buyer_name || 'Buyer'}</td>
-                    <td className="py-3 font-medium text-primary">{formatCurrency(order.total_amount)}</td>
-                    <td className="py-3 capitalize">{order.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <div className="rounded-2xl border bg-card p-5"><h3 className="mb-4 font-semibold">সাম্প্রতিক অর্ডার</h3><div className="space-y-2">{data.recentOrders.length ? data.recentOrders.map((order) => <div key={order.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><span>{order.buyer_name || 'ক্রেতা'}</span><span className="font-semibold text-primary">{formatCurrency(order.total_amount)}</span><StatusBadge status={order.status} /></div>) : <p className="py-8 text-center text-sm text-muted-foreground">এখনো কোনো অর্ডার নেই</p>}</div></div>
     </div>
   );
 }

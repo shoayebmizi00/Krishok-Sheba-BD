@@ -140,6 +140,10 @@ const AuthenticatedApp = () => {
           <Route path="messages" element={<Messages />} />
           <Route path="messages/:id" element={<ConversationDetail />} />
         </Route>
+        <Route path="/farmer" element={<FarmerDashboard />}>
+          <Route path="equipment-booking" element={<FarmerEquipmentBookings />} />
+          <Route path="transport-request" element={<FarmerTransport />} />
+        </Route>
       </Route>
 
       {/* Buyer Dashboard */}

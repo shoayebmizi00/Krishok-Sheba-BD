@@ -8,7 +8,7 @@ const timestamp = (offsetDays = 0) => `${date(offsetDays)}T09:00:00.000Z`;
 
 export const demoUsers = [
   { id: 'user-admin', email: 'admin@example.com', password: '123456', full_name: 'Demo Admin', role: 'admin', district: 'Dhaka', phone: '01700000001', is_active: true },
-  { id: 'user-farmer', email: 'farmer@example.com', password: '123456', full_name: 'Abdul Karim', role: 'farmer', district: 'Rajshahi', phone: '01700000002', farm_name: 'Karim Agro Farm', land_size: 8.5, crops_grown: 'Rice, Potato, Tomato', is_active: true },
+  { id: 'user-farmer', email: 'farmer@example.com', password: '123456', full_name: 'Abdul Karim', role: 'farmer', district: 'Rajshahi', phone: '01700000002', farm_name: 'Karim Agro Farm', land_size: 8.5, crops_grown: 'Rice, Potato, Tomato', bkash_number: '01700000002', nagad_number: '01700000002', bank_name: 'Sonali Bank', bank_account_number: '1234567890', account_holder_name: 'Abdul Karim', branch_name: 'Rajshahi', is_active: true },
   { id: 'user-buyer', email: 'buyer@example.com', password: '123456', full_name: 'Nusrat Jahan', role: 'buyer', district: 'Dhaka', phone: '01700000003', is_active: true },
   { id: 'user-equipment', email: 'equipment@example.com', password: '123456', full_name: 'Mehedi Machinery', role: 'equipment_owner', district: 'Bogura', phone: '01700000004', is_active: true },
   { id: 'user-transport', email: 'transport@example.com', password: '123456', full_name: 'Rafiq Transport', role: 'transport_provider', district: 'Jashore', phone: '01700000005', is_active: true }
@@ -50,7 +50,7 @@ export const mockData = {
     { id: 'transport-booking-2', vehicle_id: 'vehicle-pickup', vehicle_type: 'pickup_van', farmer_id: 'user-farmer', farmer_name: 'Abdul Karim', provider_id: 'user-transport', pickup_location: 'Shibganj, Bogura', delivery_location: 'Natore wholesale market', pickup_date: date(2), estimated_cost: 4200, status: 'pending', cargo_description: 'Tomato crates', created_at: timestamp(0) }
   ],
   Transaction: [
-    { id: 'transaction-1', user_id: 'user-farmer', order_id: 'order-1', amount: 31000, type: 'sale', status: 'completed', description: 'Rice order payment', counterparty_name: 'Nusrat Jahan', created_at: timestamp(-3) },
+    { id: 'transaction-1', transaction_code: 'KSB-DEMO-001', user_id: 'user-buyer', buyer_id: 'user-buyer', seller_id: 'user-farmer', order_id: 'order-1', amount: 31000, payment_method: 'bkash', sender_number: '01700000003', transaction_reference: 'DEMO1234', type: 'purchase', status: 'verified', description: 'Rice order payment', counterparty_name: 'Abdul Karim', created_at: timestamp(-3) },
     { id: 'transaction-2', user_id: 'user-buyer', order_id: 'order-1', amount: 31000, type: 'purchase', status: 'completed', description: 'Rice purchase', counterparty_name: 'Abdul Karim', created_at: timestamp(-3) },
     { id: 'transaction-3', user_id: 'user-equipment', amount: 13000, type: 'rental', status: 'pending', description: 'Tractor rental', counterparty_name: 'Abdul Karim', created_at: timestamp(-1) },
     { id: 'transaction-4', user_id: 'user-transport', amount: 14500, type: 'transport', status: 'pending', description: 'Rajshahi to Dhaka delivery', counterparty_name: 'Abdul Karim', created_at: timestamp(-1) }

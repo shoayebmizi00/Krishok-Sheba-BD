@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles']);
+const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles', 'payments']);
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 export const cloudinaryEnabled = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME

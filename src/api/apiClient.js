@@ -103,6 +103,38 @@ const entities = Object.fromEntries(
 
 const remoteApi = {
   entities,
+  transactions: {
+    paymentContext: (orderId) => request(`/transactions/payment-context/${orderId}`),
+    create: (data) => request('/transactions', { method: 'POST', body: JSON.stringify(data) }),
+    mySent: (page = 1, limit = 20) => request(`/transactions/my-sent?page=${page}&limit=${limit}`),
+    myReceived: (page = 1, limit = 20) => request(`/transactions/my-received?page=${page}&limit=${limit}`),
+    get: (id) => request(`/transactions/${id}`),
+    updateStatus: (id, status) => request(`/transactions/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    }),
+    adminList: (filters = {}) => {
+      const params = new URLSearchParams(Object.entries(filters).filter(([, value]) => value !== '' && value != null));
+      return request(`/admin/transactions?${params}`);
+    },
+    adminSummary: () => request('/admin/transactions/summary')
+  },
+  dashboard: {
+    farmerSummary: () => request('/dashboard/farmer-summary'),
+    adminSummary: () => request('/dashboard/admin-summary')
+  },
+  bookings: {
+    equipment: {
+      my: () => request('/equipment-bookings/my'),
+      create: (data) => request('/equipment-bookings', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id, data) => request(`/equipment-bookings/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+    },
+    transport: {
+      my: () => request('/transport-bookings/my'),
+      create: (data) => request('/transport-bookings', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id, data) => request(`/transport-bookings/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+    }
+  },
   availability: {
     equipment: (id, startDate, endDate) => request(`/availability/equipment/${id}?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
     transport: (id, pickupDate) => request(`/availability/transport/${id}?pickup_date=${encodeURIComponent(pickupDate)}`)

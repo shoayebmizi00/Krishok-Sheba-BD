@@ -42,12 +42,12 @@ export default function TransportBookings() {
           </div>
           {booking.status === 'pending' && (
             <div className="flex gap-2 mt-3">
-              <Button size="sm" onClick={() => updateStatus(booking.id, 'confirmed')}>নিশ্চিত করুন</Button>
-              <Button size="sm" variant="outline" onClick={() => updateStatus(booking.id, 'cancelled')}>প্রত্যাখ্যান করুন</Button>
+              <Button size="sm" onClick={() => updateStatus(booking.id, 'accepted')}>গ্রহণ করুন</Button>
+              <Button size="sm" variant="outline" onClick={() => updateStatus(booking.id, 'rejected')}>প্রত্যাখ্যান করুন</Button>
             </div>
           )}
-          {booking.status === 'confirmed' && <Button size="sm" className="mt-3" onClick={() => updateStatus(booking.id, 'in_transit')}>যাত্রা শুরু করুন</Button>}
-          {booking.status === 'in_transit' && <Button size="sm" className="mt-3" onClick={() => updateStatus(booking.id, 'delivered')}>পৌঁছেছে চিহ্নিত করুন</Button>}
+          {['accepted', 'confirmed'].includes(booking.status) && <Button size="sm" className="mt-3" onClick={() => updateStatus(booking.id, 'in_transit')}>যাত্রা শুরু করুন</Button>}
+          {booking.status === 'in_transit' && <Button size="sm" className="mt-3" onClick={() => updateStatus(booking.id, 'completed')}>সম্পন্ন চিহ্নিত করুন</Button>}
         </div>
       ))}
     </div>

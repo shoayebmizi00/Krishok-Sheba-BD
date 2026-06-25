@@ -166,7 +166,7 @@ async function createEquipmentBooking(req, res) {
   }
   const [conflicts] = await pool.execute(
     `SELECT id FROM equipment_bookings
-     WHERE equipment_id = ? AND status IN ('pending','confirmed','active')
+     WHERE equipment_id = ? AND status IN ('pending','approved','confirmed','active')
        AND start_date <= ? AND end_date >= ? LIMIT 1`,
     [equipment_id, end_date, start_date]
   );
@@ -180,7 +180,7 @@ async function createTransportBooking(req, res) {
   const [conflicts] = await pool.execute(
     `SELECT id FROM transport_bookings
      WHERE vehicle_id = ? AND pickup_date = ?
-       AND status IN ('pending','confirmed','in_transit') LIMIT 1`,
+       AND status IN ('pending','accepted','confirmed','in_transit') LIMIT 1`,
     [vehicle_id, pickup_date]
   );
   if (conflicts.length) return res.status(409).json({ message: 'নির্বাচিত তারিখে যানবাহনটি উপলব্ধ নয়' });

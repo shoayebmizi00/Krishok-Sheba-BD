@@ -22,6 +22,12 @@ const STATUS_STYLES = {
   refunded: "bg-red-100 text-red-700",
   countered: "bg-indigo-100 text-indigo-700",
   inactive: "bg-gray-100 text-gray-700",
+  sent: "bg-blue-100 text-blue-700",
+  received: "bg-emerald-100 text-emerald-700",
+  verified: "bg-green-100 text-green-700",
+  failed: "bg-red-100 text-red-700",
+  cod_pending: "bg-amber-100 text-amber-800",
+  approved: "bg-green-100 text-green-700",
 };
 const STATUS_LABELS = {
   active: 'সক্রিয়', available: 'উপলব্ধ', pending: 'অপেক্ষমাণ', confirmed: 'নিশ্চিত',
@@ -30,7 +36,8 @@ const STATUS_LABELS = {
   accepted: 'গৃহীত', sold: 'বিক্রি শেষ', sold_out: 'বিক্রি শেষ', expired: 'মেয়াদ শেষ',
   rented: 'বুকড', booked: 'বুকড', maintenance: 'রক্ষণাবেক্ষণে', on_trip: 'যাত্রায়',
   paid: 'পরিশোধিত', refunded: 'ফেরত', countered: 'পাল্টা প্রস্তাব', inactive: 'নিষ্ক্রিয়',
-  sent: 'পাঠানো হয়েছে', received: 'গ্রহণ করা হয়েছে', failed: 'ব্যর্থ', approved: 'অনুমোদিত'
+  sent: 'পাঠানো হয়েছে', received: 'গ্রহণ করা হয়েছে', verified: 'যাচাই করা হয়েছে', failed: 'ব্যর্থ',
+  cod_pending: 'COD অপেক্ষমাণ', approved: 'অনুমোদিত'
 };
 
 export default function StatusBadge({ status }) {

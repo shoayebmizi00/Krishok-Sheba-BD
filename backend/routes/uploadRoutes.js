@@ -6,7 +6,7 @@ import { pool } from '../config/db.js';
 import { cloudinaryEnabled, databaseUploadsEnabled, uploadImage } from '../middleware/upload.js';
 
 const router = Router();
-const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles']);
+const allowedFolders = new Set(['crops', 'equipment', 'vehicles', 'profiles', 'payments']);
 
 if (cloudinaryEnabled) {
   cloudinary.config({

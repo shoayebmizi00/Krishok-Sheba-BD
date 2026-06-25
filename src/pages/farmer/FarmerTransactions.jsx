@@ -1,68 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Banknote, CircleDollarSign, Clock3, PackageCheck, ReceiptText, ShieldCheck, XCircle } from 'lucide-react';
 import { apiClient } from '@/api/apiClient';
-import { History } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import StatCard from '@/components/dashboard/StatCard';
 import StatusBadge from '@/components/shared/StatusBadge';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
+import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
 import { formatCurrency, formatDate } from '@/lib/constants';
 
 export default function FarmerTransactions() {
-  const { user } = useOutletContext();
+  const { toast } = useToast();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      const [legacy, current] = await Promise.all([
-        apiClient.entities.Transaction.filter({ user_id: user.id }, '-created_date'),
-        apiClient.entities.Transaction.filter({ seller_id: user.id }, '-created_date')
-      ]);
-      setTransactions([...new Map([...legacy, ...current].map((item) => [item.id, item])).values()]);
-      setLoading(false);
-    };
-    load();
-  }, [user]);
-
-  if (loading) return <LoadingSpinner />;
-  const markReceived = async (id) => {
-    await apiClient.entities.Transaction.update(id, { status: 'received' });
-    setTransactions((items) => items.map((item) => item.id === id ? { ...item, status: 'received' } : item));
+  const load = async () => {
+    const result = await apiClient.transactions.myReceived(1, 30);
+    setTransactions(result.items);
+    setLoading(false);
   };
+  useEffect(() => { load().catch(() => setLoading(false)); }, []);
+  const summary = useMemo(() => ({
+    total: transactions.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    pending: transactions.filter((item) => ['pending', 'sent'].includes(item.status)).reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    verified: transactions.filter((item) => ['received', 'verified', 'completed'].includes(item.status)).reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    cod: transactions.filter((item) => item.payment_method === 'cash_on_delivery').length
+  }), [transactions]);
+  const update = async (id, status) => {
+    try {
+      const updated = await apiClient.transactions.updateStatus(id, status);
+      setTransactions((items) => items.map((item) => item.id === id ? updated : item));
+      toast({ title: status === 'received' ? 'পেমেন্ট গ্রহণ করা হয়েছে' : 'লেনদেন বাতিল করা হয়েছে' });
+    } catch (error) {
+      toast({ title: 'কিছু ভুল হয়েছে, আবার চেষ্টা করুন', description: error.message, variant: 'destructive' });
+    }
+  };
+  if (loading) return <TransactionSkeleton />;
 
+  const cards = [
+    [Banknote, 'মোট প্রাপ্ত পেমেন্ট', formatCurrency(summary.total), 'text-emerald-700', 'bg-emerald-100'],
+    [Clock3, 'অপেক্ষমাণ পেমেন্ট', formatCurrency(summary.pending), 'text-amber-700', 'bg-amber-100'],
+    [ShieldCheck, 'যাচাই করা পেমেন্ট', formatCurrency(summary.verified), 'text-blue-700', 'bg-blue-100'],
+    [PackageCheck, 'COD পেমেন্ট', summary.cod.toLocaleString('bn-BD'), 'text-violet-700', 'bg-violet-100'],
+    [CircleDollarSign, 'মোট আয়', formatCurrency(summary.verified), 'text-primary', 'bg-primary/10']
+  ];
   return (
     <div className="space-y-6">
-      <h2 className="font-heading font-bold text-xl text-foreground">লেনদেনের ইতিহাস</h2>
-
-      {transactions.length === 0 ? (
-        <EmptyState icon={History} title="No transactions" description="Your earnings and transaction records will appear here" />
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr className="text-left">
-                <th className="p-3 font-medium text-muted-foreground">তারিখ</th>
-                <th className="p-3 font-medium text-muted-foreground">ধরন</th>
-                <th className="p-3 font-medium text-muted-foreground">বিবরণ</th>
-                <th className="p-3 font-medium text-muted-foreground">টাকার পরিমাণ</th>
-                <th className="p-3 font-medium text-muted-foreground">অবস্থা</th>
-                <th className="p-3 font-medium text-muted-foreground">পদক্ষেপ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map(t => (
-                <tr key={t.id} className="border-t border-border">
-                  <td className="p-3 text-muted-foreground">{formatDate(t.created_date)}</td>
-                  <td className="p-3 capitalize text-foreground">{t.type}</td>
-                  <td className="p-3 text-muted-foreground">{t.description || '-'}</td>
-                  <td className="p-3 font-medium text-primary">{formatCurrency(t.amount)}</td>
-                  <td className="p-3"><StatusBadge status={t.status} /></td>
-                  <td className="p-3">{['pending', 'sent'].includes(t.status) && <button className="text-sm font-medium text-primary" onClick={() => markReceived(t.id)}>পেমেন্ট পেয়েছি</button>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div><p className="text-sm font-medium text-primary">আয়ের স্বচ্ছ হিসাব</p><h2 className="font-heading text-2xl font-bold">পেমেন্ট / লেনদেন</h2></div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">{cards.map(([icon, label, value, color, bg]) => <StatCard key={label} icon={icon} label={label} value={value} color={color} bgColor={bg} />)}</div>
+      {!transactions.length ? <EmptyState icon={ReceiptText} title="কোনো পেমেন্ট পাওয়া যায়নি" description="ক্রেতার পাঠানো পেমেন্ট তথ্য এখানে দেখা যাবে।" /> : (
+        <div className="overflow-x-auto rounded-2xl border bg-card">
+          <table className="w-full text-sm"><thead className="bg-muted/60 text-left"><tr><th className="p-3">ট্রানজেকশন</th><th className="p-3">ক্রেতা / অর্ডার</th><th className="p-3">ফসল</th><th className="p-3">পরিমাণ</th><th className="p-3">পদ্ধতি / প্রেরক</th><th className="p-3">অবস্থা</th><th className="p-3">তারিখ</th><th className="p-3">পদক্ষেপ</th></tr></thead>
+          <tbody>{transactions.map((item) => <tr key={item.id} className="border-t align-top"><td className="p-3 font-medium">{item.transaction_code || item.id.slice(-8)}<div className="text-xs text-muted-foreground">{item.transaction_reference || 'রেফারেন্স নেই'}</div></td><td className="p-3">{item.buyer_name || item.buyer_full_name || 'ক্রেতা'}<div className="text-xs text-muted-foreground">#{item.order_id?.slice(-6)}</div></td><td className="p-3">{item.items?.[0]?.name || item.description || '—'}</td><td className="p-3 font-bold text-primary">{formatCurrency(item.amount)}</td><td className="p-3">{(item.payment_method || '—').replaceAll('_', ' ')}<div className="text-xs text-muted-foreground">{item.sender_number || item.sender_account || item.sender_bank || '—'}</div></td><td className="p-3"><StatusBadge status={item.status} /></td><td className="p-3 text-muted-foreground">{formatDate(item.created_date)}</td><td className="p-3"><div className="flex min-w-36 flex-col gap-1">{['pending', 'sent', 'cod_pending'].includes(item.status) && <Button size="sm" onClick={() => update(item.id, 'received')}><PackageCheck className="mr-1 h-4 w-4" />গ্রহণ করেছি</Button>}<Button size="sm" variant="ghost" className="text-destructive" onClick={() => update(item.id, 'failed')}><XCircle className="mr-1 h-4 w-4" />সমস্যা জানান</Button>{item.screenshot_url && <Button asChild size="sm" variant="outline"><a href={item.screenshot_url} target="_blank" rel="noreferrer">ছবি দেখুন</a></Button>}</div></td></tr>)}</tbody></table>
         </div>
       )}
     </div>
