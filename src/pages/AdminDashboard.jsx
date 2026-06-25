@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, Outlet, useOutletContext, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Sprout, Package, Wrench, Truck, Megaphone, Banknote, BookOpen, Settings, Gavel, CalendarDays, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, Sprout, Package, Wrench, Truck, Megaphone, Banknote, BookOpen, Settings, Gavel, CalendarDays, BarChart3, MessageSquare } from 'lucide-react';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { useTranslation } from '@/lib/useTranslation';
@@ -27,9 +27,10 @@ export default function AdminDashboard() {
     { icon: BookOpen, label: "গল্প অনুমোদন", path: "/admin/stories" },
     { icon: Settings, label: "সেটিংস", path: "/admin/settings" },
     { icon: BarChart3, label: "প্রতিবেদন", path: "/admin/reports" },
+    { icon: MessageSquare, label: t('messages'), path: "/admin/messages" },
   ];
 
-  const pageTitle = SIDEBAR_LINKS.find(l => l.path === location.pathname)?.label || t('overview');
+  const pageTitle = SIDEBAR_LINKS.find((link) => link.path === location.pathname || (link.path !== '/admin' && location.pathname.startsWith(`${link.path}/`)))?.label || t('overview');
 
   return (
     <div className="flex min-h-screen bg-muted/30">

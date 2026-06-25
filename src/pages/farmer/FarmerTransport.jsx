@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Eye, MapPin, Search, Truck, XCircle } from 'lucide-react';
+import { Eye, MapPin, MessageSquare, Search, Truck, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,7 @@ const emptyForm = { pickup_location: '', delivery_location: '', product_name: ''
 
 export default function FarmerTransport() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -66,6 +68,19 @@ export default function FarmerTransport() {
       toast({ title: 'পরিবহন অনুরোধ বাতিল করা হয়েছে।' });
     } catch (error) { toast({ title: 'অনুরোধ বাতিল করা যায়নি', description: error.message, variant: 'destructive' }); }
   };
+  const messageProvider = async (booking) => {
+    try {
+      const conversation = await apiClient.messaging.createConversation({
+        receiver_id: booking.provider_id,
+        related_type: 'transport_booking',
+        related_id: booking.id,
+        subject: `${booking.pickup_location} → ${booking.delivery_location}`
+      });
+      navigate(`/farmer/messages/${conversation.id}`);
+    } catch (error) {
+      toast({ title: 'কথোপকথন শুরু করা যায়নি', description: error.message, variant: 'destructive', duration: 3000 });
+    }
+  };
   if (loading) return <TransactionSkeleton />;
 
   return (
@@ -83,7 +98,7 @@ export default function FarmerTransport() {
 
       <Dialog open={Boolean(bookingVehicle)} onOpenChange={(open) => !open && setBookingVehicle(null)}><DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>পরিবহন বুক করুন</DialogTitle></DialogHeader><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-medium">পণ্য তোলার স্থান<Input className="mt-1" value={form.pickup_location} onChange={(e) => setForm({ ...form, pickup_location: e.target.value })} /></label><label className="text-sm font-medium">গন্তব্য<Input className="mt-1" value={form.delivery_location} onChange={(e) => setForm({ ...form, delivery_location: e.target.value })} /></label><label className="text-sm font-medium">পণ্য/ফসলের নাম<Input className="mt-1" value={form.product_name} onChange={(e) => setForm({ ...form, product_name: e.target.value })} /></label><label className="text-sm font-medium">পরিমাণ<Input className="mt-1" placeholder="যেমন: ২ টন" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></label><label className="text-sm font-medium">পছন্দের তারিখ<Input type="date" className="mt-1" value={form.pickup_date} onChange={(e) => setForm({ ...form, pickup_date: e.target.value })} /></label><label className="text-sm font-medium">পছন্দের সময়<Input type="time" className="mt-1" value={form.preferred_time} onChange={(e) => setForm({ ...form, preferred_time: e.target.value })} /></label><label className="text-sm font-medium sm:col-span-2">পণ্যের বিবরণ<Textarea className="mt-1" value={form.cargo_description} onChange={(e) => setForm({ ...form, cargo_description: e.target.value })} /></label><label className="text-sm font-medium sm:col-span-2">অতিরিক্ত নির্দেশনা<Textarea className="mt-1" value={form.additional_instructions} onChange={(e) => setForm({ ...form, additional_instructions: e.target.value })} /></label></div>{form.pickup_date && <p className={`rounded-xl p-3 text-sm ${availability === false ? 'bg-destructive/10 text-destructive' : 'bg-primary/5 text-primary'}`}>{availability === false ? 'নির্বাচিত তারিখে যানটি উপলব্ধ নয়' : availability === true ? 'নির্বাচিত তারিখে যানটি উপলব্ধ' : 'উপলব্ধতা যাচাই হচ্ছে...'}</p>}<Button onClick={book} disabled={submitting || availability === false} className="w-full">{submitting ? 'জমা হচ্ছে...' : 'পরিবহন বুক করুন'}</Button></DialogContent></Dialog>
 
-      <Dialog open={Boolean(detailBooking)} onOpenChange={(open) => !open && setDetailBooking(null)}><DialogContent><DialogHeader><DialogTitle>পরিবহন অনুরোধ #{detailBooking?.id.slice(-8)}</DialogTitle></DialogHeader>{detailBooking && <div className="space-y-3 text-sm"><p><strong>যান:</strong> {(detailBooking.vehicle_type || '').replaceAll('_', ' ')}</p><p><strong>মালিক:</strong> {detailBooking.provider_name || '—'}</p><p><strong>রুট:</strong> {detailBooking.pickup_location} → {detailBooking.delivery_location}</p><p><strong>ফসল:</strong> {detailBooking.product_name || '—'} ({detailBooking.quantity || '—'})</p><p><strong>তারিখ:</strong> {formatDate(detailBooking.pickup_date)} {detailBooking.preferred_time?.slice(0,5) || ''}</p><p><strong>নির্দেশনা:</strong> {detailBooking.additional_instructions || '—'}</p><p><strong>যোগাযোগ:</strong> {['accepted','confirmed','in_transit','completed','delivered'].includes(detailBooking.status) ? detailBooking.provider_phone || 'তথ্য দেওয়া হয়নি' : 'অনুরোধ গ্রহণের পর দেখা যাবে'}</p><StatusBadge status={detailBooking.status} /></div>}</DialogContent></Dialog>
+      <Dialog open={Boolean(detailBooking)} onOpenChange={(open) => !open && setDetailBooking(null)}><DialogContent><DialogHeader><DialogTitle>পরিবহন অনুরোধ #{detailBooking?.id.slice(-8)}</DialogTitle></DialogHeader>{detailBooking && <div className="space-y-3 text-sm"><p><strong>যান:</strong> {(detailBooking.vehicle_type || '').replaceAll('_', ' ')}</p><p><strong>মালিক:</strong> {detailBooking.provider_name || '—'}</p><p><strong>রুট:</strong> {detailBooking.pickup_location} → {detailBooking.delivery_location}</p><p><strong>ফসল:</strong> {detailBooking.product_name || '—'} ({detailBooking.quantity || '—'})</p><p><strong>তারিখ:</strong> {formatDate(detailBooking.pickup_date)} {detailBooking.preferred_time?.slice(0,5) || ''}</p><p><strong>নির্দেশনা:</strong> {detailBooking.additional_instructions || '—'}</p><p><strong>যোগাযোগ:</strong> {['accepted','confirmed','in_transit','completed','delivered'].includes(detailBooking.status) ? detailBooking.provider_phone || 'তথ্য দেওয়া হয়নি' : 'অনুরোধ গ্রহণের পর দেখা যাবে'}</p><StatusBadge status={detailBooking.status} /><Button variant="outline" className="w-full" onClick={() => messageProvider(detailBooking)}><MessageSquare className="mr-2 h-4 w-4" />সেবাদাতাকে বার্তা দিন</Button></div>}</DialogContent></Dialog>
     </div>
   );
 }

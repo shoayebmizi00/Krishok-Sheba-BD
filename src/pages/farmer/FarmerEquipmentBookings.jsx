@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Eye, MapPin, Search, Star, Wrench, XCircle } from 'lucide-react';
+import { CalendarDays, Eye, MapPin, MessageSquare, Search, Star, Wrench, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,7 @@ const emptyForm = { start_date: '', end_date: '', quantity: '1', pickup_location
 
 export default function FarmerEquipmentBookings() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [equipment, setEquipment] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -75,6 +77,19 @@ export default function FarmerEquipmentBookings() {
       toast({ title: 'যন্ত্রপাতি বুকিং বাতিল করা হয়েছে।' });
     } catch (error) { toast({ title: 'বুকিং বাতিল করা যায়নি', description: error.message, variant: 'destructive' }); }
   };
+  const messageOwner = async (booking) => {
+    try {
+      const conversation = await apiClient.messaging.createConversation({
+        receiver_id: booking.owner_id,
+        related_type: 'equipment_booking',
+        related_id: booking.id,
+        subject: booking.equipment_name
+      });
+      navigate(`/farmer/messages/${conversation.id}`);
+    } catch (error) {
+      toast({ title: 'কথোপকথন শুরু করা যায়নি', description: error.message, variant: 'destructive', duration: 3000 });
+    }
+  };
   if (loading) return <TransactionSkeleton />;
 
   return (
@@ -109,7 +124,7 @@ export default function FarmerEquipmentBookings() {
 
       <Dialog open={Boolean(bookingItem)} onOpenChange={(open) => !open && setBookingItem(null)}><DialogContent className="max-w-xl"><DialogHeader><DialogTitle>{bookingItem?.name} বুক করুন</DialogTitle></DialogHeader><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-medium">শুরুর তারিখ<Input type="date" className="mt-1" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></label><label className="text-sm font-medium">শেষের তারিখ<Input type="date" className="mt-1" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></label><label className="text-sm font-medium">দিনের সংখ্যা<Input className="mt-1" value={days || ''} readOnly /></label><label className="text-sm font-medium">পরিমাণ<Input type="number" min="1" className="mt-1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></label><label className="text-sm font-medium sm:col-span-2">সংগ্রহের স্থান<Input className="mt-1" value={form.pickup_location} onChange={(e) => setForm({ ...form, pickup_location: e.target.value })} /></label><label className="text-sm font-medium sm:col-span-2">অতিরিক্ত নোট<Textarea className="mt-1" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label></div>{days > 0 && <div className="rounded-xl bg-primary/5 p-3 text-sm"><p>{availability === false ? 'নির্বাচিত তারিখে উপলব্ধ নয়' : availability === true ? 'নির্বাচিত তারিখে উপলব্ধ' : 'উপলব্ধতা যাচাই হচ্ছে...'}</p><strong>আনুমানিক মোট: {formatCurrency(days * Number(bookingItem?.rent_price_per_day || 0))}</strong></div>}<Button onClick={book} disabled={submitting || availability === false || !days} className="w-full">{submitting ? 'জমা হচ্ছে...' : 'বুকিং নিশ্চিত করুন'}</Button></DialogContent></Dialog>
 
-      <Dialog open={Boolean(detailBooking)} onOpenChange={(open) => !open && setDetailBooking(null)}><DialogContent><DialogHeader><DialogTitle>বুকিং #{detailBooking?.id.slice(-8)}</DialogTitle></DialogHeader>{detailBooking && <div className="space-y-3 text-sm"><p><strong>যন্ত্রপাতি:</strong> {detailBooking.equipment_name}</p><p><strong>মালিক:</strong> {detailBooking.owner_name || '—'}</p><p><strong>সময়:</strong> {formatDate(detailBooking.start_date)} – {formatDate(detailBooking.end_date)}</p><p><strong>সংগ্রহের স্থান:</strong> {detailBooking.pickup_location || '—'}</p><p><strong>নোট:</strong> {detailBooking.notes || '—'}</p><p><strong>যোগাযোগ:</strong> {['approved','confirmed','active','completed'].includes(detailBooking.status) ? detailBooking.owner_phone || 'তথ্য দেওয়া হয়নি' : 'অনুমোদনের পর দেখা যাবে'}</p><StatusBadge status={detailBooking.status} /></div>}</DialogContent></Dialog>
+      <Dialog open={Boolean(detailBooking)} onOpenChange={(open) => !open && setDetailBooking(null)}><DialogContent><DialogHeader><DialogTitle>বুকিং #{detailBooking?.id.slice(-8)}</DialogTitle></DialogHeader>{detailBooking && <div className="space-y-3 text-sm"><p><strong>যন্ত্রপাতি:</strong> {detailBooking.equipment_name}</p><p><strong>মালিক:</strong> {detailBooking.owner_name || '—'}</p><p><strong>সময়:</strong> {formatDate(detailBooking.start_date)} – {formatDate(detailBooking.end_date)}</p><p><strong>সংগ্রহের স্থান:</strong> {detailBooking.pickup_location || '—'}</p><p><strong>নোট:</strong> {detailBooking.notes || '—'}</p><p><strong>যোগাযোগ:</strong> {['approved','confirmed','active','completed'].includes(detailBooking.status) ? detailBooking.owner_phone || 'তথ্য দেওয়া হয়নি' : 'অনুমোদনের পর দেখা যাবে'}</p><StatusBadge status={detailBooking.status} /><Button variant="outline" className="w-full" onClick={() => messageOwner(detailBooking)}><MessageSquare className="mr-2 h-4 w-4" />মালিককে বার্তা দিন</Button></div>}</DialogContent></Dialog>
     </div>
   );
 }

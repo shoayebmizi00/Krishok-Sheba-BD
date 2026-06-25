@@ -27,11 +27,15 @@ export default function FarmerDashboard() {
     { icon: History, label: t('transactions'), path: "/farmer-dashboard/transactions" },
     { icon: Clock, label: t('harvestReminders'), path: "/farmer-dashboard/harvest-reminders" },
     { icon: Bell, label: t('notifications'), path: "/farmer-dashboard/notifications" },
-    { icon: MessageSquare, label: t('messages'), path: "/farmer-dashboard/messages" },
+    { icon: MessageSquare, label: t('messages'), path: "/farmer/messages", aliases: ['/farmer-dashboard/messages'] },
     { icon: UserCircle, label: t('profile'), path: "/farmer-dashboard/profile" },
   ];
 
-  const pageTitle = SIDEBAR_LINKS.find((link) => link.path === location.pathname || link.aliases?.includes(location.pathname))?.label || t('overview');
+  const pageTitle = SIDEBAR_LINKS.find((link) => (
+    link.path === location.pathname
+    || (link.path !== '/farmer-dashboard' && location.pathname.startsWith(`${link.path}/`))
+    || link.aliases?.some((alias) => alias === location.pathname || location.pathname.startsWith(`${alias}/`))
+  ))?.label || t('overview');
 
   return (
     <div className="flex min-h-screen bg-muted/30">

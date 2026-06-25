@@ -23,7 +23,7 @@ export default function TransportDashboard() {
     { icon: UserCircle, label: t('profile'), path: "/transport-dashboard/profile" },
   ];
 
-  const pageTitle = SIDEBAR_LINKS.find(l => l.path === location.pathname)?.label || t('overview');
+  const pageTitle = SIDEBAR_LINKS.find((link) => link.path === location.pathname || (link.path !== '/transport-dashboard' && location.pathname.startsWith(`${link.path}/`)))?.label || t('overview');
 
   return (
     <div className="flex min-h-screen bg-muted/30">

@@ -31,8 +31,13 @@ const requiredColumns = [
   ['crop_listings', 'remaining_quantity'],
   ['crop_listings', 'sold_quantity'],
   ['conversations', 'participant_ids'],
+  ['conversations', 'participant_one_id'],
+  ['conversations', 'participant_two_id'],
+  ['conversations', 'related_type'],
   ['messages', 'sender_id'],
-  ['messages', 'receiver_id']
+  ['messages', 'receiver_id'],
+  ['messages', 'message_text'],
+  ['messages', 'is_read']
 ];
 
 const databaseConfig = getDatabaseConfig();

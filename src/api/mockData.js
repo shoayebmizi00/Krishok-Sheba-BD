@@ -63,12 +63,12 @@ export const mockData = {
     { id: 'notification-5', user_id: 'user-admin', title: 'Demo mode active', message: 'The application is using local development data.', type: 'system', is_read: false, link: '/admin', created_at: timestamp(0) }
   ],
   Conversation: [
-    { id: 'conversation-1', participant_ids: ['user-farmer', 'user-buyer'], participant_names: ['Abdul Karim', 'Nusrat Jahan'], subject: 'Premium Aman Rice - Rajshahi', listing_id: 'crop-rice', listing_name: 'Premium Aman Rice', last_message: 'I can arrange pickup on Thursday.', last_message_by: 'user-buyer', last_message_date: timestamp(0), created_at: timestamp(-2) }
+    { id: 'conversation-1', participant_one_id: 'user-farmer', participant_two_id: 'user-buyer', participant_ids: ['user-farmer', 'user-buyer'], participant_names: ['Abdul Karim', 'Nusrat Jahan'], subject: 'Premium Aman Rice - Rajshahi', listing_id: 'crop-rice', listing_name: 'Premium Aman Rice', related_type: 'listing', related_id: 'crop-rice', last_message: 'I can arrange pickup on Thursday.', last_message_by: 'user-buyer', last_message_date: timestamp(0), last_message_at: timestamp(0), created_at: timestamp(-2) }
   ],
   Message: [
-    { id: 'message-1', conversation_id: 'conversation-1', sender_id: 'user-buyer', sender_name: 'Nusrat Jahan', content: 'Is 1,000 kg available this week?', created_at: timestamp(-1) },
-    { id: 'message-2', conversation_id: 'conversation-1', sender_id: 'user-farmer', sender_name: 'Abdul Karim', content: 'Yes, it is ready and packed.', created_at: timestamp(-1) },
-    { id: 'message-3', conversation_id: 'conversation-1', sender_id: 'user-buyer', sender_name: 'Nusrat Jahan', content: 'I can arrange pickup on Thursday.', created_at: timestamp(0) }
+    { id: 'message-1', conversation_id: 'conversation-1', sender_id: 'user-buyer', receiver_id: 'user-farmer', sender_name: 'Nusrat Jahan', content: 'Is 1,000 kg available this week?', message_text: 'Is 1,000 kg available this week?', is_read: true, created_at: timestamp(-1) },
+    { id: 'message-2', conversation_id: 'conversation-1', sender_id: 'user-farmer', receiver_id: 'user-buyer', sender_name: 'Abdul Karim', content: 'Yes, it is ready and packed.', message_text: 'Yes, it is ready and packed.', is_read: true, created_at: timestamp(-1) },
+    { id: 'message-3', conversation_id: 'conversation-1', sender_id: 'user-buyer', receiver_id: 'user-farmer', sender_name: 'Nusrat Jahan', content: 'I can arrange pickup on Thursday.', message_text: 'I can arrange pickup on Thursday.', is_read: false, created_at: timestamp(0) }
   ],
   GovernmentNotice: [
     { id: 'notice-1', title: 'Agricultural Machinery Subsidy 2026', category: 'subsidy', description: 'Eligible farmers can apply for support toward selected agricultural machinery.', eligibility: 'Registered farmers and farmer cooperatives', deadline: date(30), link: 'https://dae.gov.bd', is_active: true, created_at: timestamp(-2) },

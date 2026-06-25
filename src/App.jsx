@@ -26,7 +26,6 @@ const Notices = lazy(() => import('@/pages/Notices'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const Messages = lazy(() => import('@/pages/Messages'));
-const ConversationDetail = lazy(() => import('@/pages/ConversationDetail'));
 const Stories = lazy(() => import('@/pages/Stories'));
 const StoryDetail = lazy(() => import('@/pages/StoryDetail'));
 const ShareStory = lazy(() => import('@/pages/ShareStory'));
@@ -110,7 +109,7 @@ const AuthenticatedApp = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/messages" element={<Messages />} />
-        <Route path="/messages/:id" element={<ConversationDetail />} />
+        <Route path="/messages/:id" element={<Messages />} />
         <Route path="/stories" element={<Stories />} />
         <Route path="/stories/:id" element={<StoryDetail />} />
         <Route path="/share-story" element={<ShareStory />} />
@@ -138,11 +137,13 @@ const AuthenticatedApp = () => {
           <Route path="share-story" element={<ShareStory />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />
-          <Route path="messages/:id" element={<ConversationDetail />} />
+          <Route path="messages/:id" element={<Messages />} />
         </Route>
         <Route path="/farmer" element={<FarmerDashboard />}>
           <Route path="equipment-booking" element={<FarmerEquipmentBookings />} />
           <Route path="transport-request" element={<FarmerTransport />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="messages/:id" element={<Messages />} />
         </Route>
       </Route>
 
@@ -155,7 +156,7 @@ const AuthenticatedApp = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />
-          <Route path="messages/:id" element={<ConversationDetail />} />
+          <Route path="messages/:id" element={<Messages />} />
         </Route>
       </Route>
 
@@ -170,7 +171,7 @@ const AuthenticatedApp = () => {
           <Route path="share-story" element={<ShareStory />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />
-          <Route path="messages/:id" element={<ConversationDetail />} />
+          <Route path="messages/:id" element={<Messages />} />
         </Route>
       </Route>
 
@@ -185,7 +186,7 @@ const AuthenticatedApp = () => {
           <Route path="share-story" element={<ShareStory />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />
-          <Route path="messages/:id" element={<ConversationDetail />} />
+          <Route path="messages/:id" element={<Messages />} />
         </Route>
       </Route>
 
@@ -205,6 +206,8 @@ const AuthenticatedApp = () => {
           <Route path="stories" element={<AdminStories />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="messages/:id" element={<Messages />} />
         </Route>
       </Route>
 

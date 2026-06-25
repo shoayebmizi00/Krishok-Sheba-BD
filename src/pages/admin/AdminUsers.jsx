@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Eye, Search, ShieldCheck, Trash2, UserCheck, UserX, Users } from 'lucide-react';
-import { useOutletContext } from 'react-router-dom';
+import { Eye, MessageSquare, Search, ShieldCheck, Trash2, UserCheck, UserX, Users } from 'lucide-react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,6 +22,7 @@ export default function AdminUsers() {
   const [selected, setSelected] = useState(null);
   const [activity, setActivity] = useState(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const load = async () => {
     setUsers(await apiClient.entities.User.list('-created_date', 500));
@@ -65,6 +66,20 @@ export default function AdminUsers() {
     toast({ title: 'ব্যবহারকারী মুছে ফেলা হয়েছে' });
     setSelected(null);
     load();
+  };
+
+  const messageUser = async (user) => {
+    try {
+      const conversation = await apiClient.messaging.createConversation({
+        receiver_id: user.id,
+        related_type: 'user',
+        related_id: user.id,
+        subject: user.full_name
+      });
+      navigate(`/admin/messages/${conversation.id}`);
+    } catch (error) {
+      toast({ title: 'কথোপকথন শুরু করা যায়নি', description: error.message, variant: 'destructive', duration: 3000 });
+    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -113,6 +128,7 @@ export default function AdminUsers() {
               <div className="col-span-2 rounded-xl border p-3 sm:col-span-3"><div className="text-xs text-muted-foreground">লেনদেনের মোট পরিমাণ</div><div className="text-lg font-bold text-primary">{formatCurrency(activity.transactions.reduce((sum, item) => sum + Number(item.amount || 0), 0))}</div></div>
             </div>}
             <div className="flex flex-wrap justify-end gap-2">
+              <Button variant="outline" onClick={() => messageUser(selected)} disabled={selected.id === currentAdmin.id || !selected.is_active}><MessageSquare className="mr-2 h-4 w-4" /> বার্তা দিন</Button>
               <Button variant="outline" onClick={() => updateUser(selected, { is_active: !selected.is_active }, selected.is_active ? 'অ্যাকাউন্ট স্থগিত করা হয়েছে' : 'অ্যাকাউন্ট সক্রিয় করা হয়েছে')} disabled={selected.id === currentAdmin.id}>{selected.is_active ? <UserX className="mr-2 h-4 w-4" /> : <UserCheck className="mr-2 h-4 w-4" />}{selected.is_active ? 'স্থগিত করুন' : 'সক্রিয় করুন'}</Button>
               <Button variant="destructive" onClick={() => remove(selected)} disabled={selected.id === currentAdmin.id}><Trash2 className="mr-2 h-4 w-4" /> ব্যবহারকারী মুছুন</Button>
             </div>

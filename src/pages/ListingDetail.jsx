@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useOutletContext } from 'react-router-dom';
+import { useParams, Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
 import { MapPin, Calendar, User, Send, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ export default function ListingDetail() {
   const { id } = useParams();
   const { user } = useOutletContext();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [listing, setListing] = useState(null);
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,11 +72,13 @@ export default function ListingDetail() {
     if (!user || !listing) return;
     setStartingChat(true);
     try {
-      const conv = await apiClient.entities.Conversation.create({
-        participant_ids: [user.id, listing.farmer_id],
-        listing_id: listing.id
+      const conv = await apiClient.messaging.createConversation({
+        receiver_id: listing.farmer_id,
+        related_type: 'listing',
+        related_id: listing.id,
+        subject: listing.crop_name
       });
-      window.location.href = `/messages/${conv.id}`;
+      navigate(`/buyer-dashboard/messages/${conv.id}`);
     } catch (error) {
       toast({
         title: 'কথোপকথন শুরু করা যায়নি',
@@ -197,7 +200,7 @@ export default function ListingDetail() {
             )}
             {user?.role === 'buyer' && user.id !== listing.farmer_id && (
               <Button onClick={handleStartChat} disabled={startingChat} variant="outline" className="w-full gap-2">
-                <MessageSquare className="w-4 h-4" /> {startingChat ? 'Starting...' : 'Message Farmer'}
+                <MessageSquare className="w-4 h-4" /> {startingChat ? 'শুরু হচ্ছে...' : 'কৃষককে বার্তা দিন'}
               </Button>
             )}
             {!user && (

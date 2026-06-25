@@ -33,7 +33,7 @@ export const resources = {
   conversations: {
     table: 'conversations',
     route: 'conversations',
-    columns: ['participant_ids', 'participant_names', 'subject', 'listing_id', 'listing_name', 'last_message', 'last_message_by', 'last_message_date', ...timestamps],
+    columns: ['participant_one_id', 'participant_two_id', 'participant_ids', 'participant_names', 'subject', 'listing_id', 'listing_name', 'related_type', 'related_id', 'last_message', 'last_message_by', 'last_message_date', 'last_message_at', ...timestamps],
     json: ['participant_ids', 'participant_names'],
     publicRead: false,
     participantField: 'participant_ids'
@@ -41,7 +41,7 @@ export const resources = {
   messages: {
     table: 'messages',
     route: 'messages',
-    columns: ['conversation_id', 'sender_id', 'receiver_id', 'sender_name', 'content', ...timestamps],
+    columns: ['conversation_id', 'sender_id', 'receiver_id', 'sender_name', 'content', 'message_text', 'is_read', ...timestamps],
     publicRead: false,
     ownerFields: ['sender_id'],
     creatorField: 'sender_id',

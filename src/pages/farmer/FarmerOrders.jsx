@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
-import { Package } from 'lucide-react';
+import { MessageSquare, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/shared/StatusBadge';
@@ -12,6 +13,7 @@ import { formatCurrency, formatDate } from '@/lib/constants';
 export default function FarmerOrders() {
   const { user } = useOutletContext();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +31,20 @@ export default function FarmerOrders() {
     const labels = { confirmed: 'অর্ডার নিশ্চিত হয়েছে', shipped: 'অর্ডার পাঠানো হয়েছে', delivered: 'অর্ডার পৌঁছেছে', cancelled: 'অর্ডার বাতিল হয়েছে' };
     toast({ title: labels[status] || 'অর্ডার হালনাগাদ হয়েছে' });
     load();
+  };
+
+  const messageBuyer = async (order) => {
+    try {
+      const conversation = await apiClient.messaging.createConversation({
+        receiver_id: order.buyer_id,
+        related_type: 'order',
+        related_id: order.id,
+        subject: `অর্ডার #${order.id?.slice(-6)}`
+      });
+      navigate(`/farmer/messages/${conversation.id}`);
+    } catch (error) {
+      toast({ title: 'কথোপকথন শুরু করা যায়নি', description: error.message, variant: 'destructive', duration: 3000 });
+    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -54,8 +70,8 @@ export default function FarmerOrders() {
                   <StatusBadge status={order.status} />
                 </div>
               </div>
-              {(order.status === 'pending' || order.status === 'confirmed') && (
-                <div className="mt-3 pt-3 border-t border-border">
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                {(order.status === 'pending' || order.status === 'confirmed') && (
                   <Select onValueChange={(v) => updateStatus(order.id, v)}>
                     <SelectTrigger className="w-48"><SelectValue placeholder="অবস্থা পরিবর্তন করুন" /></SelectTrigger>
                     <SelectContent>
@@ -65,8 +81,11 @@ export default function FarmerOrders() {
                       <SelectItem value="cancelled">বাতিল করুন</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-              )}
+                )}
+                <Button size="sm" variant="outline" className="ml-auto gap-1" onClick={() => messageBuyer(order)}>
+                  <MessageSquare className="h-4 w-4" /> ক্রেতাকে বার্তা দিন
+                </Button>
+              </div>
             </div>
           ))}
         </div>

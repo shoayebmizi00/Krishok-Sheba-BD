@@ -94,20 +94,30 @@ CREATE TABLE bids (
 
 CREATE TABLE conversations (
   id CHAR(36) PRIMARY KEY,
+  participant_one_id CHAR(36) NULL,
+  participant_two_id CHAR(36) NULL,
   participant_ids JSON NOT NULL,
   participant_names JSON NOT NULL,
   subject VARCHAR(255) NOT NULL,
   listing_id CHAR(36) NULL,
   listing_name VARCHAR(150) NULL,
+  related_type ENUM('listing','bid','order','equipment_booking','transport_booking','user') NULL,
+  related_id CHAR(36) NULL,
   last_message TEXT NULL,
   last_message_by CHAR(36) NULL,
   last_message_date DATETIME NULL,
+  last_message_at DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_conversations_listing FOREIGN KEY (listing_id) REFERENCES crop_listings(id) ON DELETE SET NULL,
+  CONSTRAINT fk_conversations_participant_one FOREIGN KEY (participant_one_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_conversations_participant_two FOREIGN KEY (participant_two_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_conversations_last_sender FOREIGN KEY (last_message_by) REFERENCES users(id) ON DELETE SET NULL,
   INDEX idx_conversations_listing (listing_id),
-  INDEX idx_conversations_last_message (last_message_date)
+  INDEX idx_conversations_last_message (last_message_date),
+  INDEX idx_conversations_participant_one (participant_one_id,last_message_at),
+  INDEX idx_conversations_participant_two (participant_two_id,last_message_at),
+  INDEX idx_conversations_related (related_type,related_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE messages (
@@ -117,6 +127,8 @@ CREATE TABLE messages (
   receiver_id CHAR(36) NOT NULL,
   sender_name VARCHAR(120) NULL,
   content TEXT NOT NULL,
+  message_text TEXT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
@@ -124,7 +136,8 @@ CREATE TABLE messages (
   CONSTRAINT fk_messages_receiver FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_messages_conversation_created (conversation_id, created_at),
   INDEX idx_messages_sender (sender_id),
-  INDEX idx_messages_receiver (receiver_id)
+  INDEX idx_messages_receiver (receiver_id),
+  INDEX idx_messages_receiver_read_created (receiver_id,is_read,created_at)
 ) ENGINE=InnoDB;
 
 CREATE TABLE equipment (

@@ -136,6 +136,14 @@ const remoteApi = {
       update: (id, data) => request(`/transport-bookings/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
     }
   },
+  messaging: {
+    conversations: () => request('/conversations'),
+    createConversation: (data) => request('/conversations', { method: 'POST', body: JSON.stringify(data) }),
+    conversationMessages: (id) => request(`/conversations/${id}/messages`),
+    send: (data) => request('/messages', { method: 'POST', body: JSON.stringify(data) }),
+    markMessageRead: (id) => request(`/messages/${id}/read`, { method: 'PATCH', body: '{}' }),
+    markConversationRead: (id) => request(`/conversations/${id}/read`, { method: 'PATCH', body: '{}' })
+  },
   availability: {
     equipment: (id, startDate, endDate) => request(`/availability/equipment/${id}?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
     transport: (id, pickupDate) => request(`/availability/transport/${id}?pickup_date=${encodeURIComponent(pickupDate)}`)

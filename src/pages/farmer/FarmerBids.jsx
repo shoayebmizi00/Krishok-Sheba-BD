@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
 import { Check, X, Gavel, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { formatCurrency } from '@/lib/constants';
 export default function FarmerBids() {
   const { user } = useOutletContext();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chattingId, setChattingId] = useState(null);
@@ -34,11 +35,13 @@ export default function FarmerBids() {
   const handleMessageBuyer = async (bid) => {
     setChattingId(bid.id);
     try {
-      const conv = await apiClient.entities.Conversation.create({
-        participant_ids: [user.id, bid.buyer_id],
-        listing_id: bid.listing_id
+      const conv = await apiClient.messaging.createConversation({
+        receiver_id: bid.buyer_id,
+        related_type: 'bid',
+        related_id: bid.id,
+        subject: `${bid.crop_name || 'ফসল'} - ${bid.buyer_name || 'ক্রেতা'}`
       });
-      window.location.href = `/messages/${conv.id}`;
+      navigate(`/farmer/messages/${conv.id}`);
     } catch (error) {
       toast({
         title: 'কথোপকথন শুরু করা যায়নি',

@@ -15,6 +15,7 @@ import availabilityRoutes from './routes/availabilityRoutes.js';
 import { adminTransactionRouter, transactionRouter } from './routes/transactionRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import { equipmentBookingRouter, transportBookingRouter } from './routes/bookingRoutes.js';
+import { conversationRouter, messageRouter } from './routes/messagingRoutes.js';
 
 dotenv.config();
 
@@ -107,8 +108,11 @@ app.use('/api/admin/transactions', adminTransactionRouter);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/equipment-bookings', equipmentBookingRouter);
 app.use('/api/transport-bookings', transportBookingRouter);
+app.use('/api/conversations', conversationRouter);
+app.use('/api/messages', messageRouter);
 
 for (const [name, config] of Object.entries(resources)) {
+  if (['conversations', 'messages'].includes(config.route)) continue;
   const controller = createResourceController(models[name], config);
   app.use(`/api/${config.route}`, createResourceRouter(controller, config));
 }

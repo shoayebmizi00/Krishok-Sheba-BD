@@ -384,9 +384,129 @@ const transactionApi = {
   }
 };
 
+function localDashboardMessagePath(role, conversationId) {
+  const base = role === 'farmer' ? '/farmer/messages'
+    : role === 'buyer' ? '/buyer-dashboard/messages'
+      : role === 'equipment_owner' ? '/equipment-owner-dashboard/messages'
+        : role === 'transport_provider' ? '/transport-dashboard/messages'
+          : '/admin/messages';
+  return `${base}/${conversationId}`;
+}
+
+function localRelation(type, id) {
+  if (type === 'listing') return database.CropListing.find((item) => item.id === id);
+  if (type === 'bid') return database.Bid.find((item) => item.id === id);
+  if (type === 'order') return database.Order.find((item) => item.id === id);
+  if (type === 'equipment_booking') return database.EquipmentBooking.find((item) => item.id === id);
+  if (type === 'transport_booking') return database.TransportBooking.find((item) => item.id === id);
+  return null;
+}
+
+function localCanStart(user, receiver, type, relation) {
+  if (!user || !receiver || user.id === receiver.id || !receiver.is_active) return false;
+  if (user.role === 'admin' || receiver.role === 'admin') return true;
+  if (type === 'listing') return relation && user.role === 'buyer' && receiver.role === 'farmer' && relation.farmer_id === receiver.id;
+  if (type === 'bid') return relation && [relation.buyer_id, relation.farmer_id].includes(user.id) && [relation.buyer_id, relation.farmer_id].includes(receiver.id);
+  if (type === 'order') return relation && [relation.buyer_id, relation.seller_id].includes(user.id) && [relation.buyer_id, relation.seller_id].includes(receiver.id);
+  if (type === 'equipment_booking') return relation && [relation.farmer_id, relation.owner_id].includes(user.id) && [relation.farmer_id, relation.owner_id].includes(receiver.id);
+  if (type === 'transport_booking') return relation && [relation.farmer_id, relation.provider_id].includes(user.id) && [relation.farmer_id, relation.provider_id].includes(receiver.id);
+  return false;
+}
+
+const messagingApi = {
+  async conversations() {
+    const user = getCurrentUser();
+    if (!user) throw makeError('লগইন প্রয়োজন', 401);
+    const rows = (database.Conversation || []).filter((item) => user.role === 'admin' || item.participant_ids?.includes(user.id));
+    return clone(rows.map((item) => {
+      const otherId = item.participant_ids?.find((id) => id !== user.id);
+      const other = database.User.find((candidate) => candidate.id === otherId) || {};
+      return normalizeRecord({
+        ...item,
+        participant_one_id: item.participant_one_id || item.participant_ids?.[0],
+        participant_two_id: item.participant_two_id || item.participant_ids?.[1],
+        other_name: other.full_name || 'ব্যবহারকারী',
+        other_role: other.role,
+        unread_count: (database.Message || []).filter((message) => message.conversation_id === item.id && message.receiver_id === user.id && !message.is_read).length
+      });
+    }).sort((a, b) => String(b.last_message_at || b.last_message_date || '').localeCompare(String(a.last_message_at || a.last_message_date || ''))));
+  },
+  async createConversation(data) {
+    const user = getCurrentUser();
+    const receiverId = data.receiver_id || data.participant_ids?.find((id) => id !== user?.id);
+    const receiver = database.User.find((item) => item.id === receiverId);
+    const relatedType = data.related_type || (data.listing_id ? 'listing' : null);
+    const relatedId = data.related_id || data.listing_id || null;
+    const relation = relatedType === 'user' ? null : localRelation(relatedType, relatedId);
+    if (!localCanStart(user, receiver, relatedType, relation)) throw makeError('এই ব্যবহারকারীর সঙ্গে কথোপকথন শুরু করার অনুমতি নেই', 403);
+    const existing = (database.Conversation || []).find((item) =>
+      item.participant_ids?.includes(user.id) && item.participant_ids?.includes(receiverId)
+      && (item.related_type || (item.listing_id ? 'listing' : null)) === relatedType
+      && (item.related_id || item.listing_id || null) === relatedId
+    );
+    if (existing) return clone(normalizeRecord(existing));
+    const now = new Date().toISOString();
+    const created = {
+      id: `conversation-${crypto.randomUUID()}`,
+      participant_one_id: user.id, participant_two_id: receiverId,
+      participant_ids: [user.id, receiverId], participant_names: [user.full_name, receiver.full_name],
+      subject: data.subject || `${user.full_name} ও ${receiver.full_name}`,
+      listing_id: relatedType === 'listing' ? relatedId : null,
+      listing_name: data.listing_name || null, related_type: relatedType, related_id: relatedId,
+      last_message: '', last_message_by: null, last_message_date: now, last_message_at: now,
+      created_at: now, updated_at: now
+    };
+    database.Conversation.unshift(created); saveDatabase();
+    return clone(normalizeRecord(created));
+  },
+  async conversationMessages(id) {
+    const user = getCurrentUser();
+    const conversation = database.Conversation.find((item) => item.id === id);
+    if (!conversation || (user?.role !== 'admin' && !conversation.participant_ids?.includes(user?.id))) throw makeError('কথোপকথন পাওয়া যায়নি', 404);
+    return {
+      conversation: clone(normalizeRecord(conversation)),
+      messages: clone((database.Message || []).filter((item) => item.conversation_id === id).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).map((item) => normalizeRecord({ ...item, message_text: item.message_text || item.content })))
+    };
+  },
+  async send(data) {
+    const user = getCurrentUser();
+    const conversation = database.Conversation.find((item) => item.id === data.conversation_id);
+    if (!conversation || (user?.role !== 'admin' && !conversation.participant_ids?.includes(user?.id))) throw makeError('এই কথোপকথনে বার্তা পাঠানোর অনুমতি নেই', 403);
+    const text = String(data.message_text || data.content || '').trim();
+    if (!text) throw makeError('বার্তা লিখুন');
+    const receiverId = conversation.participant_ids.find((id) => id !== user.id);
+    const now = new Date().toISOString();
+    const created = {
+      id: `message-${crypto.randomUUID()}`, conversation_id: conversation.id,
+      sender_id: user.id, receiver_id: receiverId, sender_name: user.full_name,
+      content: text, message_text: text, is_read: false, created_at: now, updated_at: now
+    };
+    database.Message.push(created);
+    Object.assign(conversation, { last_message: text, last_message_by: user.id, last_message_date: now, last_message_at: now, updated_at: now });
+    const receiver = database.User.find((item) => item.id === receiverId);
+    addNotification(receiverId, 'নতুন বার্তা পেয়েছেন', `${user.full_name} আপনাকে একটি নতুন বার্তা পাঠিয়েছেন।`, 'message', localDashboardMessagePath(receiver?.role, conversation.id));
+    saveDatabase();
+    return clone(normalizeRecord(created));
+  },
+  async markMessageRead(id) {
+    const user = getCurrentUser();
+    const message = database.Message.find((item) => item.id === id && (user?.role === 'admin' || item.receiver_id === user?.id));
+    if (!message) throw makeError('এই বার্তা পরিবর্তনের অনুমতি নেই', 403);
+    message.is_read = true; saveDatabase(); return clone(normalizeRecord(message));
+  },
+  async markConversationRead(id) {
+    const user = getCurrentUser();
+    const conversation = database.Conversation.find((item) => item.id === id);
+    if (!conversation || (user?.role !== 'admin' && !conversation.participant_ids?.includes(user?.id))) throw makeError('কথোপকথন পাওয়া যায়নি', 404);
+    database.Message.forEach((item) => { if (item.conversation_id === id && item.receiver_id === user.id) item.is_read = true; });
+    saveDatabase(); return { success: true };
+  }
+};
+
 export const localApi = {
   entities,
   transactions: transactionApi,
+  messaging: messagingApi,
   bookings: {
     equipment: {
       my: () => entityClient('EquipmentBooking').filter({ farmer_id: getCurrentUser()?.id }, '-created_date'),
