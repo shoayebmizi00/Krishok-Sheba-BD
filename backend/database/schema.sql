@@ -269,7 +269,8 @@ CREATE TABLE orders (
   CONSTRAINT fk_orders_seller FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_orders_buyer (buyer_id, created_at),
   INDEX idx_orders_seller (seller_id, status),
-  INDEX idx_orders_payment_status (payment_status)
+  INDEX idx_orders_payment_status (payment_status),
+  UNIQUE INDEX uq_orders_bid (bid_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE transactions (

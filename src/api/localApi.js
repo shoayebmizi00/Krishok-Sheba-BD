@@ -91,6 +91,11 @@ function entityClient(name) {
   return {
     list: (sort, limit, page) => list(sort, limit, {}, page),
     filter: (filters, sort, limit, page) => list(sort, limit, filters, page),
+    async get(id) {
+      const record = (database[name] || []).find((item) => item.id === id);
+      if (!record) throw makeError(`${name} পাওয়া যায়নি`, 404);
+      return clone(normalizeRecord(record));
+    },
     async create(data) {
       const currentUser = getCurrentUser();
       if (name === 'CropListing') {
@@ -173,13 +178,19 @@ function entityClient(name) {
         };
       }
       if (name === 'Order') {
-        const bid = database.Bid.find((item) => item.id === data.bid_id && item.buyer_id === currentUser?.id);
+        if (currentUser?.role !== 'buyer') throw makeError('শুধু ক্রেতা অর্ডার তৈরি করতে পারবেন', 403);
+        const bid = database.Bid.find((item) => item.id === data.bid_id);
+        if (!bid) throw makeError('বিড পাওয়া যায়নি', 404);
+        if (bid.buyer_id !== currentUser.id) throw makeError('এই বিড থেকে অর্ডার করার অনুমতি নেই', 403);
         const listing = database.CropListing.find((item) => item.id === bid?.listing_id);
-        const quantity = Number(data.items?.[0]?.quantity);
-        if (!bid || bid.status !== 'accepted') throw makeError('শুধু গৃহীত বিড থেকে অর্ডার করা যাবে', 400);
+        const quantity = Number(data.quantity ?? data.items?.[0]?.quantity);
+        if (bid.status !== 'accepted') throw makeError('শুধু গ্রহণ করা বিড থেকে অর্ডার করা যাবে', 400);
+        if (data.crop_listing_id && data.crop_listing_id !== listing?.id) throw makeError('বিড ও ফসলের তালিকার তথ্য মিলছে না', 400);
         if (!listing || ['sold', 'sold_out'].includes(listing.status)) throw makeError('এই ফসলটি বিক্রি শেষ', 409);
         const remaining = Number(listing.remaining_quantity ?? listing.quantity);
-        if (!quantity || quantity > remaining) throw makeError(`সর্বোচ্চ ${remaining} ${listing.unit || 'কেজি'} অর্ডার করা যাবে`, 409);
+        if (!quantity || quantity <= 0) throw makeError('সঠিক পরিমাণ দিন', 400);
+        if (quantity > remaining) throw makeError('পর্যাপ্ত পরিমাণ ফসল নেই', 409);
+        if (Number(bid.quantity_requested) > 0 && quantity > Number(bid.quantity_requested)) throw makeError('গৃহীত বিডের পরিমাণের বেশি অর্ডার করা যাবে না', 400);
         if (database.Order.some((item) => item.bid_id === bid.id)) throw makeError('এই বিড থেকে ইতিমধ্যে অর্ডার তৈরি হয়েছে', 409);
         listing.total_quantity = Number(listing.total_quantity ?? listing.quantity);
         listing.sold_quantity = Number(listing.sold_quantity || 0) + quantity;
@@ -191,7 +202,9 @@ function entityClient(name) {
           seller_id: bid.farmer_id,
           seller_name: listing.farmer_name || 'কৃষক',
           total_amount: quantity * Number(bid.bid_amount),
-          items: [{ ...data.items[0], listing_id: listing.id, unit: listing.unit, price: Number(bid.bid_amount) }]
+          delivery_address: data.delivery_location || data.delivery_address,
+          delivery_district: data.district || data.delivery_district,
+          items: [{ ...(data.items?.[0] || {}), name: bid.crop_name, quantity, listing_id: listing.id, unit: listing.unit, price: Number(bid.bid_amount) }]
         };
       }
       const created = {
@@ -202,7 +215,10 @@ function entityClient(name) {
       };
       database[name] = [created, ...(database[name] || [])];
       if (name === 'Bid') addNotification(created.farmer_id, 'নতুন বিড এসেছে', `${created.crop_name || 'আপনার ফসল'}-এর জন্য নতুন বিড এসেছে।`, 'bid', '/farmer-dashboard/bids');
-      if (name === 'Order') addNotification(created.seller_id, 'নতুন অর্ডার', `${created.buyer_name || 'একজন ক্রেতা'} নতুন অর্ডার করেছেন।`, 'order', '/farmer-dashboard/orders');
+      if (name === 'Order') {
+        addNotification(created.seller_id, 'নতুন অর্ডার পাওয়া গেছে', `${created.buyer_name || 'একজন ক্রেতা'} নতুন অর্ডার করেছেন।`, 'order', '/farmer-dashboard/orders');
+        addNotification(created.buyer_id, 'অর্ডার সফলভাবে তৈরি হয়েছে', 'আপনার অর্ডার সফলভাবে তৈরি হয়েছে।', 'order', '/buyer-dashboard/orders');
+      }
       if (name === 'EquipmentBooking') {
         addNotification(created.owner_id, 'নতুন যন্ত্রপাতি বুকিং', `${created.equipment_name || 'যন্ত্রপাতি'} বুকিংয়ের অনুরোধ এসেছে।`, 'booking', '/equipment-owner-dashboard/bookings');
         addNotification(created.farmer_id, 'যন্ত্রপাতি বুকিং জমা হয়েছে', 'আপনার যন্ত্রপাতি বুকিং সফলভাবে জমা হয়েছে।', 'booking', '/farmer/equipment-booking');

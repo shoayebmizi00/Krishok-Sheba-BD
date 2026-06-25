@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.js';
+import { validateOrderCreation } from '../services/orderPolicy.js';
 
 async function createNotification(connection, { userId, title, message, type = 'system', link = null }) {
   if (!userId) return;
@@ -76,7 +77,7 @@ async function validateCropListing(data, user) {
 
 async function createOrder(req, res) {
   const bidId = req.body.bid_id;
-  const quantity = Number(req.body.items?.[0]?.quantity);
+  const quantity = Number(req.body.quantity ?? req.body.items?.[0]?.quantity);
   if (!bidId || !Number.isFinite(quantity) || quantity <= 0) {
     return res.status(400).json({ message: 'সঠিক বিড ও অর্ডারের পরিমাণ দিন' });
   }
@@ -84,26 +85,39 @@ async function createOrder(req, res) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+    const [users] = await connection.execute(
+      'SELECT id, full_name, role, is_active FROM users WHERE id = ? LIMIT 1 FOR UPDATE',
+      [req.user.id]
+    );
+    const currentUser = users[0];
+    if (!currentUser?.is_active) {
+      await connection.rollback();
+      return res.status(403).json({ message: 'আপনার এই অর্ডার তৈরি করার অনুমতি নেই' });
+    }
     const [bids] = await connection.execute(
       `SELECT bid.*, listing.unit, listing.expected_price, listing.remaining_quantity,
-              listing.status AS listing_status, listing.farmer_name
+              listing.status AS listing_status, listing.farmer_name, listing.id AS crop_listing_id
        FROM bids AS bid
        JOIN crop_listings AS listing ON listing.id = bid.listing_id
-       WHERE bid.id = ? AND bid.buyer_id = ? FOR UPDATE`,
-      [bidId, req.user.id]
+       WHERE bid.id = ? FOR UPDATE`,
+      [bidId]
     );
     const bid = bids[0];
-    if (!bid || bid.status !== 'accepted') {
+    const listing = bid ? {
+      id: bid.crop_listing_id,
+      status: bid.listing_status,
+      remaining_quantity: bid.remaining_quantity
+    } : null;
+    const validation = validateOrderCreation({
+      user: currentUser,
+      bid,
+      listing,
+      quantity,
+      cropListingId: req.body.crop_listing_id
+    });
+    if (validation) {
       await connection.rollback();
-      return res.status(400).json({ message: 'শুধু গৃহীত বিড থেকে অর্ডার করা যাবে' });
-    }
-    if (['sold', 'sold_out'].includes(bid.listing_status) || Number(bid.remaining_quantity) <= 0) {
-      await connection.rollback();
-      return res.status(409).json({ message: 'এই ফসলটি বিক্রি শেষ' });
-    }
-    if (quantity > Number(bid.remaining_quantity)) {
-      await connection.rollback();
-      return res.status(409).json({ message: `সর্বোচ্চ ${bid.remaining_quantity} ${bid.unit} অর্ডার করা যাবে` });
+      return res.status(validation.status).json({ message: validation.message });
     }
     const [existing] = await connection.execute('SELECT id FROM orders WHERE bid_id = ? LIMIT 1', [bidId]);
     if (existing.length) {
@@ -127,9 +141,11 @@ async function createOrder(req, res) {
          delivery_address, delivery_district, payment_status, bid_id, payment_method)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, 'pending', ?, ?)`,
       [
-        orderId, req.user.id, req.body.buyer_name || 'ক্রেতা', bid.farmer_id,
+        orderId, currentUser.id, currentUser.full_name || 'ক্রেতা', bid.farmer_id,
         bid.farmer_name || 'কৃষক', JSON.stringify(items), totalAmount,
-        req.body.delivery_address, req.body.delivery_district, bidId, req.body.payment_method
+        req.body.delivery_location || req.body.delivery_address,
+        req.body.district || req.body.delivery_district,
+        bidId, req.body.payment_method
       ]
     );
     await connection.execute(
@@ -142,10 +158,17 @@ async function createOrder(req, res) {
     );
     await createNotification(connection, {
       userId: bid.farmer_id,
-      title: 'নতুন অর্ডার',
+      title: 'নতুন অর্ডার পাওয়া গেছে',
       message: `${bid.crop_name}-এর ${quantity} ${bid.unit} অর্ডার হয়েছে।`,
       type: 'order',
       link: '/farmer-dashboard/orders'
+    });
+    await createNotification(connection, {
+      userId: currentUser.id,
+      title: 'অর্ডার সফলভাবে তৈরি হয়েছে',
+      message: `${bid.crop_name}-এর অর্ডার সফলভাবে তৈরি হয়েছে।`,
+      type: 'order',
+      link: '/buyer-dashboard/orders'
     });
     const [orders] = await connection.execute('SELECT * FROM orders WHERE id = ?', [orderId]);
     await connection.commit();
@@ -365,14 +388,14 @@ export function createResourceController(model, config) {
 
     async create(req, res, next) {
       try {
+        if (config.route === 'orders') return createOrder(req, res);
         if (!canCreate(config, req.user)) {
           return res.status(403).json({
-            message: config.createDeniedMessage || 'You do not have permission to create this resource'
+            message: config.createDeniedMessage || 'আপনার এই কাজ করার অনুমতি নেই'
           });
         }
         if (config.route === 'conversations') return createConversation(req, res);
         if (config.route === 'messages') return createMessage(req, res);
-        if (config.route === 'orders') return createOrder(req, res);
 
         let data = { ...req.body };
         if (config.route === 'equipment-bookings') {

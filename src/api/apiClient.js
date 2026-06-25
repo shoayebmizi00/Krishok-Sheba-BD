@@ -91,6 +91,7 @@ function entityClient(route) {
   return {
     list: (sort, limit, page) => query({}, sort, limit, page),
     filter: (filters, sort, limit, page) => query(filters, sort, limit, page),
+    get: (id) => request(`/${route}/${id}`),
     create: (data) => request(`/${route}`, { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/${route}/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id) => request(`/${route}/${id}`, { method: 'DELETE' })
