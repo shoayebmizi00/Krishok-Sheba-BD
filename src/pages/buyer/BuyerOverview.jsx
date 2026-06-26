@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
 import { ShoppingCart, Package, Banknote, Clock } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 export default function BuyerOverview() {

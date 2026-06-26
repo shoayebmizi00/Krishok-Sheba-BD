@@ -3,8 +3,8 @@ import { Navigate, Outlet, useOutletContext, useLocation } from 'react-router-do
 import { LayoutDashboard, Users, Sprout, Package, Wrench, Truck, Megaphone, Banknote, BookOpen, Settings, Gavel, CalendarDays, BarChart3, MessageSquare } from 'lucide-react';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { useTranslation } from '@/lib/useTranslation';
-import { dashboardPathForRole } from '@/lib/roleRoutes';
+import { useTranslation } from '@/hooks/useTranslation';
+import { dashboardPathForRole } from '@/routes/roleRoutes';
 
 export default function AdminDashboard() {
   const { user } = useOutletContext();

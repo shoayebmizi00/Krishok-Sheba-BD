@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { formatCurrency, formatDate } from '@/lib/constants';
+import { formatCurrency, formatDate } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function AdminBids() {

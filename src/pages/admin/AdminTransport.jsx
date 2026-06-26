@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 
 export default function AdminTransport() {
   const { toast } = useToast();

@@ -3,8 +3,8 @@ import { Banknote, CalendarDays, CircleDollarSign, Clock3, Package, Sprout, Truc
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { apiClient } from '@/api/apiClient';
 import StatCard from '@/components/dashboard/StatCard';
-import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
-import { ROLE_LABELS, formatCurrency } from '@/lib/constants';
+import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
+import { ROLE_LABELS, formatCurrency } from '@/utils/constants';
 
 const COLORS = ['#16A34A', '#F59E0B', '#3B82F6', '#8B5CF6', '#F97316'];
 export default function AdminOverview() {

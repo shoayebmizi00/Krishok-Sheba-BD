@@ -1,7 +1,7 @@
 import React from 'react';
 import { LogOut, Menu, User } from 'lucide-react';
 import NotificationBell from '@/components/shared/NotificationBell';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLocation } from 'react-router-dom';

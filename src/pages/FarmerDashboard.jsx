@@ -3,8 +3,8 @@ import { Navigate, Outlet, useOutletContext, useLocation } from 'react-router-do
 import { LayoutDashboard, Sprout, Plus, Gavel, Package, Wrench, Truck, History, Clock, Bell, MessageSquare, UserCircle } from 'lucide-react';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { useTranslation } from '@/lib/useTranslation';
-import { dashboardPathForRole } from '@/lib/roleRoutes';
+import { useTranslation } from '@/hooks/useTranslation';
+import { dashboardPathForRole } from '@/routes/roleRoutes';
 
 export default function FarmerDashboard() {
   const { user } = useOutletContext();

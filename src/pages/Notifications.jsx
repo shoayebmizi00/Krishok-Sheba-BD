@@ -5,7 +5,7 @@ import { Bell, Check, Gavel, Package, Truck, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
-import { formatDate } from '@/lib/constants';
+import { formatDate } from '@/utils/constants';
 
 const TYPE_ICONS = { bid: Gavel, order: Package, delivery: Truck, notice: Megaphone, system: Bell };
 

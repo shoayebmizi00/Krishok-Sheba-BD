@@ -7,9 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import BackButton from '@/components/shared/BackButton';
-import { DISTRICTS } from '@/lib/constants';
+import { DISTRICTS } from '@/utils/constants';
 import { Upload } from 'lucide-react';
-import { VEHICLE_TYPES } from '@/lib/constants';
+import { VEHICLE_TYPES } from '@/utils/constants';
 import { useAppSettings } from '@/hooks/useAppSettings';
 
 export default function AddVehicle() {

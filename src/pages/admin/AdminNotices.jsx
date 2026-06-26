@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
-import { formatDate } from '@/lib/constants';
+import { formatDate } from '@/utils/constants';
 
 export default function AdminNotices() {
   const { toast } = useToast();

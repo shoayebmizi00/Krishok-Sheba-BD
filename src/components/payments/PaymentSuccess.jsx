@@ -2,7 +2,7 @@ import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { formatCurrency, formatDate } from '@/lib/constants';
+import { formatCurrency, formatDate } from '@/utils/constants';
 import { paymentMethodLabel } from './paymentMethods';
 
 export default function PaymentSuccess({ transaction, onReset }) {

@@ -1,5 +1,5 @@
-import { useLanguage } from '@/lib/LanguageContext';
-import translations from '@/lib/translations';
+import { useLanguage } from '@/contexts/LanguageContext';
+import translations from '@/translations/bn';
 
 export function useTranslation() {
   const { lang } = useLanguage();

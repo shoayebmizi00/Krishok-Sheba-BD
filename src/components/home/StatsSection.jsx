@@ -1,6 +1,6 @@
 import React from 'react';
 import { Users, Sprout, Package, MapPin } from 'lucide-react';
-import { useTranslation } from '@/lib/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function StatsSection() {
   const t = useTranslation();

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
-import { formatDate } from '@/lib/constants';
+import { formatDate } from '@/utils/constants';
 
 export default function HarvestReminders() {
   const { user } = useOutletContext();

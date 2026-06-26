@@ -6,15 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
-import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
-import OrderSummaryCard from '@/components/payment/OrderSummaryCard';
-import SellerPaymentInfo from '@/components/payment/SellerPaymentInfo';
-import PaymentSuccess from '@/components/payment/PaymentSuccess';
+import PaymentMethodSelector from '@/components/payments/PaymentMethodSelector';
+import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
+import OrderSummaryCard from '@/components/payments/OrderSummaryCard';
+import SellerPaymentInfo from '@/components/payments/SellerPaymentInfo';
+import PaymentSuccess from '@/components/payments/PaymentSuccess';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import { PAYMENT_METHOD_BY_ID, paymentMethodLabel } from '@/components/payment/paymentMethods';
-import { formatCurrency, formatDate } from '@/lib/constants';
+import { PAYMENT_METHOD_BY_ID, paymentMethodLabel } from '@/components/payments/paymentMethods';
+import { formatCurrency, formatDate } from '@/utils/constants';
 
 const initialForm = {
   order_id: '',

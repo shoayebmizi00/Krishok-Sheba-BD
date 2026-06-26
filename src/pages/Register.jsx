@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AuthLayout from '@/components/AuthLayout';
-import { useTranslation } from '@/lib/useTranslation';
-import { dashboardPathForRole } from '@/lib/roleRoutes';
+import { useTranslation } from '@/hooks/useTranslation';
+import { dashboardPathForRole } from '@/routes/roleRoutes';
 import { useToast } from '@/components/ui/use-toast';
 
 const registrationRoles = [

@@ -5,9 +5,9 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { apiClient } from '@/api/apiClient';
 import StatCard from '@/components/dashboard/StatCard';
 import StatusBadge from '@/components/shared/StatusBadge';
-import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
+import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 
 export default function FarmerOverview() {
   const { user } = useOutletContext();

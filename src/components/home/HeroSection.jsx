@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ArrowRight, ChevronLeft, ChevronRight, Sprout, TrendingUp, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTranslation } from '@/lib/useTranslation';
+import { useTranslation } from '@/hooks/useTranslation';
 import heroMain from '@/assets/hero/hero-main.jpg';
 import heroEquipment from '@/assets/hero/hero-equipment.jpg';
 import heroTea from '@/assets/hero/hero-tea.jpg';

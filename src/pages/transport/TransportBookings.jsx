@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Truck } from 'lucide-react';
-import { formatDate } from '@/lib/constants';
+import { formatDate } from '@/utils/constants';
 
 export default function TransportBookings() {
   const { user } = useOutletContext();

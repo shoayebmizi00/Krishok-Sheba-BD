@@ -1,11 +1,11 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import Navbar from './Navbar';
-import Footer from './Footer';
-import { useAuth } from '@/lib/AuthContext';
-import { dashboardPathForRole } from '@/lib/roleRoutes';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import { useAuth } from '@/contexts/AuthContext';
+import { dashboardPathForRole } from '@/routes/roleRoutes';
 
-export default function MainLayout() {
+export default function PublicLayout() {
   const { user, setUser } = useAuth();
   const location = useLocation();
 

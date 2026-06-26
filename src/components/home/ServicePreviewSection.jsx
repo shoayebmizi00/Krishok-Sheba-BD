@@ -5,7 +5,7 @@ import { ArrowRight, MapPin, Truck, Wrench } from 'lucide-react';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 import StatusBadge from '@/components/shared/StatusBadge';
 import defaultTransportImage from '@/assets/hero/hero-equipment.jpg';
 

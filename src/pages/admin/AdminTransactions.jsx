@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import StatCard from '@/components/dashboard/StatCard';
 import StatusBadge from '@/components/shared/StatusBadge';
-import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
-import { formatCurrency, formatDate } from '@/lib/constants';
+import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
+import { formatCurrency, formatDate } from '@/utils/constants';
 
 const COLORS = ['#15803d', '#f59e0b', '#2563eb', '#7c3aed', '#e11d48', '#64748b'];
 export default function AdminTransactions() {

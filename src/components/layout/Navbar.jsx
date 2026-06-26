@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Sprout, ChevronDown, User, LogOut, LayoutDashboard, MessageSquare, Languages } from 'lucide-react';
-import { useAuth } from '@/lib/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { useTranslation } from '@/lib/useTranslation';
-import { useLanguage } from '@/lib/LanguageContext';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useLanguage } from '@/contexts/LanguageContext';
 import NotificationBell from '@/components/shared/NotificationBell';
 
 const navKeys = ["home", "marketplace", "equipment", "transport", "marketPrices", "notices"];

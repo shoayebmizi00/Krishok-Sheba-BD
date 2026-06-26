@@ -1,6 +1,6 @@
 import React from 'react';
 import { Package } from 'lucide-react';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 
 export default function OrderSummaryCard({ order }) {
   const item = order?.items?.[0] || {};

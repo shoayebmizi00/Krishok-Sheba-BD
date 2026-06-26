@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { ROLE_LABELS, formatCurrency, formatDate } from '@/lib/constants';
+import { ROLE_LABELS, formatCurrency, formatDate } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
 const ROLE_OPTIONS = Object.entries(ROLE_LABELS);

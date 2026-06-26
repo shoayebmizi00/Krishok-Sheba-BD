@@ -8,8 +8,8 @@ import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
-import { formatCurrency, formatDate } from '@/lib/constants';
-import { useTranslation } from '@/lib/useTranslation';
+import { formatCurrency, formatDate } from '@/utils/constants';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function OwnerBookings() {
   const { user } = useOutletContext();

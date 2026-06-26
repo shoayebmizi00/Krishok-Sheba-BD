@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { formatCurrency, formatDate } from '@/lib/constants';
+import { formatCurrency, formatDate } from '@/utils/constants';
 
 function BookingTable({ rows, type }) {
   if (!rows.length) return <EmptyState icon={CalendarDays} title="কোনো বুকিং পাওয়া যায়নি" />;

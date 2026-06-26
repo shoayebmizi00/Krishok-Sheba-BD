@@ -5,7 +5,7 @@ import { ArrowRight, MapPin } from 'lucide-react';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 import defaultCropImage from '@/assets/hero/hero-rice.jpg';
 
 const DEFAULT_CROP_IMAGE = defaultCropImage;

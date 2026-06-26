@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { CROP_CATEGORIES, DISTRICTS } from '@/lib/constants';
+import { CROP_CATEGORIES, DISTRICTS } from '@/utils/constants';
 import { Upload } from 'lucide-react';
 import BackButton from '@/components/shared/BackButton';
 import { useAppSettings } from '@/hooks/useAppSettings';

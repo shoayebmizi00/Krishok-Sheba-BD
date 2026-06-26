@@ -4,7 +4,7 @@ import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import StatCard from '@/components/dashboard/StatCard';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 
 export default function AdminReports() {
   const [data, setData] = useState(null);

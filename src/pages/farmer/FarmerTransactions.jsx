@@ -6,8 +6,8 @@ import { useToast } from '@/components/ui/use-toast';
 import StatCard from '@/components/dashboard/StatCard';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
-import { formatCurrency, formatDate } from '@/lib/constants';
+import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
+import { formatCurrency, formatDate } from '@/utils/constants';
 
 export default function FarmerTransactions() {
   const { toast } = useToast();

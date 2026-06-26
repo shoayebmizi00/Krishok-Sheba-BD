@@ -1,4 +1,4 @@
-import { createMockDatabase, demoUsers } from './mockData.js';
+import { createMockDatabase, demoUsers } from '../utils/mockData.js';
 
 const DATABASE_KEY = 'krishok_sheba_demo_database_v1';
 const SESSION_KEY = 'krishok_sheba_demo_user';

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { formatCurrency } from '@/lib/constants';
+import { formatCurrency } from '@/utils/constants';
 import defaultTransportImage from '@/assets/hero/hero-equipment.jpg';
 
 export default function MyVehicles() {

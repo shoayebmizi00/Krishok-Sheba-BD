@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
-import { useTranslation } from "@/lib/useTranslation";
-import { dashboardPathForRole } from '@/lib/roleRoutes';
+import { useTranslation } from "@/hooks/useTranslation";
+import { dashboardPathForRole } from '@/routes/roleRoutes';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function Login() {

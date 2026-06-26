@@ -11,9 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
+import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
 import AddToCalendar from '@/components/shared/AddToCalendar';
-import { VEHICLE_TYPES, formatCurrency, formatDate } from '@/lib/constants';
+import { VEHICLE_TYPES, formatCurrency, formatDate } from '@/utils/constants';
 import fallbackImage from '@/assets/hero/hero-equipment.jpg';
 
 const emptyForm = { pickup_location: '', delivery_location: '', product_name: '', quantity: '', pickup_date: '', preferred_time: '', cargo_description: '', additional_instructions: '' };

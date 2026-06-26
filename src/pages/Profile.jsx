@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import EmptyState from '@/components/shared/EmptyState';
 import BackButton from '@/components/shared/BackButton';
-import { ROLE_LABELS } from '@/lib/constants';
+import { ROLE_LABELS } from '@/utils/constants';
 
 const profileFields = [['phone', 'ফোন নম্বর'], ['district', 'জেলা'], ['farm_name', 'খামারের নাম'], ['land_size', 'জমির পরিমাণ (একর)'], ['crops_grown', 'চাষ করা ফসল']];
 const accountFields = [

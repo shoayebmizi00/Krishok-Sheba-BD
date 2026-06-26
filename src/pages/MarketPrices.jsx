@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/api/apiClient';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { DISTRICTS } from '@/lib/constants';
-import { formatCurrency } from '@/lib/constants';
+import { DISTRICTS } from '@/utils/constants';
+import { formatCurrency } from '@/utils/constants';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { TrendingUp } from 'lucide-react';
 
