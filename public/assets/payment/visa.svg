@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" role="img" aria-labelledby="title">
+  <title id="title">Visa</title>
+  <rect width="220" height="80" rx="18" fill="#fff"/>
+  <text x="42" y="53" font-family="Arial, Helvetica, sans-serif" font-size="47" font-weight="900" font-style="italic" fill="#1A1F71">VISA</text>
+  <path d="M39 24h139" stroke="#F7B600" stroke-width="5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" role="img" aria-labelledby="title">
+  <title id="title">Rocket</title>
+  <rect width="220" height="80" rx="18" fill="#fff"/>
+  <circle cx="56" cy="40" r="29" fill="#7B2CBF"/>
+  <path d="M61 17c16 12 17 30 2 47-16-6-25-17-27-34 7 2 13 0 18-5z" fill="#fff"/>
+  <path d="M53 56c-6 0-11 3-15 9 1-9 4-15 11-19z" fill="#F59E0B"/>
+  <text x="96" y="51" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800" fill="#7B2CBF">Rocket</text>
+</svg>

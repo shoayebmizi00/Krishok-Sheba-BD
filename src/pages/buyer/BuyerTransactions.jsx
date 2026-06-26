@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Clipboard, CreditCard, ImagePlus, ReceiptText } from 'lucide-react';
+import { CreditCard, ImagePlus, Loader2, ReceiptText } from 'lucide-react';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 import TransactionSkeleton from '@/components/payment/TransactionSkeleton';
+import OrderSummaryCard from '@/components/payment/OrderSummaryCard';
+import SellerPaymentInfo from '@/components/payment/SellerPaymentInfo';
+import PaymentSuccess from '@/components/payment/PaymentSuccess';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
+import { PAYMENT_METHOD_BY_ID, paymentMethodLabel } from '@/components/payment/paymentMethods';
 import { formatCurrency, formatDate } from '@/lib/constants';
 
-const initialForm = { order_id: '', payment_method: 'bkash', amount: '', sender_number: '', sender_bank: '', account_number: '', transaction_reference: '', screenshot_url: '', note: '' };
+const initialForm = {
+  order_id: '',
+  payment_method: 'bkash',
+  amount: '',
+  sender_number: '',
+  sender_bank: '',
+  account_number: '',
+  transaction_reference: '',
+  screenshot_url: '',
+  note: '',
+  card_holder: '',
+  card_number: '',
+  card_expiry: '',
+  card_cvv: ''
+};
+
+const mobileMethods = new Set(['bkash', 'nagad', 'rocket', 'upay']);
+const cardMethods = new Set(['visa', 'mastercard', 'amex']);
 
 export default function BuyerTransactions() {
   const { toast } = useToast();
@@ -22,136 +43,243 @@ export default function BuyerTransactions() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [successTransaction, setSuccessTransaction] = useState(null);
 
   const load = async () => {
     const [sent, orderData] = await Promise.all([
       apiClient.transactions.mySent(1, 20),
       apiClient.entities.Order.list('-created_date', 30)
     ]);
-    setTransactions(sent.items);
-    setOrders(orderData);
+    setTransactions(sent.items || []);
+    setOrders(Array.isArray(orderData) ? orderData : []);
     setLoading(false);
   };
-  useEffect(() => { load().catch(() => setLoading(false)); }, []);
+
+  useEffect(() => {
+    load().catch(() => setLoading(false));
+  }, []);
+
+  const updateForm = (changes) => setForm((current) => ({ ...current, ...changes }));
 
   const selectOrder = async (orderId) => {
-    setForm((current) => ({ ...current, order_id: orderId }));
+    updateForm({ order_id: orderId });
+    setSuccessTransaction(null);
     try {
       const data = await apiClient.transactions.paymentContext(orderId);
       setContext(data);
-      setForm((current) => ({ ...current, order_id: orderId, amount: String(data.total_amount || '') }));
+      updateForm({ order_id: orderId, amount: String(data.total_amount || '') });
     } catch (error) {
       toast({ title: 'অর্ডারের তথ্য পাওয়া যায়নি', description: error.message, variant: 'destructive' });
     }
   };
-  const selectedAccount = useMemo(() => {
-    if (!context) return '';
-    if (form.payment_method === 'bank_transfer') return context.bank_account_number;
-    return context[`${form.payment_method}_number`] || '';
-  }, [context, form.payment_method]);
+
+  const selectedMethod = PAYMENT_METHOD_BY_ID[form.payment_method] || PAYMENT_METHOD_BY_ID.bkash;
+  const isMobilePayment = mobileMethods.has(form.payment_method);
+  const isBankPayment = form.payment_method === 'bank_transfer';
+  const isCardPayment = cardMethods.has(form.payment_method);
+  const isCod = form.payment_method === 'cash_on_delivery';
+
   const copy = async (value) => {
+    if (!value) return;
     await navigator.clipboard.writeText(value);
-    toast({ title: 'অ্যাকাউন্ট নম্বর কপি করা হয়েছে' });
+    toast({ title: 'তথ্য কপি করা হয়েছে' });
   };
+
   const upload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
       const result = await apiClient.upload(file, 'payments');
-      setForm((current) => ({ ...current, screenshot_url: result.file_url }));
-      toast({ title: 'পেমেন্টের ছবি যোগ করা হয়েছে' });
+      updateForm({ screenshot_url: result.file_url });
+      toast({ title: 'পেমেন্ট স্ক্রিনশট যোগ করা হয়েছে' });
     } catch (error) {
       toast({ title: 'ছবি আপলোড করা যায়নি', description: error.message, variant: 'destructive' });
     }
   };
+
+  const selectedOrderLabel = useMemo(() => {
+    const order = orders.find((item) => item.id === form.order_id);
+    if (!order) return '';
+    return `#${order.id.slice(-6)} · ${order.items?.[0]?.name || 'পণ্য'} · ${formatCurrency(order.total_amount)}`;
+  }, [orders, form.order_id]);
+
   const submit = async () => {
-    if (!form.order_id || !form.amount) return toast({ title: 'অর্ডার ও টাকার পরিমাণ দিন', variant: 'destructive' });
+    if (!form.order_id || !form.amount) {
+      toast({ title: 'অর্ডার ও টাকার পরিমাণ দিন', variant: 'destructive' });
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await apiClient.transactions.create(form);
-      toast({ title: 'পেমেন্ট তথ্য সফলভাবে পাঠানো হয়েছে' });
-      setForm(initialForm); setContext(null);
+      const payload = {
+        ...form,
+        note: isCardPayment
+          ? [form.note, `Card UI only: ${selectedMethod.name}${form.card_holder ? `, Holder: ${form.card_holder}` : ''}`].filter(Boolean).join('\n')
+          : form.note,
+        account_number: isCardPayment ? form.card_number?.replace(/\s/g, '').slice(-4) : form.account_number,
+        transaction_reference: isCardPayment && !form.transaction_reference
+          ? `CARD-UI-${Date.now().toString(36).toUpperCase()}`
+          : form.transaction_reference
+      };
+      const created = await apiClient.transactions.create(payload);
+      toast({ title: 'পেমেন্ট তথ্য সফলভাবে পাঠানো হয়েছে।' });
+      setSuccessTransaction(created);
+      setForm(initialForm);
+      setContext(null);
       await load();
     } catch (error) {
-      toast({ title: 'কিছু ভুল হয়েছে, আবার চেষ্টা করুন', description: error.message, variant: 'destructive' });
-    } finally { setSubmitting(false); }
+      toast({ title: 'পেমেন্ট তথ্য পাঠানো যায়নি', description: error.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) return <TransactionSkeleton />;
-  const mobile = ['bkash', 'nagad', 'rocket', 'upay'].includes(form.payment_method);
-  const bank = form.payment_method === 'bank_transfer';
-  const noReference = ['cash_on_delivery', 'cash'].includes(form.payment_method);
 
   return (
     <div className="space-y-7">
-      <div>
-        <p className="text-sm font-medium text-primary">নিরাপদ ম্যানুয়াল লেনদেন</p>
-        <h2 className="font-heading text-2xl font-bold">পেমেন্ট সম্পন্ন করুন</h2>
+      <div className="animate-in fade-in-50">
+        <p className="text-sm font-semibold text-primary">নিরাপদ পেমেন্ট</p>
+        <h2 className="font-heading text-2xl font-black tracking-normal text-foreground">পেমেন্ট সম্পন্ন করুন</h2>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">অর্ডার নির্বাচন করুন, পেমেন্ট পদ্ধতি বাছাই করুন এবং প্রয়োজনীয় তথ্য পাঠান।</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 rounded-2xl border bg-card p-3 text-center text-xs sm:text-sm">
-        {['১. অর্ডার', '২. পেমেন্ট', '৩. নিশ্চিতকরণ'].map((step, index) => (
-          <div key={step} className={`rounded-xl px-2 py-3 ${index <= (context ? 1 : 0) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{step}</div>
-        ))}
-      </div>
+      {successTransaction && (
+        <PaymentSuccess transaction={successTransaction} onReset={() => setSuccessTransaction(null)} />
+      )}
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
-        <div className="space-y-6 rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
-          <div>
-            <label className="mb-2 block text-sm font-semibold">অর্ডার নির্বাচন করুন</label>
-            <Select value={form.order_id} onValueChange={selectOrder}>
-              <SelectTrigger><SelectValue placeholder="পেমেন্টের জন্য অর্ডার বাছাই করুন" /></SelectTrigger>
-              <SelectContent>{orders.map((order) => <SelectItem key={order.id} value={order.id}>#{order.id.slice(-6)} · {order.items?.[0]?.name || 'ফসল'} · {formatCurrency(order.total_amount)}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div>
-            <h3 className="mb-3 font-semibold">পেমেন্ট পদ্ধতি</h3>
-            <PaymentMethodSelector value={form.payment_method} onChange={(payment_method) => setForm((current) => ({ ...current, payment_method }))} />
-          </div>
-          {form.payment_method === 'cash_on_delivery' ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">পণ্য ডেলিভারির সময় পেমেন্ট সংগ্রহ করা হবে। কোনো ট্রানজেকশন আইডি প্রয়োজন নেই।</div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {mobile && <label className="text-sm font-medium">প্রেরক মোবাইল নম্বর<Input className="mt-1" value={form.sender_number} onChange={(e) => setForm({ ...form, sender_number: e.target.value })} /></label>}
-              {bank && <><label className="text-sm font-medium">প্রেরক ব্যাংকের নাম<Input className="mt-1" value={form.sender_bank} onChange={(e) => setForm({ ...form, sender_bank: e.target.value })} /></label><label className="text-sm font-medium">প্রেরক হিসাব নম্বর<Input className="mt-1" value={form.account_number} onChange={(e) => setForm({ ...form, account_number: e.target.value })} /></label></>}
-              {!noReference && <label className="text-sm font-medium">ট্রানজেকশন আইডি / রেফারেন্স<Input className="mt-1" value={form.transaction_reference} onChange={(e) => setForm({ ...form, transaction_reference: e.target.value })} /></label>}
-              <label className="text-sm font-medium">টাকার পরিমাণ<Input type="number" className="mt-1" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></label>
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-3 text-sm text-primary"><ImagePlus className="h-4 w-4" />{form.screenshot_url ? 'ছবি যোগ হয়েছে' : 'পেমেন্টের ছবি (ঐচ্ছিক)'}<input type="file" accept="image/*" className="hidden" onChange={upload} /></label>
-              <label className="text-sm font-medium sm:col-span-2">নোট (ঐচ্ছিক)<Textarea className="mt-1" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></label>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="order-2 space-y-6 xl:order-1">
+          <section className="animate-in fade-in-50 rounded-lg border bg-white p-5 shadow-sm sm:p-6">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-end">
+              <label className="text-sm font-semibold">
+                অর্ডার নির্বাচন করুন
+                <Select value={form.order_id} onValueChange={selectOrder}>
+                  <SelectTrigger className="mt-2 h-12 rounded-lg bg-white">
+                    <SelectValue placeholder="পেমেন্টের জন্য অর্ডার বাছাই করুন">{selectedOrderLabel}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orders.map((order) => (
+                      <SelectItem key={order.id} value={order.id}>
+                        #{order.id.slice(-6)} · {order.items?.[0]?.name || 'পণ্য'} · {formatCurrency(order.total_amount)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <div className="rounded-lg bg-emerald-50 p-4 text-sm">
+                <p className="text-muted-foreground">পরিশোধযোগ্য</p>
+                <p className="text-2xl font-black text-primary">{formatCurrency(form.amount)}</p>
+              </div>
             </div>
-          )}
-          <Button onClick={submit} disabled={submitting || !context} className="h-12 w-full text-base"><CreditCard className="mr-2 h-5 w-5" />{submitting ? 'পাঠানো হচ্ছে...' : 'পেমেন্ট তথ্য পাঠান'}</Button>
+          </section>
+
+          <section className="animate-in fade-in-50 rounded-lg border bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4 flex flex-col gap-1">
+              <h3 className="font-heading text-xl font-bold">পেমেন্ট পদ্ধতি</h3>
+              <p className="text-sm text-muted-foreground">আপনার সুবিধামতো একটি পদ্ধতি নির্বাচন করুন।</p>
+            </div>
+            <PaymentMethodSelector value={form.payment_method} onChange={(payment_method) => updateForm({ payment_method })} />
+          </section>
+
+          <section className="animate-in fade-in-50 rounded-lg border bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-5 flex items-center gap-3">
+              <img src={selectedMethod.logo} alt={`${selectedMethod.name} logo`} className="h-10 w-24 rounded-md object-contain" />
+              <div>
+                <h3 className="font-heading text-xl font-bold">{selectedMethod.name} তথ্য</h3>
+                <p className="text-sm text-muted-foreground">{selectedMethod.description}</p>
+              </div>
+            </div>
+
+            {isCod ? (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5 text-sm font-medium text-emerald-900">
+                আপনার পণ্য ডেলিভারির সময় মূল্য পরিশোধ করবেন।
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {isMobilePayment && (
+                  <>
+                    <label className="text-sm font-medium">Sender Mobile Number<Input className="mt-1 h-11 rounded-lg" value={form.sender_number} onChange={(event) => updateForm({ sender_number: event.target.value })} placeholder="01XXXXXXXXX" /></label>
+                    <label className="text-sm font-medium">Transaction ID<Input className="mt-1 h-11 rounded-lg" value={form.transaction_reference} onChange={(event) => updateForm({ transaction_reference: event.target.value })} placeholder="TXN123456" /></label>
+                    <label className="text-sm font-medium">Amount<Input type="number" className="mt-1 h-11 rounded-lg" value={form.amount} onChange={(event) => updateForm({ amount: event.target.value })} /></label>
+                  </>
+                )}
+
+                {isBankPayment && (
+                  <>
+                    <label className="text-sm font-medium">Bank Name<Input className="mt-1 h-11 rounded-lg" value={form.sender_bank} onChange={(event) => updateForm({ sender_bank: event.target.value })} /></label>
+                    <label className="text-sm font-medium">Sender Account Number<Input className="mt-1 h-11 rounded-lg" value={form.account_number} onChange={(event) => updateForm({ account_number: event.target.value })} /></label>
+                    <label className="text-sm font-medium">Transaction Reference<Input className="mt-1 h-11 rounded-lg" value={form.transaction_reference} onChange={(event) => updateForm({ transaction_reference: event.target.value })} /></label>
+                    <label className="text-sm font-medium">Amount<Input type="number" className="mt-1 h-11 rounded-lg" value={form.amount} onChange={(event) => updateForm({ amount: event.target.value })} /></label>
+                  </>
+                )}
+
+                {isCardPayment && (
+                  <>
+                    <label className="text-sm font-medium">Card Holder Name<Input className="mt-1 h-11 rounded-lg" value={form.card_holder} onChange={(event) => updateForm({ card_holder: event.target.value })} /></label>
+                    <label className="text-sm font-medium">Card Number<Input className="mt-1 h-11 rounded-lg" inputMode="numeric" value={form.card_number} onChange={(event) => updateForm({ card_number: event.target.value })} placeholder="0000 0000 0000 0000" /></label>
+                    <label className="text-sm font-medium">Expiry Date<Input className="mt-1 h-11 rounded-lg" value={form.card_expiry} onChange={(event) => updateForm({ card_expiry: event.target.value })} placeholder="MM/YY" /></label>
+                    <label className="text-sm font-medium">CVV<Input className="mt-1 h-11 rounded-lg" inputMode="numeric" value={form.card_cvv} onChange={(event) => updateForm({ card_cvv: event.target.value })} placeholder="***" /></label>
+                    <label className="text-sm font-medium sm:col-span-2">Amount<Input type="number" className="mt-1 h-11 rounded-lg" value={form.amount} onChange={(event) => updateForm({ amount: event.target.value })} /></label>
+                  </>
+                )}
+
+                {!isCardPayment && (
+                  <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-emerald-50/40 p-4 text-center text-sm font-medium text-primary transition hover:bg-emerald-50 sm:col-span-2">
+                    <ImagePlus className="h-5 w-5" />
+                    {form.screenshot_url ? 'ফাইল যোগ করা হয়েছে' : isBankPayment ? 'Upload Slip' : 'Upload Payment Screenshot (optional)'}
+                    <input type="file" accept="image/*" className="hidden" onChange={upload} />
+                  </label>
+                )}
+
+                {!isCardPayment && (
+                  <label className="text-sm font-medium sm:col-span-2">Note<Textarea className="mt-1 min-h-24 rounded-lg" value={form.note} onChange={(event) => updateForm({ note: event.target.value })} /></label>
+                )}
+              </div>
+            )}
+
+            <Button onClick={submit} disabled={submitting || !context} className="mt-6 h-12 w-full rounded-lg bg-primary text-base font-bold hover:bg-emerald-700">
+              {submitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
+              {submitting ? 'পাঠানো হচ্ছে...' : 'পেমেন্ট তথ্য পাঠান'}
+            </Button>
+          </section>
+
+          <SellerPaymentInfo context={context} onCopy={copy} />
         </div>
 
-        <div className="space-y-5">
-          <div className="rounded-3xl border bg-gradient-to-br from-emerald-950 to-emerald-700 p-6 text-white">
-            <h3 className="font-semibold">অর্ডার সারাংশ</h3>
-            {context ? <div className="mt-4 space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-white/70">অর্ডার আইডি</span><span>#{context.id?.slice(-8)}</span></div>
-              <div className="flex justify-between"><span className="text-white/70">বিক্রেতা</span><span>{context.seller_name}</span></div>
-              <div className="flex justify-between"><span className="text-white/70">ফসল</span><span>{context.items?.[0]?.name || '—'}</span></div>
-              <div className="flex justify-between"><span className="text-white/70">পরিমাণ</span><span>{context.items?.[0]?.quantity || '—'} {context.items?.[0]?.unit || ''}</span></div>
-              <div className="flex justify-between border-t border-white/20 pt-3 text-lg font-bold"><span>মোট</span><span>{formatCurrency(context.total_amount)}</span></div>
-              <div className="flex gap-2"><StatusBadge status={context.status} /><StatusBadge status={context.payment_status} /></div>
-            </div> : <p className="mt-4 text-sm text-white/70">অর্ডার নির্বাচন করলে বিস্তারিত দেখা যাবে।</p>}
-          </div>
-          <div className="rounded-3xl border bg-card p-6">
-            <h3 className="font-semibold">বিক্রেতার পেমেন্ট হিসাব</h3>
-            {context ? <div className="mt-4 space-y-3 text-sm">
-              {selectedAccount ? <div className="flex items-center justify-between rounded-xl bg-primary/5 p-3"><div><p className="text-xs text-muted-foreground">{bank ? context.bank_name : form.payment_method.toUpperCase()}</p><p className="font-semibold">{selectedAccount}</p></div><Button size="sm" variant="outline" onClick={() => copy(selectedAccount)}><Clipboard className="mr-1 h-3 w-3" />কপি করুন</Button></div> : <p className="rounded-xl bg-amber-50 p-3 text-amber-800">এই পদ্ধতির হিসাব এখনো যোগ করা হয়নি। বিক্রেতার সঙ্গে যোগাযোগ করুন।</p>}
-              {bank && <><p>হিসাবধারী: {context.account_holder_name || '—'}</p><p>শাখা: {context.branch_name || '—'}</p></>}
-              <p className="flex gap-2 text-xs text-muted-foreground"><Check className="h-4 w-4 text-primary" />টাকা পাঠানোর পর সঠিক রেফারেন্স দিন। বিক্রেতা যাচাই করে গ্রহণ করবেন।</p>
-            </div> : <p className="mt-4 text-sm text-muted-foreground">অর্ডার নির্বাচনের অপেক্ষায়।</p>}
-          </div>
-        </div>
+        <aside className="order-1 space-y-5 xl:order-2">
+          <OrderSummaryCard order={context} />
+        </aside>
       </div>
 
-      <div>
-        <h3 className="mb-3 font-heading text-lg font-bold">আমার পাঠানো পেমেন্ট</h3>
-        {!transactions.length ? <EmptyState icon={ReceiptText} title="এখনো কোনো পেমেন্ট পাঠানো হয়নি" /> : (
-          <div className="overflow-x-auto rounded-2xl border bg-card"><table className="w-full text-sm"><thead className="bg-muted/60 text-left"><tr><th className="p-3">কোড</th><th className="p-3">অর্ডার</th><th className="p-3">পদ্ধতি</th><th className="p-3">পরিমাণ</th><th className="p-3">অবস্থা</th><th className="p-3">তারিখ</th></tr></thead><tbody>{transactions.map((item) => <tr key={item.id} className="border-t"><td className="p-3 font-medium">{item.transaction_code || item.id.slice(-8)}</td><td className="p-3">#{item.order_id?.slice(-6)}</td><td className="p-3">{(item.payment_method || '—').replaceAll('_', ' ')}</td><td className="p-3 font-semibold text-primary">{formatCurrency(item.amount)}</td><td className="p-3"><StatusBadge status={item.status} /></td><td className="p-3 text-muted-foreground">{formatDate(item.created_date)}</td></tr>)}</tbody></table></div>
+      <section className="rounded-lg border bg-white shadow-sm">
+        <div className="border-b px-5 py-4">
+          <h3 className="font-heading text-lg font-bold">আমার পাঠানো পেমেন্ট</h3>
+        </div>
+        {!transactions.length ? (
+          <div className="p-6"><EmptyState icon={ReceiptText} title="এখনও কোনো পেমেন্ট পাঠানো হয়নি" /></div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/60 text-left">
+                <tr><th className="p-3">কোড</th><th className="p-3">অর্ডার</th><th className="p-3">পদ্ধতি</th><th className="p-3">পরিমাণ</th><th className="p-3">অবস্থা</th><th className="p-3">তারিখ</th></tr>
+              </thead>
+              <tbody>
+                {transactions.map((item) => (
+                  <tr key={item.id} className="border-t">
+                    <td className="p-3 font-medium">{item.transaction_code || item.id.slice(-8)}</td>
+                    <td className="p-3">#{item.order_id?.slice(-6)}</td>
+                    <td className="p-3">{paymentMethodLabel(item.payment_method)}</td>
+                    <td className="p-3 font-semibold text-primary">{formatCurrency(item.amount)}</td>
+                    <td className="p-3"><StatusBadge status={item.status} /></td>
+                    <td className="p-3 text-muted-foreground">{formatDate(item.created_date)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" role="img" aria-labelledby="title">
+  <title id="title">Nagad</title>
+  <rect width="220" height="80" rx="18" fill="#fff"/>
+  <circle cx="56" cy="40" r="28" fill="#F37021"/>
+  <path d="M39 27h33L53 54h29" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="96" y="51" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800" fill="#F37021">Nagad</text>
+</svg>

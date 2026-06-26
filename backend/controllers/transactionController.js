@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { pool } from '../config/db.js';
 
-const METHODS = new Set(['cash_on_delivery', 'bkash', 'nagad', 'rocket', 'upay', 'bank_transfer', 'cash']);
+const METHODS = new Set(['cash_on_delivery', 'bkash', 'nagad', 'rocket', 'upay', 'bank_transfer', 'visa', 'mastercard', 'amex', 'cash']);
 const STATUSES = new Set(['pending', 'sent', 'received', 'verified', 'failed', 'cancelled', 'cod_pending']);
 const detailSql = `SELECT t.*, o.buyer_name, o.seller_name, o.items, o.total_amount AS order_total,
   o.status AS delivery_status, o.payment_status, buyer.full_name AS buyer_full_name,
