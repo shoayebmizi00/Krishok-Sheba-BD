@@ -1,12 +1,16 @@
 import React from 'react';
 import { Check, Clipboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import bkashLogo from '@/assets/payment/bkash.svg';
+import nagadLogo from '@/assets/payment/nagad.svg';
+import rocketLogo from '@/assets/payment/rocket.png';
+import upayLogo from '@/assets/payment/upay.png';
 
 const sellerMethods = [
-  ['bKash', 'bkash_number', '/assets/payment/bkash.svg'],
-  ['Nagad', 'nagad_number', '/assets/payment/nagad.svg'],
-  ['Rocket', 'rocket_number', '/assets/payment/rocket.svg'],
-  ['Upay', 'upay_number', '/assets/payment/upay.svg']
+  ['bKash', 'bkash_number', bkashLogo],
+  ['Nagad', 'nagad_number', nagadLogo],
+  ['Rocket', 'rocket_number', rocketLogo],
+  ['Upay', 'upay_number', upayLogo]
 ];
 
 function CopyButton({ value, onCopy }) {

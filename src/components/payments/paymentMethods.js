@@ -1,10 +1,15 @@
+import bkashLogo from '@/assets/payment/bkash.svg';
+import nagadLogo from '@/assets/payment/nagad.svg';
+import rocketLogo from '@/assets/payment/rocket.png';
+import upayLogo from '@/assets/payment/upay.png';
+
 export const PAYMENT_METHODS = [
   {
     id: 'bkash',
     group: 'মোবাইল ব্যাংকিং',
     name: 'bKash',
     description: 'Fast Mobile Payment',
-    logo: '/assets/payment/bkash.svg',
+    logo: bkashLogo,
     type: 'mobile'
   },
   {
@@ -12,7 +17,7 @@ export const PAYMENT_METHODS = [
     group: 'মোবাইল ব্যাংকিং',
     name: 'Nagad',
     description: 'Secure Mobile Banking',
-    logo: '/assets/payment/nagad.svg',
+    logo: nagadLogo,
     type: 'mobile'
   },
   {
@@ -20,7 +25,7 @@ export const PAYMENT_METHODS = [
     group: 'মোবাইল ব্যাংকিং',
     name: 'Rocket',
     description: 'Instant Transfer',
-    logo: '/assets/payment/rocket.svg',
+    logo: rocketLogo,
     type: 'mobile'
   },
   {
@@ -28,7 +33,7 @@ export const PAYMENT_METHODS = [
     group: 'মোবাইল ব্যাংকিং',
     name: 'Upay',
     description: 'Quick Mobile Payment',
-    logo: '/assets/payment/upay.svg',
+    logo: upayLogo,
     type: 'mobile'
   },
   {
