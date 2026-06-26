@@ -435,7 +435,7 @@ const messagingApi = {
     const user = getCurrentUser();
     const receiverId = data.receiver_id || data.participant_ids?.find((id) => id !== user?.id);
     const receiver = database.User.find((item) => item.id === receiverId);
-    const relatedType = data.related_type || (data.listing_id ? 'listing' : null);
+    const relatedType = data.related_type || (data.listing_id ? 'listing' : 'general');
     const relatedId = data.related_id || data.listing_id || null;
     const relation = relatedType === 'user' ? null : localRelation(relatedType, relatedId);
     if (!localCanStart(user, receiver, relatedType, relation)) throw makeError('এই ব্যবহারকারীর সঙ্গে কথোপকথন শুরু করার অনুমতি নেই', 403);
@@ -458,6 +458,9 @@ const messagingApi = {
     };
     database.Conversation.unshift(created); saveDatabase();
     return clone(normalizeRecord(created));
+  },
+  async startConversation(receiverId, relatedType = 'general', relatedId = null) {
+    return this.createConversation({ receiver_id: receiverId, related_type: relatedType, related_id: relatedId });
   },
   async conversationMessages(id) {
     const user = getCurrentUser();

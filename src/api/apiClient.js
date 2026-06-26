@@ -139,6 +139,10 @@ const remoteApi = {
   messaging: {
     conversations: () => request('/conversations'),
     createConversation: (data) => request('/conversations', { method: 'POST', body: JSON.stringify(data) }),
+    startConversation: (receiverId, relatedType = 'general', relatedId = null) => request('/conversations', {
+      method: 'POST',
+      body: JSON.stringify({ receiver_id: receiverId, related_type: relatedType, related_id: relatedId })
+    }),
     conversationMessages: (id) => request(`/conversations/${id}/messages`),
     send: (data) => request('/messages', { method: 'POST', body: JSON.stringify(data) }),
     markMessageRead: (id) => request(`/messages/${id}/read`, { method: 'PATCH', body: '{}' }),

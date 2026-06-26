@@ -101,7 +101,7 @@ CREATE TABLE conversations (
   subject VARCHAR(255) NOT NULL,
   listing_id CHAR(36) NULL,
   listing_name VARCHAR(150) NULL,
-  related_type ENUM('listing','bid','order','equipment_booking','transport_booking','user') NULL,
+  related_type ENUM('listing','bid','order','equipment_booking','transport_booking','user','general') NULL,
   related_id CHAR(36) NULL,
   last_message TEXT NULL,
   last_message_by CHAR(36) NULL,
