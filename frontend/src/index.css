@@ -87,7 +87,37 @@
   }
   body {
     @apply bg-background text-foreground font-body;
-    font-family: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
+  }
+  html[data-language="bn"] {
+    --font-heading: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
+    --font-body: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
+    --font-display: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
+  }
+  html[data-language="en"] {
+    --font-heading: Inter, system-ui, sans-serif;
+    --font-body: Inter, system-ui, sans-serif;
+    --font-display: Inter, system-ui, sans-serif;
+  }
+  .dark .bg-white {
+    background-color: hsl(var(--card));
+  }
+  .dark .text-gray-700,
+  .dark .text-gray-800,
+  .dark .text-gray-900 {
+    color: hsl(var(--foreground));
+  }
+  .dark .text-gray-500,
+  .dark .text-gray-600 {
+    color: hsl(var(--muted-foreground));
+  }
+  .dark .border-gray-100,
+  .dark .border-gray-200,
+  .dark .border-slate-100 {
+    border-color: hsl(var(--border));
+  }
+  .dark .bg-gray-50,
+  .dark .bg-gray-100 {
+    background-color: hsl(var(--muted));
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),

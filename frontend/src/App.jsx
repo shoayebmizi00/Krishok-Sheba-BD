@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { queryClientInstance } from '@/lib/query-client';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import PageLoader from '@/components/shared/PageLoader';
 import RouteDiagnostics from '@/components/RouteDiagnostics';
@@ -26,16 +27,18 @@ function RoutedApp() {
 export default function App() {
   return (
     <LanguageProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <ScrollToTop />
-            <RouteDiagnostics />
-            <RoutedApp />
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <Router>
+              <ScrollToTop />
+              <RouteDiagnostics />
+              <RoutedApp />
+            </Router>
+            <Toaster />
+          </QueryClientProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </LanguageProvider>
   );
 }

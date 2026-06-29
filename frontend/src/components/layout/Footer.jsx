@@ -55,7 +55,7 @@ export default function Footer() {
             <h3 className="font-heading font-semibold mb-4">{t('contact')}</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-background/60">
-                <Phone className="w-4 h-4 shrink-0" /> +880 1XXX-XXXXXX
+                <Phone className="w-4 h-4 shrink-0" /> +880 1641418856
               </div>
               <div className="flex items-center gap-2 text-sm text-background/60">
                 <Mail className="w-4 h-4 shrink-0" /> info@krishoksheba.bd
@@ -69,7 +69,7 @@ export default function Footer() {
 
         <div className="border-t border-background/10 mt-10 pt-6 text-center">
           <p className="text-sm text-background/40">
-            © {new Date().getFullYear()} কৃষক-সেবা বিডি। {t('allRightsReserved')}
+            © {new Date().getFullYear()} কৃষক-সেবা বিডি। {t('allRightsReservedbyMIZI')}
           </p>
         </div>
       </div>

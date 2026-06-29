@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sprout, ChevronDown, User, LogOut, LayoutDashboard, MessageSquare, Languages } from 'lucide-react';
+import { Menu, X, Sprout, ChevronDown, User, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useLanguage } from '@/contexts/LanguageContext';
 import NotificationBell from '@/components/shared/NotificationBell';
+import LanguageToggle from '@/components/shared/LanguageToggle';
+import ThemeToggle from '@/components/shared/ThemeToggle';
 
 const navKeys = ["home", "marketplace", "equipment", "transport", "marketPrices", "notices"];
 const navPaths = ["/", "/marketplace", "/equipment", "/transport", "/market-prices", "/notices"];
@@ -17,7 +18,6 @@ export default function Navbar({ user }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const t = useTranslation();
-  const { lang, toggleLang } = useLanguage();
   const { logout } = useAuth();
 
   const handleLogout = () => {
@@ -68,11 +68,8 @@ export default function Navbar({ user }) {
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
-            {/* Language Toggle */}
-            <button onClick={toggleLang} className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-md" title={t('switchToEnglish')}>
-              <Languages className="w-5 h-5" />
-              <span className="sr-only">{lang === 'bn' ? t('switchToEnglish') : t('switchToBangla')}</span>
-            </button>
+            <LanguageToggle />
+            <ThemeToggle />
 
             {user ? (
               <>
@@ -94,7 +91,20 @@ export default function Navbar({ user }) {
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <div className="flex items-center justify-between gap-2">
+                        <span>{t('settings.language')}</span>
+                        <LanguageToggle showLabel />
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <div className="flex items-center justify-between gap-2">
+                        <span>{t('settings.darkMode')}</span>
+                        <ThemeToggle showLabel />
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to={getDashboardPath()} className="flex items-center gap-2">
                         <LayoutDashboard className="w-4 h-4" /> {t('dashboard')}
