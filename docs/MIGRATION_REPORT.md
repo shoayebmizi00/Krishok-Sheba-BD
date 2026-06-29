@@ -36,7 +36,7 @@ KRISHOK-SHEBA BD now uses a self-hosted React/Express/MySQL architecture. Propri
 
 ## Database
 
-`backend/database/schema.sql` creates:
+`database/schema.sql` creates:
 
 - `users`
 - `crop_listings`
@@ -66,10 +66,11 @@ The schema includes UUID primary keys, foreign keys, indexes, JSON fields, statu
 
 ## Verification
 
-- `npm install`: passed
+- `npm --prefix frontend install`: passed
 - `npm --prefix backend install`: passed
-- `npm run build`: passed
-- `npm run lint`: passed after cleanup
+- `npm --prefix frontend run build`: passed
+- `npm --prefix backend run check`: passed
+- `npm --prefix backend test`: passed
 - Backend JavaScript syntax check: passed
 - Source and lockfile scan for proprietary SDK references: passed
 

@@ -8,8 +8,8 @@ import { getDatabaseConfig } from '../config/databaseConfig.js';
 dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const schemaPath = path.resolve(__dirname, '..', 'database', 'schema.sql');
-const migrationsDirectory = path.resolve(__dirname, '..', 'database', 'migrations');
+const schemaPath = path.resolve(__dirname, '..', '..', 'database', 'schema.sql');
+const migrationsDirectory = path.resolve(__dirname, '..', '..', 'database', 'migrations');
 
 async function tableExists(connection, table) {
   const [rows] = await connection.query(

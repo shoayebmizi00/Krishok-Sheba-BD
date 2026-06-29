@@ -13,13 +13,13 @@ Self-hosted agricultural marketplace built with React, Vite, Tailwind CSS, Expre
 1. Create the database:
 
    ```powershell
-   mysql -u root -p < backend/database/schema.sql
+   mysql -u root -p < database/schema.sql
    ```
 
 2. Configure environment files:
 
    ```powershell
-   Copy-Item .env.example .env
+   Copy-Item frontend/.env.example frontend/.env
    Copy-Item backend/.env.example backend/.env
    ```
 
@@ -28,20 +28,20 @@ Self-hosted agricultural marketplace built with React, Vite, Tailwind CSS, Expre
 3. Install dependencies:
 
    ```powershell
-   npm.cmd install
+   npm.cmd --prefix frontend install
    npm.cmd --prefix backend install
    ```
 
 4. Start the API:
 
    ```powershell
-   npm.cmd run server
+   npm.cmd --prefix backend start
    ```
 
 5. In another terminal, start the frontend:
 
    ```powershell
-   npm.cmd run dev
+   npm.cmd --prefix frontend run dev
    ```
 
 Frontend: `http://localhost:5173`
@@ -56,7 +56,7 @@ On Windows PowerShell systems that allow npm scripts, `npm` can be used instead 
 
 Vite development uses the local demo API by default, so pages remain testable when MySQL or Express is stopped. Demo changes persist in browser `localStorage`.
 
-Set `VITE_USE_LOCAL_API=false` in `.env` to use the Express API instead.
+Set `VITE_USE_LOCAL_API=false` in `frontend/.env` to use the Express API instead.
 
 All demo accounts use password `123456`:
 
@@ -103,4 +103,4 @@ npm.cmd --prefix backend run migrate
 - [API reference](docs/API.md)
 - [Migration report](docs/MIGRATION_REPORT.md)
 - [Postman collection](postman/KRISHOK-SHEBA-BD.postman_collection.json)
-- [Database schema](backend/database/schema.sql)
+- [Database schema](database/schema.sql)
