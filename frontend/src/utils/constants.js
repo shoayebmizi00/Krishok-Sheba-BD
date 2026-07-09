@@ -30,7 +30,7 @@ export const VEHICLE_TYPES = [
 ];
 
 export const ROLE_LABELS = {
-  admin: "প্রশাসক", farmer: "কৃষক", buyer: "ক্রেতা",
+  admin: "সুপার অ্যাডমিন", farmer: "কৃষক", buyer: "ক্রেতা",
   equipment_owner: "যন্ত্রপাতির মালিক", transport_provider: "পরিবহন সেবাদাতা"
 };
 

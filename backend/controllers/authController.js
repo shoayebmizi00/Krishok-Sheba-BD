@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.js';
+import { sendPasswordResetEmail } from '../services/emailService.js';
 
 const roles = new Set(['admin', 'farmer', 'buyer', 'equipment_owner', 'transport_provider']);
 
@@ -133,48 +134,66 @@ export async function updateMe(req, res, next) {
 
 export async function requestPasswordReset(req, res, next) {
   try {
-    const email = req.body.email?.trim().toLowerCase();
-    const [rows] = await pool.execute('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
-    let resetToken;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address.' });
+    }
+    const [rows] = await pool.execute('SELECT id, email, full_name FROM users WHERE email = ? LIMIT 1', [email]);
     if (rows[0]) {
-      resetToken = crypto.randomBytes(32).toString('hex');
+      const resetToken = crypto.randomBytes(32).toString('hex');
       const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-      const minutes = Number(process.env.RESET_TOKEN_EXPIRES_MINUTES || 30);
+      const configuredMinutes = Number(process.env.RESET_TOKEN_EXPIRES_MINUTES || 30);
+      const minutes = Number.isFinite(configuredMinutes) && configuredMinutes >= 5 && configuredMinutes <= 60 ? configuredMinutes : 30;
       await pool.execute(
         'UPDATE users SET reset_password_token = ?, reset_password_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?',
         [tokenHash, minutes, rows[0].id]
       );
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`Password reset URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`);
+      const frontendUrl = String(process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim().replace(/\/$/, '');
+      const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
+      try {
+        const delivery = await sendPasswordResetEmail({ to: rows[0].email, name: rows[0].full_name, resetUrl, expiresMinutes: minutes });
+        if (!delivery.sent && process.env.NODE_ENV !== 'production') {
+          console.info('[auth.password-reset] Email delivery is not configured.');
+        }
+      } catch (error) {
+        console.error('[auth.password-reset] Email delivery failed', { requestId: req.id, code: error.code, message: error.message });
       }
     }
-    const response = { message: 'অ্যাকাউন্টটি থাকলে পাসওয়ার্ড পুনরুদ্ধারের লিংক তৈরি হয়েছে' };
-    if (process.env.NODE_ENV !== 'production' && resetToken) response.resetToken = resetToken;
-    res.json(response);
+    res.json({ message: 'If an account exists for this email, password recovery instructions will be sent.' });
   } catch (error) {
     next(error);
   }
 }
 
 export async function resetPassword(req, res, next) {
+  let connection;
   try {
     const { token, newPassword } = req.body;
-    if (!token || !newPassword || newPassword.length < 8) {
+    if (typeof token !== 'string' || typeof newPassword !== 'string' || newPassword.length < 8) {
       return res.status(400).json({ message: 'সঠিক টোকেন ও কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন' });
     }
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    const [rows] = await pool.execute(
-      'SELECT id FROM users WHERE reset_password_token = ? AND reset_password_expires > NOW() LIMIT 1',
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      'SELECT id FROM users WHERE reset_password_token = ? AND reset_password_expires > NOW() LIMIT 1 FOR UPDATE',
       [tokenHash]
     );
-    if (!rows[0]) return res.status(400).json({ message: 'পুনরুদ্ধার টোকেন সঠিক নয় বা মেয়াদ শেষ' });
+    if (!rows[0]) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'পুনরুদ্ধার টোকেন সঠিক নয় বা মেয়াদ শেষ' });
+    }
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    await pool.execute(
+    await connection.execute(
       'UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
       [passwordHash, rows[0].id]
     );
+    await connection.commit();
     res.json({ message: 'পাসওয়ার্ড সফলভাবে হালনাগাদ হয়েছে' });
   } catch (error) {
+    if (connection) await connection.rollback();
     next(error);
+  } finally {
+    connection?.release();
   }
 }

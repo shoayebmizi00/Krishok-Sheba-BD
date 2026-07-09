@@ -68,15 +68,21 @@ All demo accounts use password `123456`:
 
 ## Administrator Account
 
-Register a normal account, then promote it in MySQL:
+Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME`, then create or promote the
+account with the idempotent bootstrap command:
 
-```sql
-UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
+```sh
+npm --prefix backend run admin:create
 ```
+
+See [docs/AUTHENTICATION_RECOVERY_ADMIN.md](docs/AUTHENTICATION_RECOVERY_ADMIN.md)
+for Render Shell usage and intentional password replacement.
 
 ## Password Reset
 
-No paid email provider is required. In development, the API logs the reset URL and returns the reset token in the response. Connect an SMTP provider before production deployment.
+Password recovery requires SMTP configuration. Reset tokens are never returned by
+the API or logged. Configure the SMTP variables documented in
+[docs/AUTHENTICATION_RECOVERY_ADMIN.md](docs/AUTHENTICATION_RECOVERY_ADMIN.md).
 
 ## Production uploads
 
