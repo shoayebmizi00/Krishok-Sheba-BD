@@ -10,6 +10,14 @@ export const AuthProvider = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false);
 
   const checkUserAuth = useCallback(async () => {
+    if (!apiClient.auth.hasSession()) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
+      return;
+    }
+
     setIsLoadingAuth(true);
     try {
       const currentUser = await apiClient.auth.me();

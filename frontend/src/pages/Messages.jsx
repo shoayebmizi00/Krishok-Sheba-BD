@@ -54,18 +54,24 @@ export default function Messages() {
   }, []);
 
   const loadMessages = useCallback(async (background = false) => {
-    if (!id) {
+    if (!id || !user?.id) {
       setMessages([]);
       return;
     }
     if (!background) setChatLoading(true);
     try {
       const result = await messageService.conversationMessages(id);
-      setMessages(listFromResponse(result, 'messages'));
-      await messageService.markConversationRead(id);
-      setConversations((current) => current.map((conversation) => (
-        String(conversation.id) === String(id) ? { ...conversation, unread_count: 0 } : conversation
-      )));
+      const nextMessages = listFromResponse(result, 'messages');
+      setMessages(nextMessages);
+      const hasUnreadIncoming = nextMessages.some((message) => (
+        !message.is_read && String(message.sender_id) !== String(user.id)
+      ));
+      if (hasUnreadIncoming) {
+        await messageService.markConversationRead(id);
+        setConversations((current) => current.map((conversation) => (
+          String(conversation.id) === String(id) ? { ...conversation, unread_count: 0 } : conversation
+        )));
+      }
     } catch (error) {
       if (!background) {
         toast({ title: 'বার্তা লোড করা যায়নি', description: error.message, variant: 'destructive', duration: 3000 });
@@ -73,19 +79,23 @@ export default function Messages() {
     } finally {
       if (!background) setChatLoading(false);
     }
-  }, [id]);
+  }, [id, user?.id]);
 
   useEffect(() => {
     if (!user?.id) return undefined;
     loadConversations();
-    const timer = window.setInterval(() => loadConversations(true), 6000);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') loadConversations(true);
+    }, 15_000);
     return () => window.clearInterval(timer);
   }, [user?.id, loadConversations]);
 
   useEffect(() => {
     loadMessages();
     if (!id) return undefined;
-    const timer = window.setInterval(() => loadMessages(true), 6000);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') loadMessages(true);
+    }, 15_000);
     return () => window.clearInterval(timer);
   }, [id, loadMessages]);
 

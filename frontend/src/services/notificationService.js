@@ -5,3 +5,7 @@ export const notificationService = {
   filter: (filters, sort, limit, page) => apiClient.entities.Notification.filter(filters, sort, limit, page),
   update: (id, data) => apiClient.entities.Notification.update(id, data)
 };
+
+export const loadUserNotifications = (userId) => (
+  notificationService.filter({ user_id: userId }, '-created_date')
+);

@@ -13,6 +13,10 @@ function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+function hasToken() {
+  return Boolean(getToken());
+}
+
 function setToken(token) {
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
@@ -153,6 +157,7 @@ const remoteApi = {
     transport: (id, pickupDate) => request(`/availability/transport/${id}?pickup_date=${encodeURIComponent(pickupDate)}`)
   },
   auth: {
+    hasSession: hasToken,
     async register(data) {
       const result = await request('/auth/register', { method: 'POST', body: JSON.stringify(data) });
       setToken(result.token);

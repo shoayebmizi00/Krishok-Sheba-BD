@@ -55,17 +55,14 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-[720px] overflow-hidden bg-emerald-950 lg:min-h-[680px]">
       <div className="absolute inset-0">
-        {heroSlides.map((slide, index) => (
-          <img
-            key={slide.image}
-            src={slide.image}
-            alt={slide.alt}
-            aria-hidden={index !== activeSlide}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-              index === activeSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          />
-        ))}
+        <img
+          key={heroSlides[activeSlide].image}
+          src={heroSlides[activeSlide].image}
+          alt={heroSlides[activeSlide].alt}
+          fetchPriority={activeSlide === 0 ? 'high' : 'auto'}
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-emerald-950/65 to-black/35" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20" />
       </div>

@@ -41,6 +41,8 @@ const requiredColumns = [
 ];
 
 const databaseConfig = getDatabaseConfig();
+const SCHEMA_CACHE_MS = 5 * 60_000;
+let schemaCache = null;
 
 export const pool = mysql.createPool({
   ...databaseConfig,
@@ -73,6 +75,10 @@ export async function checkDatabaseConnection() {
 }
 
 export async function checkDatabaseSchema() {
+  if (schemaCache && Date.now() - schemaCache.checkedAt < SCHEMA_CACHE_MS) {
+    return schemaCache.value;
+  }
+
   const [rows] = await pool.query(
     'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()'
   );
@@ -86,10 +92,12 @@ export async function checkDatabaseSchema() {
     .map(([table, column]) => `${table}.${column}`)
     .filter((column) => !columns.has(column));
 
-  return {
+  const value = {
     ready: missingTables.length === 0 && missingColumns.length === 0,
     tableCount: tables.size,
     missingTables,
     missingColumns
   };
+  schemaCache = { checkedAt: Date.now(), value };
+  return value;
 }

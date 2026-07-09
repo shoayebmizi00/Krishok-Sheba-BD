@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { apiClient } from '@/api/apiClient';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { Bell, Check, Gavel, Package, Truck, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -11,26 +11,7 @@ const TYPE_ICONS = { bid: Gavel, order: Package, delivery: Truck, notice: Megaph
 
 export default function Notifications() {
   const { user } = useOutletContext();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    const load = async () => {
-      const data = await apiClient.entities.Notification.filter({ user_id: user.id }, '-created_date');
-      setNotifications(data);
-      setLoading(false);
-    };
-    load();
-  }, [user]);
-
-  const markRead = async (id) => {
-    await apiClient.entities.Notification.update(id, { is_read: true });
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-  };
+  const { notifications, isLoading: loading, markRead } = useNotifications();
 
   if (loading) return <div className="max-w-3xl mx-auto px-4 py-8"><LoadingSpinner /></div>;
   if (!user) {

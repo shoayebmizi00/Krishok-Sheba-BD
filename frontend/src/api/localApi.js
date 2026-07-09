@@ -581,6 +581,9 @@ export const localApi = {
     }
   },
   auth: {
+    hasSession() {
+      return Boolean(localStorage.getItem(SESSION_KEY));
+    },
     async register(data) {
       if (database.User.some((user) => user.email.toLowerCase() === data.email.toLowerCase())) {
         throw makeError('An account with this email already exists', 409);

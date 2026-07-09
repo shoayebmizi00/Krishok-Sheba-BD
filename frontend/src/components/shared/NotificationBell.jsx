@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { apiClient } from '@/api/apiClient';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -22,30 +22,19 @@ function playNotificationSound() {
 }
 
 export default function NotificationBell({ user, link = '/notifications' }) {
-  const [items, setItems] = useState([]);
   const previousUnread = useRef(0);
-  const load = async () => {
-    if (!user) return;
-    const data = await apiClient.entities.Notification.filter({ user_id: user.id }, '-created_date', 8);
-    const unread = data.filter((item) => !item.is_read).length;
+  const { notifications, markRead, markAllRead } = useNotifications();
+  const items = notifications.slice(0, 8);
+  const unread = notifications.filter((item) => !item.is_read).length;
+
+  useEffect(() => {
     if (previousUnread.current && unread > previousUnread.current) playNotificationSound();
     previousUnread.current = unread;
-    setItems(data);
-  };
-  useEffect(() => {
-    load();
-    const timer = window.setInterval(load, 12_000);
-    return () => window.clearInterval(timer);
-  }, [user?.id]);
-  const unread = items.filter((item) => !item.is_read).length;
-  const markAll = async () => {
-    await Promise.all(items.filter((item) => !item.is_read).map((item) => apiClient.entities.Notification.update(item.id, { is_read: true })));
-    setItems((current) => current.map((item) => ({ ...item, is_read: true })));
-  };
-  const markRead = async (item) => {
+  }, [unread]);
+
+  const readItem = async (item) => {
     if (item.is_read) return;
-    await apiClient.entities.Notification.update(item.id, { is_read: true });
-    setItems((current) => current.map((notification) => notification.id === item.id ? { ...notification, is_read: true } : notification));
+    await markRead(item.id);
   };
   return (
     <DropdownMenu>
@@ -56,9 +45,9 @@ export default function NotificationBell({ user, link = '/notifications' }) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between border-b p-3"><strong className="text-sm">নতুন নোটিফিকেশন</strong><Button variant="ghost" size="sm" onClick={markAll}><CheckCheck className="mr-1 h-4 w-4" /> সব পড়া হয়েছে</Button></div>
+        <div className="flex items-center justify-between border-b p-3"><strong className="text-sm">নতুন নোটিফিকেশন</strong><Button variant="ghost" size="sm" onClick={markAllRead}><CheckCheck className="mr-1 h-4 w-4" /> সব পড়া হয়েছে</Button></div>
         <div className="max-h-80 overflow-y-auto">
-          {items.length === 0 ? <p className="p-6 text-center text-sm text-muted-foreground">কোনো নোটিফিকেশন নেই</p> : items.map((item) => <Link key={item.id} to={item.link || link} onClick={() => markRead(item)} className={`block border-b p-3 text-sm hover:bg-muted ${item.is_read ? '' : 'bg-primary/5'}`}><strong>{item.title}</strong><p className="mt-1 text-xs text-muted-foreground">{item.message}</p></Link>)}
+          {items.length === 0 ? <p className="p-6 text-center text-sm text-muted-foreground">কোনো নোটিফিকেশন নেই</p> : items.map((item) => <Link key={item.id} to={item.link || link} onClick={() => readItem(item)} className={`block border-b p-3 text-sm hover:bg-muted ${item.is_read ? '' : 'bg-primary/5'}`}><strong>{item.title}</strong><p className="mt-1 text-xs text-muted-foreground">{item.message}</p></Link>)}
         </div>
         <Link to={link} className="block p-3 text-center text-sm font-medium text-primary">সব নোটিফিকেশন দেখুন</Link>
       </DropdownMenuContent>
