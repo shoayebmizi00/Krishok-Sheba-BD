@@ -77,7 +77,7 @@ export default function HeroSection() {
   ];
 
   return (
-    <section className="relative min-h-[720px] overflow-hidden bg-white dark:bg-gray-950 lg:min-h-[680px]">
+    <section className="relative min-h-[720px] overflow-hidden bg-emerald-950 dark:bg-gray-950 lg:min-h-[680px]">
       <div className="absolute inset-0">
         <img
           key={heroSlides[activeSlide].image}
@@ -87,22 +87,22 @@ export default function HeroSection() {
           decoding="async"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-white/35 dark:from-gray-950/90 dark:via-gray-950/75 dark:to-black/45" />
-        <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/20 dark:from-black/70 dark:via-transparent dark:to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-emerald-950/65 to-black/35 dark:from-gray-950/90 dark:via-gray-950/75 dark:to-black/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20 dark:from-black/70 dark:via-transparent dark:to-black/30" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-green-600/30 bg-white/80 px-3 py-1.5 text-sm font-medium text-green-800 shadow-sm backdrop-blur-sm dark:border-green-400/30 dark:bg-gray-950/70 dark:text-green-200">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white shadow-sm backdrop-blur-sm dark:border-green-400/30 dark:bg-gray-950/70 dark:text-green-200">
               <Sprout className="w-4 h-4" />
               {t('home.hero.tagline')}
             </div>
 
-            <h1 className="font-heading text-4xl font-extrabold leading-tight text-gray-950 drop-shadow-sm dark:text-white dark:drop-shadow-lg sm:text-5xl lg:text-6xl">
+            <h1 className="font-heading text-4xl font-extrabold leading-tight text-white drop-shadow-lg dark:text-white sm:text-5xl lg:text-6xl">
               {t('home.hero.title')}
             </h1>
-            <p className="max-w-xl text-lg leading-relaxed text-gray-700 drop-shadow-sm dark:text-gray-300 dark:drop-shadow">
+            <p className="max-w-xl text-lg leading-relaxed text-white/85 drop-shadow dark:text-gray-300">
               {t('home.hero.subtitle')}
             </p>
 
@@ -113,7 +113,7 @@ export default function HeroSection() {
                 </Button>
               </Link>
               <Link to="/market-prices">
-                <Button size="lg" variant="outline" className="w-full border border-green-600 bg-white text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-500 dark:bg-gray-900 dark:text-green-300 dark:hover:bg-gray-800 dark:hover:text-green-200 sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full border-white/50 bg-white/10 text-white hover:bg-white hover:text-primary dark:border-green-500 dark:bg-gray-900 dark:text-green-300 dark:hover:bg-gray-800 dark:hover:text-green-200 sm:w-auto">
                   {t('home.hero.secondaryButton')}
                 </Button>
               </Link>
@@ -122,8 +122,8 @@ export default function HeroSection() {
             <div className="flex gap-6 pt-4">
               {stats.map((s) =>
               <div key={s.label}>
-                  <div className="font-heading text-xl font-bold text-gray-950 dark:text-white">{s.num}</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">{s.label}</div>
+                  <div className="font-heading text-xl font-bold text-white dark:text-white">{s.num}</div>
+                  <div className="text-xs text-white/70 dark:text-gray-400">{s.label}</div>
                 </div>
               )}
             </div>
@@ -132,7 +132,7 @@ export default function HeroSection() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
             {featureCards.map((f) =>
-            <Link to={f.to} key={f.titleKey} className="flex min-h-32 h-full cursor-pointer flex-col rounded-2xl border border-gray-200 bg-white/90 p-4 text-gray-950 shadow-lg backdrop-blur-sm transition-all hover:-translate-y-1 hover:bg-white hover:shadow-xl dark:border-gray-700 dark:bg-gray-900/90 dark:text-white dark:hover:bg-gray-900">
+            <Link to={f.to} key={f.titleKey} className="flex min-h-32 h-full cursor-pointer flex-col rounded-2xl border border-white/25 bg-white/95 p-4 text-gray-950 shadow-lg backdrop-blur-sm transition-all hover:-translate-y-1 hover:bg-white hover:shadow-xl dark:border-gray-700 dark:bg-gray-900/90 dark:text-white dark:hover:bg-gray-900">
                 <div className={`w-10 h-10 rounded-xl ${f.iconClass} flex items-center justify-center mb-3`}>
                   <f.icon className="w-5 h-5" />
                 </div>
@@ -154,7 +154,7 @@ export default function HeroSection() {
                 aria-label={`${t('home.hero.showSlide')} ${index + 1}`}
                 aria-current={index === activeSlide}
                 className={`h-2.5 rounded-full transition-all ${
-                  index === activeSlide ? 'w-8 bg-green-700 dark:bg-white' : 'w-2.5 bg-green-700/40 hover:bg-green-700/70 dark:bg-white/45 dark:hover:bg-white/75'
+                  index === activeSlide ? 'w-8 bg-white' : 'w-2.5 bg-white/45 hover:bg-white/75'
                 }`}
               />
             ))}
@@ -165,7 +165,7 @@ export default function HeroSection() {
               type="button"
               onClick={showPreviousSlide}
               aria-label={t('home.hero.previousImage')}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-green-700/30 bg-white/80 text-green-800 backdrop-blur-sm transition hover:bg-green-700 hover:text-white dark:border-white/30 dark:bg-black/30 dark:text-white dark:hover:bg-white dark:hover:text-emerald-800"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white backdrop-blur-sm transition hover:bg-white hover:text-emerald-800 dark:border-white/30 dark:bg-black/30 dark:text-white dark:hover:bg-white dark:hover:text-emerald-800"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -173,7 +173,7 @@ export default function HeroSection() {
               type="button"
               onClick={showNextSlide}
               aria-label={t('home.hero.nextImage')}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-green-700/30 bg-white/80 text-green-800 backdrop-blur-sm transition hover:bg-green-700 hover:text-white dark:border-white/30 dark:bg-black/30 dark:text-white dark:hover:bg-white dark:hover:text-emerald-800"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-black/20 text-white backdrop-blur-sm transition hover:bg-white hover:text-emerald-800 dark:border-white/30 dark:bg-black/30 dark:text-white dark:hover:bg-white dark:hover:text-emerald-800"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
