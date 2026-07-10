@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import PageNotFound from '@/routes/PageNotFound';
 import { useAuth } from '@/contexts/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Layout
 import PublicLayout from '@/layouts/PublicLayout';
@@ -66,13 +67,14 @@ const AdminReports = lazy(() => import('@/pages/admin/AdminReports'));
 
 export default function AppRoutes() {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const t = useTranslation();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-sm text-muted-foreground">কৃষক-সেবা বিডি লোড হচ্ছে...</p>
+          <p className="text-sm text-muted-foreground">{t('appLoading')}</p>
         </div>
       </div>
     );

@@ -44,8 +44,8 @@ export default function Navbar({ user }) {
               <Sprout className="w-5 h-5 text-primary-foreground" />
             </div>
             <div className="hidden sm:block">
-              <span className="font-heading font-bold text-lg text-foreground leading-none">কৃষক-সেবা</span>
-              <span className="text-xs text-primary font-semibold ml-1">বিডি</span>
+              <span className="font-heading font-bold text-lg text-foreground leading-none">{t('appNameShort')}</span>
+              <span className="text-xs text-primary font-semibold ml-1">{t('appNameSuffix')}</span>
             </div>
           </Link>
 
@@ -82,12 +82,12 @@ export default function Navbar({ user }) {
                     <button
                       type="button"
                       className="relative z-10 inline-flex h-10 cursor-pointer touch-manipulation items-center justify-center gap-2 rounded-md px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label="প্রোফাইল মেনু খুলুন"
+                      aria-label={t('profileMenu')}
                     >
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                         <User className="w-4 h-4 text-primary" />
                       </div>
-                      <span className="hidden sm:inline text-sm font-medium">{user.full_name || 'User'}</span>
+                      <span className="hidden sm:inline text-sm font-medium">{user.full_name || t('common.user')}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>

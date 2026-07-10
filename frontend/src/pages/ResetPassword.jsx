@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -18,13 +17,12 @@ export default function ResetPassword() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const t = useTranslation();
-  const { lang } = useLanguage();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("দুটি পাসওয়ার্ড একই নয়");
+      setError(t('validation.passwordMismatch'));
       return;
     }
     setLoading(true);
@@ -32,7 +30,7 @@ export default function ResetPassword() {
       await apiClient.auth.resetPassword(resetToken, newPassword);
       window.location.href = "/login";
     } catch (err) {
-      setError(err.message || "পাসওয়ার্ড পরিবর্তন করা যায়নি");
+      setError(t('auth.passwordUpdateFailed'));
     } finally {
       setLoading(false);
     }
@@ -42,16 +40,16 @@ export default function ResetPassword() {
     return (
       <AuthLayout
         icon={AlertTriangle}
-        title={lang === 'bn' ? 'অবৈধ রিসেট লিংক' : 'Invalid reset link'}
-        subtitle={lang === 'bn' ? 'এই পাসওয়ার্ড রিসেট লিংকটি অনুপস্থিত বা অবৈধ' : 'This password reset link is missing or invalid'}
+        title={t('auth.invalidResetLink')}
+        subtitle={t('auth.invalidResetLinkDesc')}
         footer={
           <Link to="/forgot-password" className="text-primary font-medium hover:underline">
-            {lang === 'bn' ? 'নতুন লিংক অনুরোধ করুন' : 'Request a new link'}
+            {t('auth.requestNewLink')}
           </Link>
         }
       >
         <p className="text-sm text-foreground text-center">
-          {lang === 'bn' ? 'আপনার ব্যবহৃত লিংকটি অসম্পূর্ণ মনে হচ্ছে। অনুগ্রহ করে নতুন পাসওয়ার্ড রিসেট ইমেইল অনুরোধ করুন।' : 'The link you used appears to be incomplete. Please request a new password reset email.'}
+          {t('auth.incompleteResetLink')}
         </p>
       </AuthLayout>
     );

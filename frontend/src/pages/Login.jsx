@@ -18,11 +18,11 @@ export default function Login() {
   const t = useTranslation();
   const { toast } = useToast();
   const demoAccounts = [
-    ['Admin', 'admin@example.com'],
-    ['Farmer', 'farmer@example.com'],
-    ['Buyer', 'buyer@example.com'],
-    ['Equipment', 'equipment@example.com'],
-    ['Transport', 'transport@example.com']
+    ['roles.admin', 'admin@example.com'],
+    ['roles.farmer', 'farmer@example.com'],
+    ['roles.buyer', 'buyer@example.com'],
+    ['roles.equipmentOwner', 'equipment@example.com'],
+    ['roles.transportProvider', 'transport@example.com']
   ];
 
   const handleSubmit = async (e) => {
@@ -31,10 +31,10 @@ export default function Login() {
     setLoading(true);
     try {
       const result = await apiClient.auth.login(email, password);
-      toast({ title: 'সফলভাবে লগইন হয়েছে' });
+      toast({ title: t('auth.loginSuccess') });
       window.setTimeout(() => window.location.assign(dashboardPathForRole(result.user.role)), 200);
     } catch (err) {
-      setError(err.message || "ইমেইল বা পাসওয়ার্ড সঠিক নয়");
+      setError(t('auth.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -112,9 +112,9 @@ export default function Login() {
       </form>
       {import.meta.env.DEV && (
         <div className="mt-5 pt-5 border-t border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-2">ডেমো অ্যাকাউন্ট (পাসওয়ার্ড: 123456)</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{t('auth.demoAccounts')}</p>
           <div className="flex flex-wrap gap-2">
-            {demoAccounts.map(([label, demoEmail]) => (
+            {demoAccounts.map(([labelKey, demoEmail]) => (
               <Button
                 key={demoEmail}
                 type="button"
@@ -125,7 +125,7 @@ export default function Login() {
                   setPassword('123456');
                 }}
               >
-                {label}
+                {t(labelKey)}
               </Button>
             ))}
           </div>

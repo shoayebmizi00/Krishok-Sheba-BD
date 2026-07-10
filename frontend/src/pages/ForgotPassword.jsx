@@ -7,14 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const t = useTranslation();
-  const { lang } = useLanguage();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,7 +40,7 @@ export default function ForgotPassword() {
     >
       {sent ? (
         <p className="text-sm text-foreground text-center">
-          {lang === 'bn' ? 'যদি এই ইমেইলের সাথে কোনো অ্যাকাউন্ট থাকে, আপনি শীঘ্রই পাসওয়ার্ড রিসেট লিংক পাবেন।' : "If an account exists with that email, you'll receive a password reset link shortly."}
+          {t('auth.resetLinkSent')}
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">

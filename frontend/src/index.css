@@ -88,6 +88,12 @@
   body {
     @apply bg-background text-foreground font-body;
   }
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
   html[data-language="bn"] {
     --font-heading: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
     --font-body: "Hind Siliguri", "Noto Sans Bengali", "SolaimanLipi", sans-serif;
@@ -118,6 +124,32 @@
   .dark .bg-gray-50,
   .dark .bg-gray-100 {
     background-color: hsl(var(--muted));
+  }
+  .dark .bg-amber-50,
+  .dark .bg-yellow-50 {
+    background-color: rgb(69 26 3 / 0.5);
+  }
+  .dark .bg-green-50,
+  .dark .bg-emerald-50 {
+    background-color: rgb(5 46 22 / 0.5);
+  }
+  .dark .text-amber-800,
+  .dark .text-yellow-700,
+  .dark .text-yellow-800 {
+    color: rgb(254 240 138);
+  }
+  .dark .text-green-700,
+  .dark .text-green-800,
+  .dark .text-emerald-700,
+  .dark .text-emerald-800 {
+    color: rgb(187 247 208);
+  }
+  .dark .bg-blue-50 {
+    background-color: rgb(23 37 84 / 0.5);
+  }
+  .dark .text-blue-700,
+  .dark .text-blue-800 {
+    color: rgb(191 219 254);
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),

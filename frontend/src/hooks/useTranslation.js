@@ -21,15 +21,13 @@ export function useTranslation() {
   return useMemo(() => {
     const translate = (key, fallback) => {
       const value = getNestedValue(translations[lang], key) ?? translations[lang]?.[key];
-      const englishValue = getNestedValue(translations.en, key) ?? translations.en?.[key];
-
       if (value) return value;
 
       if (import.meta.env.DEV) {
         console.warn(`[i18n] Missing translation key "${key}" for "${lang}"`);
       }
 
-      return fallback ?? englishValue ?? humanizeKey(key);
+      return fallback ?? `[${key}]`;
     };
 
     translate.t = translate;

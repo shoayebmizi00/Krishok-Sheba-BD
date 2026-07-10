@@ -12,10 +12,10 @@ import { dashboardPathForRole } from '@/routes/roleRoutes';
 import { useToast } from '@/components/ui/use-toast';
 
 const registrationRoles = [
-  ['farmer', 'কৃষক'],
-  ['buyer', 'ক্রেতা'],
-  ['equipment_owner', 'যন্ত্রপাতির মালিক'],
-  ['transport_provider', 'পরিবহন সেবাদাতা']
+  ['farmer', 'roles.farmer'],
+  ['buyer', 'roles.buyer'],
+  ['equipment_owner', 'roles.equipmentOwner'],
+  ['transport_provider', 'roles.transportProvider']
 ];
 
 export default function Register() {
@@ -37,15 +37,15 @@ export default function Register() {
     event.preventDefault();
     setError('');
     if (form.password !== form.confirmPassword) {
-      setError('দুটি পাসওয়ার্ড একই নয়');
+      setError(t('validation.passwordMismatch'));
       return;
     }
     if (!form.full_name.trim()) {
-      setError('পূর্ণ নাম আবশ্যক');
+      setError(t('validation.fullNameRequired'));
       return;
     }
     if (form.password.length < 8) {
-      setError('পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে');
+      setError(t('validation.passwordMinLength'));
       return;
     }
     setLoading(true);
@@ -56,10 +56,10 @@ export default function Register() {
         password: form.password,
         role: form.role
       });
-      toast({ title: 'সফলভাবে নিবন্ধন সম্পন্ন হয়েছে' });
+      toast({ title: t('auth.registerSuccess') });
       window.setTimeout(() => window.location.assign(dashboardPathForRole(result.user.role)), 200);
     } catch (err) {
-      setError(err.message || 'নিবন্ধন সম্পন্ন হয়নি');
+      setError(t('auth.registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="full_name">পূর্ণ নাম</Label>
+          <Label htmlFor="full_name">{t('auth.fullName')}</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input id="full_name" value={form.full_name} onChange={(e) => update('full_name', e.target.value)} className="pl-10 h-12" required />
@@ -95,11 +95,11 @@ export default function Register() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label>অ্যাকাউন্টের ধরন</Label>
+          <Label>{t('auth.accountType')}</Label>
           <Select value={form.role} onValueChange={(value) => update('role', value)}>
             <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {registrationRoles.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+              {registrationRoles.map(([value, labelKey]) => <SelectItem key={value} value={value}>{t(labelKey)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

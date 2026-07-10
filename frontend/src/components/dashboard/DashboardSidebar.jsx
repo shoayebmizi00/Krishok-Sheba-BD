@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sprout, X } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function DashboardSidebar({ links, mobileOpen, setMobileOpen }) {
   const location = useLocation();
+  const t = useTranslation();
 
   const content = (
     <div className="flex flex-col h-full">
@@ -12,7 +14,7 @@ export default function DashboardSidebar({ links, mobileOpen, setMobileOpen }) {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <Sprout className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-heading font-bold text-sm">কৃষক-সেবা বিডি</span>
+          <span className="font-heading font-bold text-sm">{t('appName')}</span>
         </Link>
         {setMobileOpen && (
           <button onClick={() => setMobileOpen(false)} className="lg:hidden p-1">

@@ -24,7 +24,7 @@ export default function Footer() {
               <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
                 <Sprout className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-heading font-bold text-lg">কৃষক-সেবা বিডি</span>
+              <span className="font-heading font-bold text-lg">{t('appName')}</span>
             </div>
             <p className="text-sm text-background/60 leading-relaxed">
               {t('footerDesc')}
@@ -61,7 +61,7 @@ export default function Footer() {
                 <Mail className="w-4 h-4 shrink-0" /> info@krishoksheba.bd
               </div>
               <div className="flex items-center gap-2 text-sm text-background/60">
-                <MapPin className="w-4 h-4 shrink-0" /> ঢাকা, বাংলাদেশ
+                <MapPin className="w-4 h-4 shrink-0" /> {t('dhakaBangladesh')}
               </div>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function Footer() {
 
         <div className="border-t border-background/10 mt-10 pt-6 text-center">
           <p className="text-sm text-background/40">
-            © {new Date().getFullYear()} কৃষক-সেবা বিডি। {t('allRightsReservedbyMIZI')}
+            © {new Date().getFullYear()} {t('appName')}. {t('allRightsReservedbyMIZI')}
           </p>
         </div>
       </div>
