@@ -6,10 +6,13 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import NotificationBell from '@/components/shared/NotificationBell';
-import LanguageToggle from '@/components/shared/LanguageToggle';
 import ThemeToggle from '@/components/shared/ThemeToggle';
+import { cn } from '@/lib/utils';
 
 const navKeys = ["home", "marketplace", "equipment", "transport", "marketPrices", "notices"];
 const navPaths = ["/", "/marketplace", "/equipment", "/transport", "/market-prices", "/notices"];
@@ -19,6 +22,9 @@ export default function Navbar({ user }) {
   const location = useLocation();
   const t = useTranslation();
   const { logout } = useAuth();
+  const { lang, setLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   const handleLogout = () => {
     logout();
@@ -68,7 +74,6 @@ export default function Navbar({ user }) {
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
-            <LanguageToggle />
             <ThemeToggle />
 
             {user ? (
@@ -91,33 +96,60 @@ export default function Navbar({ user }) {
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem asChild>
-                      <div className="flex items-center justify-between gap-2">
-                        <span>{t('settings.language')}</span>
-                        <LanguageToggle showLabel />
+                  <DropdownMenuContent
+                    align="end"
+                    className="min-w-[260px] bg-white p-2 text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                  >
+                    <div className="px-3 py-2.5">
+                      <p className="mb-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                        {t('settings.language')}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          ['bn', t('settings.bangla')],
+                          ['en', t('settings.english')],
+                        ].map(([code, label]) => (
+                          <button
+                            key={code}
+                            type="button"
+                            onClick={() => setLanguage(code)}
+                            className={cn(
+                              'rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+                              lang === code
+                                ? 'border-primary bg-primary text-primary-foreground'
+                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800'
+                            )}
+                          >
+                            {label}
+                          </button>
+                        ))}
                       </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <div className="flex items-center justify-between gap-2">
-                        <span>{t('settings.darkMode')}</span>
-                        <ThemeToggle showLabel />
-                      </div>
-                    </DropdownMenuItem>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {t('settings.darkMode')}
+                      </span>
+                      <Switch
+                        checked={isDark}
+                        onCheckedChange={toggleTheme}
+                        aria-label={t(isDark ? 'settings.lightMode' : 'settings.darkMode')}
+                      />
+                    </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to={getDashboardPath()} className="flex items-center gap-2">
+                      <Link to={getDashboardPath()} className="flex items-center gap-2 px-3 py-2.5">
                         <LayoutDashboard className="w-4 h-4" /> {t('dashboard')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center gap-2">
-                        <User className="w-4 h-4" /> {t('profile')}
+                      <Link to="/profile" className="flex items-center gap-2 px-3 py-2.5">
+                        <User className="w-4 h-4" /> {t('profile.profile')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 text-destructive">
-                      <LogOut className="w-4 h-4" /> {t('logout')}
+                    <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 px-3 py-2.5 text-red-600 dark:text-red-400">
+                      <LogOut className="w-4 h-4" /> {t('profile.logout')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
