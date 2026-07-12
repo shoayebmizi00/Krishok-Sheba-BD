@@ -21,11 +21,15 @@ CREATE TABLE users (
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   reset_password_token CHAR(64) NULL,
   reset_password_expires DATETIME NULL,
+  email_verified BOOLEAN NOT NULL DEFAULT TRUE,
+  email_verification_token CHAR(64) NULL,
+  email_verification_expires DATETIME NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_users_role (role),
   INDEX idx_users_district (district),
-  INDEX idx_users_reset_token (reset_password_token)
+  INDEX idx_users_reset_token (reset_password_token),
+  INDEX idx_users_email_verification_token (email_verification_token)
 ) ENGINE=InnoDB;
 
 CREATE TABLE uploaded_files (

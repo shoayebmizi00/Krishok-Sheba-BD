@@ -33,3 +33,22 @@ export async function sendPasswordResetEmail({ to, name, resetUrl, expiresMinute
   });
   return { sent: true };
 }
+
+export async function sendVerificationEmail({ to, name, verificationUrl, expiresMinutes }) {
+  const configuration = getEmailConfiguration();
+  if (!configuration.configured) return { sent: false, reason: 'not_configured' };
+  const port = Number(process.env.SMTP_PORT);
+  const transport = nodemailer.createTransport({
+    host: process.env.SMTP_HOST, port,
+    secure: String(process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+  });
+  const greeting = name ? `Hello ${name},` : 'Hello,';
+  await transport.sendMail({
+    from: process.env.EMAIL_FROM, to,
+    subject: 'Verify your KRISHOK-SHEBA BD email',
+    text: `${greeting}\n\nVerify your email within ${expiresMinutes} minutes:\n${verificationUrl}`,
+    html: `<p>${escapeHtml(greeting)}</p><p>Verify your email within ${expiresMinutes} minutes:</p><p><a href="${escapeHtml(verificationUrl)}">Verify email</a></p>`
+  });
+  return { sent: true };
+}

@@ -16,6 +16,7 @@ import { adminTransactionRouter, transactionRouter } from './routes/transactionR
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import { equipmentBookingRouter, transportBookingRouter } from './routes/bookingRoutes.js';
 import { conversationRouter, messageRouter } from './routes/messagingRoutes.js';
+import { getEmailConfiguration } from './services/emailService.js';
 
 dotenv.config();
 
@@ -149,6 +150,7 @@ app.use((error, req, res, _next) => {
 
 app.listen(port, '0.0.0.0', async () => {
   console.log(`KRISHOK-SHEBA BD API running on 0.0.0.0:${port} (${deployment})`);
+  console.log(`Password recovery email: ${getEmailConfiguration().configured ? 'configured' : 'SMTP configuration incomplete'}`);
   try {
     await checkDatabaseConnection();
     console.log('MySQL connection established');

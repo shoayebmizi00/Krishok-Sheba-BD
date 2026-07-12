@@ -4,7 +4,8 @@ import { apiClient } from "@/api/apiClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
+import { LogIn, Mail, Loader2 } from "lucide-react";
+import PasswordInput from '@/components/shared/PasswordInput';
 import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { dashboardPathForRole } from '@/routes/roleRoutes';
@@ -85,19 +86,14 @@ export default function Login() {
               {t('forgotPassword')}
             </Link>
           </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
+          <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
               required
             />
-          </div>
         </div>
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
