@@ -79,13 +79,15 @@ app.get('/api/health', async (_req, res, next) => {
         deployment
       });
     }
+    const emailConfiguration = getEmailConfiguration();
     res.json({
       status: 'ok',
       database: 'connected',
       ssl: database.ssl,
       sslCipher: database.sslCipher,
       tables: schema.tableCount,
-      deployment
+      deployment,
+      passwordRecoveryEmail: emailConfiguration.configured ? 'configured' : (emailConfiguration.invalid.length ? 'invalid_format' : 'missing')
     });
   } catch (error) {
     next(error);
