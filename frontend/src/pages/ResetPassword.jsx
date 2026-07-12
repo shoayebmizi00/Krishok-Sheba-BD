@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiClient } from "@/api/apiClient";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
+import PasswordInput from '@/components/shared/PasswordInput';
 import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -25,10 +25,11 @@ export default function ResetPassword() {
       setError(t('validation.passwordMismatch'));
       return;
     }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(newPassword)) { setError(t('validation.passwordMinLength')); return; }
     setLoading(true);
     try {
       await apiClient.auth.resetPassword(resetToken, newPassword);
-      window.location.href = "/login";
+      window.setTimeout(() => window.location.assign('/login'), 800);
     } catch (err) {
       setError(t('auth.passwordUpdateFailed'));
     } finally {
@@ -69,38 +70,28 @@ export default function ResetPassword() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="password">{t('newPassword')}</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
+          <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               autoFocus
               placeholder="••••••••"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="pl-10 h-12"
               required
               minLength={8}
             />
-          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">{t('confirmPassword')}</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
+          <PasswordInput
               id="confirm"
-              type="password"
               autoComplete="new-password"
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12"
               required
               minLength={8}
             />
-          </div>
         </div>
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (

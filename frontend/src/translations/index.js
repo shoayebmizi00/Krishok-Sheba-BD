@@ -21,6 +21,13 @@ const bn = {
     tryAgain: 'কিছু ভুল হয়েছে, আবার চেষ্টা করুন',
   },
   auth: {
+    showPassword: 'পাসওয়ার্ড দেখান',
+    hidePassword: 'পাসওয়ার্ড লুকান',
+    verificationEmailSent: 'আপনার ইমেইলে একটি যাচাইকরণ লিংক পাঠানো হয়েছে। অ্যাকাউন্ট যাচাই করতে ইমেইলটি দেখুন।',
+    verifyEmail: 'ইমেইল যাচাই করুন',
+    verifyingEmail: 'ইমেইল যাচাই করা হচ্ছে...',
+    emailVerified: 'ইমেইল সফলভাবে যাচাই হয়েছে',
+    invalidVerificationLink: 'যাচাইকরণ লিংকটি অবৈধ, মেয়াদোত্তীর্ণ অথবা ইতিমধ্যে ব্যবহৃত।',
     login: 'লগইন',
     register: 'নিবন্ধন',
     email: 'ইমেইল',

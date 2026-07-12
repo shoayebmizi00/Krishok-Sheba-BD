@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UserPlus, Mail, Lock, Loader2, User } from 'lucide-react';
+import { UserPlus, Mail, Loader2, User } from 'lucide-react';
+import PasswordInput from '@/components/shared/PasswordInput';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AuthLayout from '@/components/AuthLayout';
 import { useTranslation } from '@/hooks/useTranslation';
-import { dashboardPathForRole } from '@/routes/roleRoutes';
 import { useToast } from '@/components/ui/use-toast';
 
 const registrationRoles = [
@@ -44,20 +44,20 @@ export default function Register() {
       setError(t('validation.fullNameRequired'));
       return;
     }
-    if (form.password.length < 8) {
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(form.password)) {
       setError(t('validation.passwordMinLength'));
       return;
     }
     setLoading(true);
     try {
-      const result = await apiClient.auth.register({
+      await apiClient.auth.register({
         full_name: form.full_name,
         email: form.email,
         password: form.password,
         role: form.role
       });
-      toast({ title: t('auth.registerSuccess') });
-      window.setTimeout(() => window.location.assign(dashboardPathForRole(result.user.role)), 200);
+      toast({ title: t('auth.verificationEmailSent') });
+      window.setTimeout(() => window.location.assign('/login'), 500);
     } catch (err) {
       setError(t('auth.registerFailed'));
     } finally {
@@ -105,17 +105,11 @@ export default function Register() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">{t('password')}</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input id="password" type="password" minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} className="pl-10 h-12" required />
-          </div>
+          <PasswordInput id="password" minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">{t('confirmPassword')}</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input id="confirm" type="password" minLength={8} autoComplete="new-password" value={form.confirmPassword} onChange={(e) => update('confirmPassword', e.target.value)} className="pl-10 h-12" required />
-          </div>
+          <PasswordInput id="confirm" minLength={8} autoComplete="new-password" value={form.confirmPassword} onChange={(e) => update('confirmPassword', e.target.value)} required />
         </div>
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('creating')}</> : t('createAccount')}

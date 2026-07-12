@@ -227,8 +227,17 @@ async function applyDashboardMessagingMigration(connection) {
   }
 }
 
+async function applyAuthEmailVerificationMigration(connection) {
+  if (!(await tableExists(connection, 'users'))) return;
+  await addColumnIfMissing(connection, 'users', 'email_verified', 'email_verified BOOLEAN NOT NULL DEFAULT TRUE AFTER reset_password_expires');
+  await addColumnIfMissing(connection, 'users', 'email_verification_token', 'email_verification_token CHAR(64) NULL AFTER email_verified');
+  await addColumnIfMissing(connection, 'users', 'email_verification_expires', 'email_verification_expires DATETIME NULL AFTER email_verification_token');
+  await addIndexIfMissing(connection, 'users', 'idx_users_email_verification_token', 'idx_users_email_verification_token (email_verification_token)', ['email_verification_token']);
+}
+
 const safeMigrationHandlers = new Map([
-  ['20260626_dashboard_messaging.sql', applyDashboardMessagingMigration]
+  ['20260626_dashboard_messaging.sql', applyDashboardMessagingMigration],
+  ['20260712_auth_email_verification.sql', applyAuthEmailVerificationMigration]
 ]);
 
 const connection = await mysql.createConnection({
