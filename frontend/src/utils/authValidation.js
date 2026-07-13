@@ -26,7 +26,10 @@ export function getAuthErrorMessage(error, t, fallbackKey) {
     INVALID_OR_EXPIRED_RESET_TOKEN: 'auth.invalidResetLink',
     INVALID_RESET_REQUEST: 'validation.passwordRequirements',
     TOO_MANY_ATTEMPTS: 'auth.tooManyAttempts',
-    PASSWORD_RESET_UNAVAILABLE: 'auth.passwordResetUnavailable'
+    PASSWORD_RESET_UNAVAILABLE: 'auth.passwordResetUnavailable',
+    NETWORK_ERROR: 'auth.serverUnavailable',
+    REQUEST_TIMEOUT: 'auth.requestTimeout',
+    INVALID_REQUEST: 'auth.invalidRegistrationData'
   };
-  return t(keyByCode[error?.data?.code] || fallbackKey);
+  return t(keyByCode[error?.data?.code || error?.code] || fallbackKey);
 }

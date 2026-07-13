@@ -46,7 +46,7 @@ export async function register(req, res, next) {
     );
     const [rows] = await connection.execute('SELECT * FROM users WHERE id = ?', [id]);
     await connection.commit();
-    res.status(201).json({ user: publicUser(rows[0]), message: 'Account created successfully. Please log in.' });
+    res.status(201).json({ success: true, user: publicUser(rows[0]), message: 'Account created successfully. Please log in.' });
   } catch (error) {
     if (connection) await connection.rollback();
     if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' });

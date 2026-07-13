@@ -40,9 +40,13 @@ async function request(path, options = {}) {
     });
   } catch (error) {
     if (error.name === 'AbortError') {
-      throw new Error('The server took too long to respond. Please try again.');
+      const timeoutError = new Error('The server took too long to respond. Please try again.');
+      timeoutError.code = 'REQUEST_TIMEOUT';
+      throw timeoutError;
     }
-    throw new Error('Cannot connect to the server. Please try again shortly.');
+    const networkError = new Error('Cannot connect to the server. Please try again shortly.');
+    networkError.code = 'NETWORK_ERROR';
+    throw networkError;
   } finally {
     window.clearTimeout(timeout);
   }
@@ -54,6 +58,7 @@ async function request(path, options = {}) {
     const error = new Error(payload.message || 'Request failed');
     error.status = response.status;
     error.data = payload;
+    error.code = payload.code || (response.status === 400 ? 'INVALID_REQUEST' : 'REQUEST_FAILED');
     throw error;
   }
   return payload;

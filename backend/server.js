@@ -133,6 +133,9 @@ app.use((error, req, res, _next) => {
     message: error.message,
     stack: error.stack
   });
+  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    return res.status(400).json({ code: 'INVALID_JSON', message: 'Request body must contain valid JSON.' });
+  }
   if (error.code === 'ER_NO_REFERENCED_ROW_2') {
     return res.status(400).json({ message: 'A referenced record does not exist' });
   }

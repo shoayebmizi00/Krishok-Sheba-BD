@@ -61,6 +61,12 @@ export default function Register() {
       toast({ title: t('auth.accountCreated') });
       window.setTimeout(() => window.location.assign('/login'), 500);
     } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn('[registration.failed]', {
+          status: err?.status || null,
+          code: err?.data?.code || err?.code || 'UNKNOWN'
+        });
+      }
       setError(getAuthErrorMessage(err, t, 'auth.registerFailed'));
     } finally {
       setLoading(false);

@@ -610,7 +610,7 @@ export const localApi = {
       };
       database.User.unshift(user);
       saveDatabase();
-      return { user: publicUser(user), message: 'Account created successfully. Please log in.' };
+      return { success: true, user: publicUser(user), message: 'Account created successfully. Please log in.' };
     },
     async login(email, password) {
       const user = database.User.find((candidate) =>
