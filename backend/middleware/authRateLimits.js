@@ -7,5 +7,4 @@ export const loginLimiter = createLimiter(15 * 60_000, 10);
 export const registrationLimiter = createLimiter(60 * 60_000, 10);
 export const recoveryLimiter = createLimiter(15 * 60_000, 5);
 export const resetLimiter = createLimiter(15 * 60_000, 10);
-export const verificationLimiter = createLimiter(60 * 60_000, 5);
 

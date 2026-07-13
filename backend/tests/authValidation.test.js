@@ -10,5 +10,9 @@ test('email normalization and validation reject malformed registrations', () => 
 
 test('one password policy is enforced for registration and reset', () => {
   assert.equal(passwordPolicy.test('weak-password'), false);
+  assert.equal(passwordPolicy.test('lowercase1'), false);
+  assert.equal(passwordPolicy.test('UPPERCASE1'), false);
+  assert.equal(passwordPolicy.test('No-numbers'), false);
+  assert.equal(passwordPolicy.test(`Valid-password1${'x'.repeat(114)}`), false);
   assert.equal(passwordPolicy.test('Strong-password1'), true);
 });

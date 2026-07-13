@@ -10,6 +10,7 @@ import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { dashboardPathForRole } from '@/routes/roleRoutes';
 import { useToast } from '@/components/ui/use-toast';
+import { getAuthErrorMessage } from '@/utils/authValidation';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -35,7 +36,7 @@ export default function Login() {
       toast({ title: t('auth.loginSuccess') });
       window.setTimeout(() => window.location.assign(dashboardPathForRole(result.user.role)), 200);
     } catch (err) {
-      setError(t('auth.invalidCredentials'));
+      setError(getAuthErrorMessage(err, t, 'auth.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -56,8 +57,8 @@ export default function Login() {
       }
     >
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
+        <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+          <p>{error}</p>
         </div>
       )}
 

@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import PasswordInput from '@/components/shared/PasswordInput';
+import PasswordRequirements from '@/components/shared/PasswordRequirements';
 import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getAuthErrorMessage, isStrongPassword } from '@/utils/authValidation';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -25,13 +27,13 @@ export default function ResetPassword() {
       setError(t('validation.passwordMismatch'));
       return;
     }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(newPassword)) { setError(t('validation.passwordMinLength')); return; }
+    if (!isStrongPassword(newPassword)) { setError(t('validation.passwordRequirements')); return; }
     setLoading(true);
     try {
       await apiClient.auth.resetPassword(resetToken, newPassword);
       window.setTimeout(() => window.location.assign('/login'), 800);
     } catch (err) {
-      setError(t('auth.passwordUpdateFailed'));
+      setError(getAuthErrorMessage(err, t, 'auth.passwordUpdateFailed'));
     } finally {
       setLoading(false);
     }
@@ -80,6 +82,7 @@ export default function ResetPassword() {
               required
               minLength={8}
             />
+          <PasswordRequirements password={newPassword} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">{t('confirmPassword')}</Label>

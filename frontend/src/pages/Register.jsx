@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UserPlus, Mail, Loader2, User } from 'lucide-react';
 import PasswordInput from '@/components/shared/PasswordInput';
+import PasswordRequirements from '@/components/shared/PasswordRequirements';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AuthLayout from '@/components/AuthLayout';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/components/ui/use-toast';
+import { getAuthErrorMessage, isStrongPassword } from '@/utils/authValidation';
 
 const registrationRoles = [
   ['farmer', 'roles.farmer'],
@@ -44,22 +46,28 @@ export default function Register() {
       setError(t('validation.fullNameRequired'));
       return;
     }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(form.password)) {
-      setError(t('validation.passwordMinLength'));
+    if (!isStrongPassword(form.password)) {
+      setError(t('validation.passwordRequirements'));
       return;
     }
     setLoading(true);
     try {
       await apiClient.auth.register({
-        full_name: form.full_name,
-        email: form.email,
+        full_name: form.full_name.trim(),
+        email: form.email.trim(),
         password: form.password,
         role: form.role
       });
-      toast({ title: t('auth.verificationEmailSent') });
+      toast({ title: t('auth.accountCreated') });
       window.setTimeout(() => window.location.assign('/login'), 500);
     } catch (err) {
-      setError(t('auth.registerFailed'));
+      if (import.meta.env.DEV) {
+        console.warn('[registration.failed]', {
+          status: err?.status || null,
+          code: err?.data?.code || err?.code || 'UNKNOWN'
+        });
+      }
+      setError(getAuthErrorMessage(err, t, 'auth.registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -106,6 +114,7 @@ export default function Register() {
         <div className="space-y-2">
           <Label htmlFor="password">{t('password')}</Label>
           <PasswordInput id="password" minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} required />
+          <PasswordRequirements password={form.password} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">{t('confirmPassword')}</Label>

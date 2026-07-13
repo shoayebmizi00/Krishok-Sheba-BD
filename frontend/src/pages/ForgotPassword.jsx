@@ -12,18 +12,22 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
   const t = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       await apiClient.auth.requestPasswordReset(email);
-    } catch {
-      // Always show success regardless
+      setSent(true);
+    } catch (err) {
+      setError(err?.data?.code === 'PASSWORD_RESET_UNAVAILABLE'
+        ? t('auth.passwordResetUnavailable')
+        : t('common.tryAgain'));
     } finally {
       setLoading(false);
-      setSent(true);
     }
   };
 
@@ -38,6 +42,7 @@ export default function ForgotPassword() {
         </Link>
       }
     >
+      {error && <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
       {sent ? (
         <p className="text-sm text-foreground text-center">
           {t('auth.resetLinkSent')}

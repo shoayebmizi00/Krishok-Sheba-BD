@@ -1,4 +1,4 @@
--- Existing accounts remain verified for compatibility; only new registrations require verification.
+-- Verification columns are retained for compatibility. Registration no longer depends on them.
 -- Applied idempotently by backend/scripts/migrate.js for MySQL compatibility.
 SELECT 1;
 

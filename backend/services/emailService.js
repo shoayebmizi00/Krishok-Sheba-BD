@@ -55,17 +55,3 @@ export async function sendPasswordResetEmail({ to, name, resetUrl, expiresMinute
   });
   return { sent: true };
 }
-
-export async function sendVerificationEmail({ to, name, verificationUrl, expiresMinutes }) {
-  const configuration = getEmailConfiguration();
-  if (!configuration.configured) return { sent: false, reason: 'not_configured' };
-  const transport = createTransport();
-  const greeting = name ? `Hello ${name},` : 'Hello,';
-  await transport.sendMail({
-    from: process.env.EMAIL_FROM, to,
-    subject: 'Verify your KRISHOK-SHEBA BD email',
-    text: `${greeting}\n\nVerify your email within ${expiresMinutes} minutes:\n${verificationUrl}`,
-    html: `<p>${escapeHtml(greeting)}</p><p>Verify your email within ${expiresMinutes} minutes:</p><p><a href="${escapeHtml(verificationUrl)}">Verify email</a></p>`
-  });
-  return { sent: true };
-}
