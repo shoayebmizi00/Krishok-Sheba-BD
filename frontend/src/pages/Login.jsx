@@ -10,12 +10,14 @@ import AuthLayout from "@/components/AuthLayout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { dashboardPathForRole } from '@/routes/roleRoutes';
 import { useToast } from '@/components/ui/use-toast';
+import { getAuthErrorMessage } from '@/utils/authValidation';
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const t = useTranslation();
   const { toast } = useToast();
   const demoAccounts = [
@@ -29,13 +31,27 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setNeedsVerification(false);
     setLoading(true);
     try {
       const result = await apiClient.auth.login(email, password);
       toast({ title: t('auth.loginSuccess') });
       window.setTimeout(() => window.location.assign(dashboardPathForRole(result.user.role)), 200);
     } catch (err) {
-      setError(t('auth.invalidCredentials'));
+      setNeedsVerification(err?.data?.code === 'EMAIL_NOT_VERIFIED');
+      setError(getAuthErrorMessage(err, t, 'auth.invalidCredentials'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    setLoading(true);
+    try {
+      await apiClient.auth.resendVerification(email.trim());
+      toast({ title: t('auth.verificationResent') });
+    } catch (err) {
+      setError(getAuthErrorMessage(err, t, 'auth.registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -56,8 +72,13 @@ export default function Login() {
       }
     >
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
+        <div className="mb-4 space-y-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+          <p>{error}</p>
+          {needsVerification && (
+            <Button type="button" size="sm" variant="outline" disabled={loading} onClick={resendVerification}>
+              {t('auth.resendVerification')}
+            </Button>
+          )}
         </div>
       )}
 

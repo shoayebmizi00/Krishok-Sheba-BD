@@ -160,7 +160,6 @@ const remoteApi = {
     hasSession: hasToken,
     async register(data) {
       const result = await request('/auth/register', { method: 'POST', body: JSON.stringify(data) });
-      setToken(result.token);
       return result;
     },
     async login(email, password) {

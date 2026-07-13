@@ -84,7 +84,7 @@ test('account recovery is enumeration-safe and reset tokens are single-use', asy
     assert.deepEqual(known.body, unknown.body);
     assert.equal(Object.hasOwn(known.body, 'resetToken'), false);
 
-    const rawToken = 'secure-test-token';
+    const rawToken = 'a'.repeat(64);
     user.reset_password_token = crypto.createHash('sha256').update(rawToken).digest('hex');
     user.reset_password_expires = Date.now() + 60_000;
     const reset = await invoke(resetPassword, { token: rawToken, newPassword: 'New-password1' });
@@ -97,10 +97,11 @@ test('account recovery is enumeration-safe and reset tokens are single-use', asy
     assert.equal((await invoke(login, { email: user.email, password: 'Old-password1' })).statusCode, 401);
     assert.equal((await invoke(login, { email: user.email, password: 'New-password1' })).statusCode, 200);
 
-    user.reset_password_token = crypto.createHash('sha256').update('expired').digest('hex');
+    const expiredToken = 'b'.repeat(64);
+    user.reset_password_token = crypto.createHash('sha256').update(expiredToken).digest('hex');
     user.reset_password_expires = Date.now() - 1;
-    assert.equal((await invoke(resetPassword, { token: 'expired', newPassword: 'Valid-password1' })).statusCode, 400);
-    assert.equal((await invoke(resetPassword, { token: 'invalid', newPassword: 'Valid-password1' })).statusCode, 400);
+    assert.equal((await invoke(resetPassword, { token: expiredToken, newPassword: 'Valid-password1' })).statusCode, 400);
+    assert.equal((await invoke(resetPassword, { token: 'c'.repeat(64), newPassword: 'Valid-password1' })).statusCode, 400);
   } finally {
     pool.execute = originalExecute;
     pool.getConnection = originalGetConnection;

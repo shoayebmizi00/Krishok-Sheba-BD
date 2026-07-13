@@ -1,4 +1,5 @@
 import { createMockDatabase, demoUsers } from '../utils/mockData.js';
+import { isStrongPassword } from '../utils/authValidation.js';
 
 const DATABASE_KEY = 'krishok_sheba_demo_database_v1';
 const SESSION_KEY = 'krishok_sheba_demo_user';
@@ -585,23 +586,27 @@ export const localApi = {
       return Boolean(localStorage.getItem(SESSION_KEY));
     },
     async register(data) {
+      const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
+      const fullName = typeof data.full_name === 'string' ? data.full_name.trim() : '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw makeError('Enter a valid email address', 400);
+      if (!fullName || fullName.length > 120) throw makeError('Full name is required', 400);
+      if (!isStrongPassword(data.password)) throw makeError('Password does not meet the requirements', 400);
       if (database.User.some((user) => user.email.toLowerCase() === data.email.toLowerCase())) {
         throw makeError('An account with this email already exists', 409);
       }
       const user = {
         id: `user-${crypto.randomUUID()}`,
-        email: data.email.trim().toLowerCase(),
+        email,
         password: data.password,
-        full_name: data.full_name,
+        full_name: fullName,
         role: data.role || 'farmer',
         district: '',
         is_active: true,
         created_at: new Date().toISOString()
       };
       database.User.unshift(user);
-      localStorage.setItem(SESSION_KEY, user.id);
       saveDatabase();
-      return { token: `demo-token-${user.id}`, user: publicUser(user) };
+      return { verificationRequired: false, user: publicUser(user) };
     },
     async login(email, password) {
       const user = database.User.find((candidate) =>

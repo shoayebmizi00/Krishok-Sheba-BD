@@ -10,8 +10,9 @@ export const isValidEmail = (value) => {
 
 export const passwordPolicy = {
   minLength: 8,
+  maxLength: 128,
   test(value) {
-    return typeof value === 'string' && value.length >= 8
+    return typeof value === 'string' && value.length >= 8 && value.length <= 128
       && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value);
   }
 };

@@ -32,3 +32,6 @@ dist-ssr
 .env
 .env.local
 .vite
+
+# Local browser profiles and visual test output
+test-artifacts/
