@@ -28,7 +28,10 @@ test('account recovery is enumeration-safe and reset tokens are single-use', asy
   const originalExecute = pool.execute;
   const originalGetConnection = pool.getConnection;
   const originalNodeEnv = process.env.NODE_ENV;
+  const smtpNames = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASSWORD', 'EMAIL_FROM'];
+  const originalSmtp = Object.fromEntries(smtpNames.map((name) => [name, process.env[name]]));
   process.env.NODE_ENV = 'production';
+  smtpNames.forEach((name) => delete process.env[name]);
 
   const user = {
     id: 'user-1',
@@ -78,11 +81,10 @@ test('account recovery is enumeration-safe and reset tokens are single-use', asy
   pool.getConnection = async () => connection;
 
   try {
-    const known = await invoke(requestPasswordReset, { email: user.email });
-    const unknown = await invoke(requestPasswordReset, { email: 'unknown@example.com' });
-    assert.equal(known.statusCode, 200);
-    assert.deepEqual(known.body, unknown.body);
-    assert.equal(Object.hasOwn(known.body, 'resetToken'), false);
+    const unavailable = await invoke(requestPasswordReset, { email: user.email });
+    assert.equal(unavailable.statusCode, 503);
+    assert.equal(unavailable.body.code, 'PASSWORD_RESET_UNAVAILABLE');
+    assert.equal(user.reset_password_token, null);
 
     const rawToken = 'a'.repeat(64);
     user.reset_password_token = crypto.createHash('sha256').update(rawToken).digest('hex');
@@ -106,5 +108,6 @@ test('account recovery is enumeration-safe and reset tokens are single-use', asy
     pool.execute = originalExecute;
     pool.getConnection = originalGetConnection;
     process.env.NODE_ENV = originalNodeEnv;
+    for (const name of smtpNames) originalSmtp[name] === undefined ? delete process.env[name] : process.env[name] = originalSmtp[name];
   }
 });

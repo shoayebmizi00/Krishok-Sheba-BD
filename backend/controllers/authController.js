@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.js';
-import { sendPasswordResetEmail, sendVerificationEmail } from '../services/emailService.js';
+import { getEmailConfiguration, sendPasswordResetEmail } from '../services/emailService.js';
 import { isValidEmail, normalizeEmail, passwordPolicy } from '../utils/authValidation.js';
 
 const roles = new Set(['admin', 'farmer', 'buyer', 'equipment_owner', 'transport_provider']);
@@ -39,22 +39,14 @@ export async function register(req, res, next) {
     const [existing] = await connection.execute('SELECT id FROM users WHERE email = ? LIMIT 1 FOR UPDATE', [email]);
     if (existing.length) { await connection.rollback(); return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' }); }
     const id = crypto.randomUUID();
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const verificationMinutes = 1440;
+    const passwordHash = await bcrypt.hash(password, 12);
     await connection.execute(
-      'INSERT INTO users (id, email, password_hash, full_name, role, email_verified, email_verification_token, email_verification_expires) VALUES (?, ?, ?, ?, ?, FALSE, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))',
-      [id, email, await bcrypt.hash(password, 12), name, role, hashToken(rawToken), verificationMinutes]
+      'INSERT INTO users (id, email, password_hash, full_name, role, is_active) VALUES (?, ?, ?, ?, ?, TRUE)',
+      [id, email, passwordHash, name, role]
     );
     const [rows] = await connection.execute('SELECT * FROM users WHERE id = ?', [id]);
     await connection.commit();
-    let verificationEmailSent = true;
-    try {
-      await sendVerificationEmail({ to: email, name, verificationUrl: `${frontendUrl()}/verify-email?token=${encodeURIComponent(rawToken)}`, expiresMinutes: verificationMinutes });
-    } catch (error) {
-      verificationEmailSent = false;
-      console.error('[auth.verify-email] Delivery failed', { requestId: req.id, code: error.code, message: error.message });
-    }
-    res.status(201).json({ verificationRequired: true, verificationEmailSent, user: publicUser(rows[0]), message: verificationEmailSent ? 'A verification link has been sent to your email.' : 'Account created. Request a new verification email to continue.' });
+    res.status(201).json({ user: publicUser(rows[0]), message: 'Account created successfully. Please log in.' });
   } catch (error) {
     if (connection) await connection.rollback();
     if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' });
@@ -62,7 +54,6 @@ export async function register(req, res, next) {
   }
   finally { connection?.release(); }
 }
-
 export async function login(req, res, next) {
   try {
     const { password } = req.body;
@@ -72,7 +63,6 @@ export async function login(req, res, next) {
     const user = rows[0];
     const passwordMatches = await bcrypt.compare(password, user?.password_hash || dummyPasswordHash);
     if (!user || !user.is_active || !passwordMatches) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Invalid email or password.' });
-    if (user.email_verified === 0 || user.email_verified === false) return res.status(403).json({ code: 'EMAIL_NOT_VERIFIED', message: 'Please verify your email before signing in.' });
     res.json({ token: signToken(user), user: publicUser(user) });
   } catch (error) { next(error); }
 }
@@ -101,14 +91,20 @@ export async function requestPasswordReset(req, res, next) {
   try {
     const email = normalizeEmail(req.body.email);
     if (!isValidEmail(email)) return res.status(400).json({ code: 'INVALID_EMAIL', message: 'Please provide a valid email address.' });
+    if (!getEmailConfiguration().configured) return res.status(503).json({ code: 'PASSWORD_RESET_UNAVAILABLE', message: 'Password reset email is temporarily unavailable.' });
     const [rows] = await pool.execute('SELECT id, email, full_name FROM users WHERE email = ? LIMIT 1', [email]);
     if (rows[0]) {
       const rawToken = crypto.randomBytes(32).toString('hex');
       const configured = Number(process.env.RESET_TOKEN_EXPIRES_MINUTES || 30);
       const minutes = Number.isFinite(configured) && configured >= 5 && configured <= 60 ? configured : 30;
       await pool.execute('UPDATE users SET reset_password_token = ?, reset_password_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?', [hashToken(rawToken), minutes, rows[0].id]);
-      try { await sendPasswordResetEmail({ to: rows[0].email, name: rows[0].full_name, resetUrl: `${frontendUrl()}/reset-password?token=${encodeURIComponent(rawToken)}`, expiresMinutes: minutes }); }
-      catch (error) { console.error('[auth.password-reset] Delivery failed', { requestId: req.id, code: error.code, message: error.message }); }
+      try {
+        const delivery = await sendPasswordResetEmail({ to: rows[0].email, name: rows[0].full_name, resetUrl: `${frontendUrl()}/reset-password?token=${encodeURIComponent(rawToken)}`, expiresMinutes: minutes });
+        if (!delivery.sent) return res.status(503).json({ code: 'PASSWORD_RESET_UNAVAILABLE', message: 'Password reset email is temporarily unavailable.' });
+      } catch (error) {
+        console.error('[auth.password-reset] Delivery failed', { requestId: req.id, code: error.code, message: error.message });
+        return res.status(503).json({ code: 'PASSWORD_RESET_UNAVAILABLE', message: 'Password reset email is temporarily unavailable.' });
+      }
     }
     res.json(neutralRecovery);
   } catch (error) { next(error); }
@@ -126,29 +122,4 @@ export async function resetPassword(req, res, next) {
     await connection.commit(); res.json({ message: 'Password reset successful.' });
   } catch (error) { if (connection) await connection.rollback(); next(error); }
   finally { connection?.release(); }
-}
-
-export async function verifyEmail(req, res, next) {
-  try {
-    const token = typeof req.query.token === 'string' ? req.query.token : '';
-    if (!/^[a-f\d]{64}$/i.test(token)) return res.status(400).json({ code: 'INVALID_VERIFICATION_TOKEN', message: 'Invalid verification link.' });
-    const [result] = await pool.execute('UPDATE users SET email_verified = TRUE, email_verification_token = NULL, email_verification_expires = NULL WHERE email_verification_token = ? AND email_verification_expires > NOW()', [hashToken(token)]);
-    if (!result.affectedRows) return res.status(400).json({ code: 'INVALID_OR_EXPIRED_VERIFICATION_TOKEN', message: 'This verification link is invalid, expired, or already used.' });
-    res.json({ message: 'Email verified successfully.' });
-  } catch (error) { next(error); }
-}
-
-export async function resendVerification(req, res, next) {
-  const neutral = { message: 'If an unverified account exists, a verification email has been sent.' };
-  try {
-    const email = normalizeEmail(req.body.email);
-    if (!isValidEmail(email)) return res.json(neutral);
-    const [rows] = await pool.execute('SELECT id, email, full_name, email_verified FROM users WHERE email = ? LIMIT 1', [email]);
-    const user = rows[0]; if (!user || user.email_verified) return res.json(neutral);
-    const rawToken = crypto.randomBytes(32).toString('hex'); const minutes = 1440;
-    await pool.execute('UPDATE users SET email_verification_token = ?, email_verification_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?', [hashToken(rawToken), minutes, user.id]);
-    try { await sendVerificationEmail({ to: user.email, name: user.full_name, verificationUrl: `${frontendUrl()}/verify-email?token=${encodeURIComponent(rawToken)}`, expiresMinutes: minutes }); }
-    catch (error) { console.error('[auth.verify-email] Resend failed', { requestId: req.id, code: error.code, message: error.message }); }
-    res.json(neutral);
-  } catch (error) { next(error); }
 }

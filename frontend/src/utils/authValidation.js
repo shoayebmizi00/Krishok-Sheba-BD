@@ -22,11 +22,11 @@ export function getAuthErrorMessage(error, t, fallbackKey) {
     INVALID_PASSWORD: 'validation.passwordRequirements',
     FULL_NAME_REQUIRED: 'validation.fullNameRequired',
     INVALID_ROLE: 'auth.invalidRole',
-    EMAIL_NOT_VERIFIED: 'auth.emailNotVerified',
     INVALID_CREDENTIALS: 'auth.invalidCredentials',
     INVALID_OR_EXPIRED_RESET_TOKEN: 'auth.invalidResetLink',
     INVALID_RESET_REQUEST: 'validation.passwordRequirements',
-    TOO_MANY_ATTEMPTS: 'auth.tooManyAttempts'
+    TOO_MANY_ATTEMPTS: 'auth.tooManyAttempts',
+    PASSWORD_RESET_UNAVAILABLE: 'auth.passwordResetUnavailable'
   };
   return t(keyByCode[error?.data?.code] || fallbackKey);
 }

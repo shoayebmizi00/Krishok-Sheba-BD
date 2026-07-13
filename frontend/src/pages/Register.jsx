@@ -52,13 +52,13 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const result = await apiClient.auth.register({
+      await apiClient.auth.register({
         full_name: form.full_name.trim(),
         email: form.email.trim(),
         password: form.password,
         role: form.role
       });
-      toast({ title: t(result.verificationEmailSent === false ? 'auth.verificationEmailPending' : 'auth.verificationEmailSent') });
+      toast({ title: t('auth.accountCreated') });
       window.setTimeout(() => window.location.assign('/login'), 500);
     } catch (err) {
       setError(getAuthErrorMessage(err, t, 'auth.registerFailed'));

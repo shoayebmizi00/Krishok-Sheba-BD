@@ -1,8 +1,9 @@
-import { createMockDatabase, demoUsers } from '../utils/mockData.js';
+import { createMockDatabase } from '../utils/mockData.js';
 import { isStrongPassword } from '../utils/authValidation.js';
 
 const DATABASE_KEY = 'krishok_sheba_demo_database_v1';
 const SESSION_KEY = 'krishok_sheba_demo_user';
+const PUBLIC_REGISTRATION_ROLES = new Set(['farmer', 'buyer', 'equipment_owner', 'transport_provider']);
 
 const clone = (value) => structuredClone(value);
 
@@ -39,9 +40,10 @@ function getCurrentUser() {
   return database.User.find((user) => user.id === id) || null;
 }
 
-function makeError(message, status = 400) {
+function makeError(message, status = 400, code) {
   const error = new Error(message);
   error.status = status;
+  if (code) error.data = { code, message };
   return error;
 }
 
@@ -588,25 +590,27 @@ export const localApi = {
     async register(data) {
       const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
       const fullName = typeof data.full_name === 'string' ? data.full_name.trim() : '';
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw makeError('Enter a valid email address', 400);
-      if (!fullName || fullName.length > 120) throw makeError('Full name is required', 400);
-      if (!isStrongPassword(data.password)) throw makeError('Password does not meet the requirements', 400);
+      const role = data.role || 'farmer';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.includes('..')) throw makeError('Enter a valid email address', 400, 'INVALID_EMAIL');
+      if (!fullName || fullName.length > 120) throw makeError('Full name is required', 400, 'FULL_NAME_REQUIRED');
+      if (!isStrongPassword(data.password)) throw makeError('Password does not meet the requirements', 400, 'INVALID_PASSWORD');
+      if (!PUBLIC_REGISTRATION_ROLES.has(role)) throw makeError('Invalid account type', 400, 'INVALID_ROLE');
       if (database.User.some((user) => user.email.toLowerCase() === data.email.toLowerCase())) {
-        throw makeError('An account with this email already exists', 409);
+        throw makeError('An account with this email already exists', 409, 'EMAIL_EXISTS');
       }
       const user = {
         id: `user-${crypto.randomUUID()}`,
         email,
         password: data.password,
         full_name: fullName,
-        role: data.role || 'farmer',
+        role,
         district: '',
         is_active: true,
         created_at: new Date().toISOString()
       };
       database.User.unshift(user);
       saveDatabase();
-      return { verificationRequired: false, user: publicUser(user) };
+      return { user: publicUser(user), message: 'Account created successfully. Please log in.' };
     },
     async login(email, password) {
       const user = database.User.find((candidate) =>
@@ -639,8 +643,8 @@ export const localApi = {
       return Boolean(getCurrentUser());
     },
     async requestPasswordReset(email) {
-      const exists = demoUsers.some((user) => user.email === email.trim().toLowerCase());
-      return { message: exists ? 'Demo reset request accepted.' : 'If the account exists, a reset link will be sent.' };
+      void email;
+      throw makeError('Password reset email is unavailable in local demo mode.', 503, 'PASSWORD_RESET_UNAVAILABLE');
     },
     async resetPassword() {
       return { message: 'Password reset is simulated in local demo mode.' };

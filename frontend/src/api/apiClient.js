@@ -194,8 +194,6 @@ const remoteApi = {
       method: 'POST',
       body: JSON.stringify({ token, newPassword })
     }),
-    verifyEmail: (token) => request(`/auth/verify-email?token=${encodeURIComponent(token)}`),
-    resendVerification: (email) => request('/auth/resend-verification', { method: 'POST', body: JSON.stringify({ email }) })
   },
   async upload(file, folder = 'crops') {
     const form = new FormData();
