@@ -34,7 +34,7 @@ try {
     try {
       await connection.execute(sql);
       await connection.execute(
-        'INSERT INTO schema_migrations (filename) VALUES ($1)',
+        'INSERT INTO schema_migrations (filename) VALUES ($1) RETURNING filename',
         [filename]
       );
       await connection.commit();

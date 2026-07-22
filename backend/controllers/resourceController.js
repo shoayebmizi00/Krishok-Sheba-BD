@@ -7,7 +7,7 @@ async function createNotification(connection, { userId, title, message, type = '
   if (!userId) return;
   await connection.execute(
     `INSERT INTO notifications (id, user_id, title, message, type, is_read, link)
-     VALUES ($1, $2, $3, $4, $5, FALSE, $6)`,
+     VALUES ($1, $2, $3, $4, $5, FALSE, $6) RETURNING id`,
     [crypto.randomUUID(), userId, title, message, type, link]
   );
 }
@@ -139,7 +139,7 @@ async function createOrder(req, res) {
       `INSERT INTO orders
         (id, buyer_id, buyer_name, seller_id, seller_name, items, total_amount, status,
          delivery_address, delivery_district, payment_status, bid_id, payment_method)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, $9, 'pending', $10, $11)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, $9, 'pending', $10, $11) RETURNING id`,
       [
         orderId, currentUser.id, currentUser.full_name || 'ক্রেতা', bid.farmer_id,
         bid.farmer_name || 'কৃষক', JSON.stringify(items), totalAmount,
@@ -279,7 +279,7 @@ async function createConversation(req, res) {
   await pool.execute(
     `INSERT INTO conversations
       (id, participant_ids, participant_names, subject, listing_id, listing_name, last_message, last_message_date)
-     VALUES ($1, $2, $3, $4, $5, $6, '', NOW())`,
+     VALUES ($1, $2, $3, $4, $5, $6, '', NOW()) RETURNING id`,
     [
       id,
       JSON.stringify(participantIds),
@@ -321,7 +321,7 @@ async function createMessage(req, res) {
     await connection.beginTransaction();
     await connection.execute(
       `INSERT INTO messages (id, conversation_id, sender_id, receiver_id, sender_name, content)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
       [id, conversation.id, req.user.id, receiverId, senderName, content]
     );
     await connection.execute(

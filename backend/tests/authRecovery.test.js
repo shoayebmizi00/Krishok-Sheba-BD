@@ -51,7 +51,7 @@ test('account recovery is enumeration-safe and reset tokens are single-use', asy
     if (sql.startsWith('UPDATE users SET reset_password_token')) {
       user.reset_password_token = params[0];
       user.reset_password_expires = Date.now() + params[1] * 60_000;
-      return [{ affectedRows: 1 }];
+      return [[]];
     }
     if (sql.startsWith('SELECT * FROM users WHERE email')) {
       return [params[0] === user.email ? [user] : []];
@@ -73,7 +73,7 @@ test('account recovery is enumeration-safe and reset tokens are single-use', asy
         user.password_hash = params[0];
         user.reset_password_token = null;
         user.reset_password_expires = null;
-        return [{ affectedRows: 1 }];
+        return [[]];
       }
       throw new Error(`Unexpected transaction query: ${sql}`);
     }

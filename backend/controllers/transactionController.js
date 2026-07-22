@@ -21,7 +21,7 @@ const paging = (query) => {
 };
 async function notify(db, userId, title, message, link) {
   await db.execute(`INSERT INTO notifications (id,user_id,title,message,type,is_read,link)
-    VALUES ($1,$2,$3,$4, 'payment',FALSE,$5)`, [crypto.randomUUID(), userId, title, message, link]);
+    VALUES ($1,$2,$3,$4, 'payment',FALSE,$5) RETURNING id`, [crypto.randomUUID(), userId, title, message, link]);
 }
 
 export async function paymentContext(req, res, next) {
@@ -67,7 +67,7 @@ export async function createTransaction(req, res, next) {
       (id,transaction_code,user_id,order_id,buyer_id,seller_id,amount,type,status,description,counterparty_name,
        payment_method,sender_account,receiver_account,reference,sender_number,receiver_number,sender_bank,
        receiver_bank,transaction_reference,screenshot_url,note)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,'purchase',$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`, [
+      VALUES ($1,$2,$3,$4,$5,$6,$7,'purchase',$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING id`, [
       id, code, req.user.id, order.id, req.user.id, order.seller_id, Number(body.amount), status,
       `${parseItems(order.items)[0]?.name || 'অর্ডার'} পেমেন্ট`, order.seller_name, body.payment_method,
       body.sender_number || body.account_number || null, receiverAccount, body.transaction_reference || null,
@@ -164,7 +164,7 @@ export async function adminSummary(_req, res, next) {
         COALESCE(SUM(CASE WHEN status IN ('pending','sent') THEN amount ELSE 0 END),0) pending_amount,
         COUNT(*) FILTER (WHERE payment_method='cash_on_delivery') cod_transactions FROM transactions`),
       pool.execute('SELECT payment_method name,COUNT(*) value FROM transactions GROUP BY payment_method ORDER BY value DESC'),
-      pool.execute(`SELECT TO_CHAR(created_at,'YYYY-MM') month,SUM(amount) amount,COUNT(*) transactions
+      pool.execute(`SELECT TO_CHAR(created_at,'YYYY-MM') AS "month",SUM(amount) amount,COUNT(*) transactions
         FROM transactions WHERE created_at>=CURRENT_DATE-INTERVAL '6 months'
         GROUP BY TO_CHAR(created_at,'YYYY-MM') ORDER BY month`)
     ]);

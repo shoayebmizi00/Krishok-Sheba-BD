@@ -44,20 +44,11 @@ const SCHEMA_CACHE_MS = 5 * 60_000;
 let schemaCache = null;
 
 nativePool.on('error', (error) => {
-  console.error(`Unexpected PostgreSQL pool error: ${error.message}`);
+  console.error(`Unexpected PostgreSQL pool error (${error.code || 'UNKNOWN'})`);
 });
 
 function adaptResult(result) {
-  if (result.command === 'SELECT' || result.command === 'SHOW') {
-    return [result.rows, result.fields];
-  }
-  const metadata = {
-    affectedRows: result.rowCount,
-    insertId: null,
-    rowCount: result.rowCount,
-    rows: result.rows
-  };
-  return [metadata, result.fields];
+  return [result.rows, result.fields];
 }
 
 async function executeWith(client, sql, values = []) {
@@ -125,9 +116,10 @@ export async function checkDatabaseSchema() {
     .map(([table, column]) => `${table}.${column}`)
     .filter((column) => !columns.has(column));
 
+  const detectedTables = requiredTables.filter((table) => tables.has(table));
   const value = {
     ready: missingTables.length === 0 && missingColumns.length === 0,
-    tableCount: tables.size,
+    tableCount: detectedTables.length,
     missingTables,
     missingColumns
   };

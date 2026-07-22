@@ -116,7 +116,7 @@ export async function createConversation(req, res, next) {
       `INSERT INTO conversations
        (id,participant_one_id,participant_two_id,participant_ids,participant_names,subject,listing_id,
         listing_name,related_type,related_id,last_message,last_message_date,last_message_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'',NOW(),NOW())`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'',NOW(),NOW()) RETURNING id`,
       [
         id, req.user.id, receiverId, JSON.stringify([req.user.id, receiverId]), JSON.stringify(names),
         subject, relatedType === 'listing' ? relatedId : null, req.body.listing_name || null, relatedType, relatedId
@@ -176,7 +176,7 @@ export async function sendMessage(req, res, next) {
     const id = crypto.randomUUID();
     await db.execute(
       `INSERT INTO messages (id,conversation_id,sender_id,receiver_id,sender_name,content,message_text,is_read)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,FALSE)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,FALSE) RETURNING id`,
       [id, conversation.id, req.user.id, receiverId, senderName, text, text]
     );
     await db.execute(
@@ -187,7 +187,7 @@ export async function sendMessage(req, res, next) {
     const [receiverRows] = await db.execute('SELECT role FROM users WHERE id=$1 LIMIT 1', [receiverId]);
     await db.execute(
       `INSERT INTO notifications (id,user_id,title,message,type,is_read,link)
-       VALUES ($1,$2,$3 ,$4,'message',FALSE,$5)`,
+       VALUES ($1,$2,$3 ,$4,'message',FALSE,$5) RETURNING id`,
       [
         crypto.randomUUID(),
         receiverId,

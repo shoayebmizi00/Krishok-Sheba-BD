@@ -22,7 +22,7 @@ router.get('/farmer-summary', authorizeRoles('farmer'), async (req, res, next) =
       [req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id]),
       pool.execute('SELECT id,buyer_name,items,total_amount,status,created_at FROM orders WHERE seller_id=$1 ORDER BY created_at DESC LIMIT 5', [req.user.id]),
       pool.execute('SELECT id,buyer_name,crop_name,bid_amount,status,created_at FROM bids WHERE farmer_id=$1 ORDER BY created_at DESC LIMIT 5', [req.user.id]),
-      pool.execute(`SELECT TO_CHAR(created_at,'YYYY-MM') month,SUM(amount) sales FROM transactions
+      pool.execute(`SELECT TO_CHAR(created_at,'YYYY-MM') AS "month",SUM(amount) sales FROM transactions
         WHERE seller_id=$1 AND status IN ('received','verified','completed') AND created_at>=CURRENT_DATE-INTERVAL '6 months'
         GROUP BY TO_CHAR(created_at,'YYYY-MM') ORDER BY month`, [req.user.id])
     ]);
@@ -45,7 +45,7 @@ router.get('/admin-summary', authorizeRoles('admin'), async (_req, res, next) =>
         (SELECT COUNT(*) FROM vehicles WHERE approval_status='pending') pending,
         (SELECT COUNT(*) FROM crop_listings WHERE status IN ('sold','sold_out')) sold_out`),
       pool.execute('SELECT role name,COUNT(*) value FROM users GROUP BY role'),
-      pool.execute(`SELECT TO_CHAR(created_at,'YYYY-MM') month,COUNT(*) orders FROM orders
+      pool.execute(`SELECT TO_CHAR(created_at,'YYYY-MM') AS "month",COUNT(*) orders FROM orders
         WHERE created_at>=CURRENT_DATE-INTERVAL '6 months'
         GROUP BY TO_CHAR(created_at,'YYYY-MM') ORDER BY month`)
     ]);

@@ -4,7 +4,7 @@ import { pool } from '../config/db.js';
 async function notify(db, userId, title, message, link) {
   await db.execute(
     `INSERT INTO notifications (id,user_id,title,message,type,is_read,link)
-     VALUES ($1,$2,$3,$4, 'booking',FALSE,$5)`,
+     VALUES ($1,$2,$3,$4, 'booking',FALSE,$5) RETURNING id`,
     [crypto.randomUUID(), userId, title, message, link]
   );
 }
@@ -64,7 +64,7 @@ export async function createEquipmentBooking(req, res, next) {
       `INSERT INTO equipment_bookings
        (id,equipment_id,equipment_name,farmer_id,farmer_name,owner_id,owner_name,start_date,end_date,
         rental_days,quantity,pickup_location,notes,total_cost,status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending')`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending') RETURNING id`,
       [
         id, equipment.id, equipment.name, req.user.id, req.user.full_name || 'কৃষক',
         equipment.owner_id, equipment.owner_name, startDate, endDate, days,
@@ -182,7 +182,7 @@ export async function createTransportBooking(req, res, next) {
        (id,vehicle_id,vehicle_type,farmer_id,farmer_name,provider_id,provider_name,pickup_location,
         delivery_location,pickup_date,preferred_time,product_name,quantity,estimated_cost,status,
         cargo_description,additional_instructions)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending',$15,$16)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending',$15,$16) RETURNING id`,
       [
         id, vehicle.id, vehicle.vehicle_type, req.user.id, req.user.full_name || 'কৃষক',
         vehicle.owner_id, vehicle.owner_name, String(pickup).trim(), String(destination).trim(), pickupDate,

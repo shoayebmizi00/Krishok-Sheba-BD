@@ -27,9 +27,11 @@ export async function register(req, res, next) {
   try {
     const email = normalizeEmail(req.body.email);
     const { password, full_name = '' } = req.body;
+    const passwordConfirmation = req.body.confirmPassword ?? req.body.password_confirmation;
     const role = req.body.role || 'farmer';
     if (!isValidEmail(email)) return res.status(400).json({ code: 'INVALID_EMAIL', message: 'Please provide a valid email address.' });
     if (!passwordPolicy.test(password)) return res.status(400).json({ code: 'INVALID_PASSWORD', message: 'Password must contain at least 8 characters, uppercase, lowercase, and a number.' });
+    if (passwordConfirmation !== undefined && passwordConfirmation !== password) return res.status(400).json({ code: 'PASSWORD_MISMATCH', message: 'Password confirmation does not match.' });
     if (!roles.has(role) || role === 'admin') return res.status(400).json({ code: 'INVALID_ROLE', message: 'Invalid account type.' });
     const name = typeof full_name === 'string' ? full_name.trim() : '';
     if (!name || name.length > 120) return res.status(400).json({ code: 'FULL_NAME_REQUIRED', message: 'Full name is required and must not exceed 120 characters.' });
@@ -40,16 +42,15 @@ export async function register(req, res, next) {
     if (existing.length) { await connection.rollback(); return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' }); }
     const id = crypto.randomUUID();
     const passwordHash = await bcrypt.hash(password, 12);
-    await connection.execute(
-      'INSERT INTO users (id, email, password_hash, full_name, role, is_active) VALUES ($1, $2, $3, $4, $5, TRUE)',
+    const [rows] = await connection.execute(
+      'INSERT INTO users (id, email, password_hash, full_name, role, is_active) VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING *',
       [id, email, passwordHash, name, role]
     );
-    const [rows] = await connection.execute('SELECT * FROM users WHERE id = $1', [id]);
     await connection.commit();
     res.status(201).json({ success: true, user: publicUser(rows[0]), message: 'Account created successfully. Please log in.' });
   } catch (error) {
     if (connection) await connection.rollback();
-    if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' });
+    if (error.code === '23505') return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' });
     next(error);
   }
   finally { connection?.release(); }

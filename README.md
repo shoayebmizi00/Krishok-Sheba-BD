@@ -38,32 +38,34 @@ API: `http://localhost:5000/api`
 
 Health check: `http://localhost:5000/api/health`
 
-## Database migrations
+## Database initialization
 
-The backend applies ordered PostgreSQL migrations from `database/postgresql`
-before startup:
+The backend uses one PostgreSQL connection URL and applies ordered migrations
+from `database/postgresql`. Initialize a fresh database with:
+
+```powershell
+npm.cmd --prefix backend run db:init
+```
+
+This runs migrations and the idempotent configuration seed. It does not create
+sample users, orders, messages, or transactions. Either part can also be run
+independently:
 
 ```powershell
 npm.cmd --prefix backend run migrate
+npm.cmd --prefix backend run db:seed
 ```
 
-During the Aiven-to-Supabase transition, source data can be inventoried without
-writing to PostgreSQL:
+Verify the configured server and all 18 application tables without exposing the
+connection URL:
 
 ```powershell
-npm.cmd --prefix backend run data:transfer
+npm.cmd --prefix backend run db:check
 ```
 
-Adding `-- --execute` performs the resumable upsert after backups and approval.
-Validation is separate:
-
-```powershell
-npm.cmd --prefix backend run data:validate
-```
-
-See [the PostgreSQL migration runbook](docs/POSTGRESQL_MIGRATION.md) before any
-production cutover. The original MySQL schema and migrations are intentionally
-retained until production data and rollback readiness are verified.
+`npm start` runs the safe, repeatable initialization before starting Express.
+See [the PostgreSQL deployment runbook](docs/POSTGRESQL_MIGRATION.md) before the
+existing Render service is switched.
 
 ## Local demo mode
 

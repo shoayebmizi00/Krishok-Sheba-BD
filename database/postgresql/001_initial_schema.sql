@@ -293,7 +293,12 @@ BEGIN
     'stories','app_settings'
   ] LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
-    EXECUTE format('REVOKE ALL ON TABLE %I FROM anon, authenticated', table_name);
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+      EXECUTE format('REVOKE ALL ON TABLE %I FROM anon', table_name);
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+      EXECUTE format('REVOKE ALL ON TABLE %I FROM authenticated', table_name);
+    END IF;
   END LOOP;
 END;
 $$;

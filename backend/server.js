@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import { checkDatabaseConnection, checkDatabaseSchema } from './config/db.js';
+import { checkDatabaseConnection, checkDatabaseSchema, pool } from './config/db.js';
 import { resources } from './config/resources.js';
 import { models } from './models/index.js';
 import { createResourceController } from './controllers/resourceController.js';
@@ -128,21 +128,18 @@ app.use((error, req, res, _next) => {
     method: req.method,
     path: req.originalUrl,
     code: error.code,
-    errno: error.errno,
-    sqlState: error.sqlState,
-    message: error.message,
-    stack: error.stack
+    message: process.env.NODE_ENV === 'production' ? 'Request failed' : error.message
   });
   if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
     return res.status(400).json({ code: 'INVALID_JSON', message: 'Request body must contain valid JSON.' });
   }
-  if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+  if (error.code === '23503') {
     return res.status(400).json({ message: 'A referenced record does not exist' });
   }
-  if (error.code === 'ER_DUP_ENTRY') {
+  if (error.code === '23505') {
     return res.status(409).json({ message: 'A record with this value already exists' });
   }
-  if (['ECONNREFUSED', 'ETIMEDOUT', 'PROTOCOL_CONNECTION_LOST', 'HANDSHAKE_SSL_ERROR'].includes(error.code)) {
+  if (['ECONNREFUSED', 'ETIMEDOUT', '08000', '08003', '08006', '57P01'].includes(error.code)) {
     return res.status(503).json({ message: 'Database is temporarily unavailable. Please try again shortly.' });
   }
   if (error.name === 'MulterError' || error.message?.startsWith('Only ')) {
@@ -153,13 +150,33 @@ app.use((error, req, res, _next) => {
   });
 });
 
-app.listen(port, '0.0.0.0', async () => {
+const server = app.listen(port, '0.0.0.0', async () => {
   console.log(`KRISHOK-SHEBA BD API running on 0.0.0.0:${port} (${deployment})`);
   console.log(`Password recovery email: ${getEmailConfiguration().configured ? 'configured' : 'SMTP configuration incomplete'}`);
   try {
     await checkDatabaseConnection();
     console.log('PostgreSQL connection established');
   } catch (error) {
-    console.error(`PostgreSQL connection failed: ${error.message}`);
+    console.error(`PostgreSQL connection failed (${error.code || 'UNKNOWN'})`);
   }
 });
+
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`${signal} received; closing HTTP and PostgreSQL connections.`);
+  const forceExit = setTimeout(() => process.exit(1), 10_000);
+  forceExit.unref();
+  server.close(async () => {
+    try {
+      await pool.end();
+      process.exit(0);
+    } catch {
+      process.exit(1);
+    }
+  });
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

@@ -96,11 +96,11 @@ export default class BaseModel {
     const fields = ['id', ...Object.keys(normalized)];
     const values = [id, ...Object.values(normalized)];
     const placeholders = fields.map((_, index) => `$${index + 1}`).join(', ');
-    await pool.execute(
-      `INSERT INTO ${this.config.table} (${fields.join(', ')}) VALUES (${placeholders})`,
+    const [rows] = await pool.execute(
+      `INSERT INTO ${this.config.table} (${fields.join(', ')}) VALUES (${placeholders}) RETURNING *`,
       values
     );
-    return this.findById(id);
+    return parseRow(rows[0], this.config);
   }
 
   async update(id, data) {
@@ -108,15 +108,15 @@ export default class BaseModel {
     const fields = Object.keys(normalized);
     if (!fields.length) return this.findById(id);
     const assignments = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
-    await pool.execute(
-      `UPDATE ${this.config.table} SET ${assignments} WHERE id = $${fields.length + 1}`,
+    const [rows] = await pool.execute(
+      `UPDATE ${this.config.table} SET ${assignments} WHERE id = $${fields.length + 1} RETURNING *`,
       [...Object.values(normalized), id]
     );
-    return this.findById(id);
+    return rows[0] ? parseRow(rows[0], this.config) : null;
   }
 
   async remove(id) {
-    const [result] = await pool.execute(`DELETE FROM ${this.config.table} WHERE id = $1`, [id]);
-    return result.affectedRows > 0;
+    const [rows] = await pool.execute(`DELETE FROM ${this.config.table} WHERE id = $1 RETURNING id`, [id]);
+    return rows.length > 0;
   }
 }

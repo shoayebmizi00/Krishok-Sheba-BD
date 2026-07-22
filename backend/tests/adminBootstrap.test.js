@@ -10,12 +10,12 @@ test('admin bootstrap creates once and preserves an existing password and profil
       if (sql.startsWith('SELECT id')) return [user ? [{ id: user.id, role: user.role, is_active: user.is_active }] : []];
       if (sql.startsWith('INSERT INTO users')) {
         user = { id: params[0], email: params[1], password_hash: params[2], full_name: params[3], role: 'admin', is_active: true };
-        return [{ affectedRows: 1 }];
+        return [[{ id: user.id }]];
       }
       if (sql.startsWith('UPDATE users SET')) {
         user.role = 'admin';
         user.is_active = true;
-        return [{ affectedRows: 1 }];
+        return [[]];
       }
       throw new Error(`Unexpected query: ${sql}`);
     }

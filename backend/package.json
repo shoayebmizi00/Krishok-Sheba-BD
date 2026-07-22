@@ -7,13 +7,14 @@
     "node": "22.x"
   },
   "scripts": {
-    "start": "npm run migrate && node scripts/create-admin.js --if-configured && node server.js",
+    "start": "npm run db:init && node scripts/create-admin.js --if-configured && node server.js",
     "dev": "node --watch server.js",
     "check": "node --check server.js",
     "test": "node --import ./tests/setup-env.js --test tests/*.test.js",
     "migrate": "node scripts/migrate.js",
-    "data:transfer": "node scripts/transfer-data.js",
-    "data:validate": "node scripts/validate-migration.js",
+    "db:check": "node scripts/check-database.js",
+    "db:init": "npm run migrate && npm run db:seed",
+    "db:seed": "node scripts/seed.js",
     "admin:create": "node scripts/create-admin.js",
     "email:test": "node scripts/test-email.js"
   },
@@ -28,8 +29,5 @@
     "multer": "^2.0.2",
     "nodemailer": "^9.0.3",
     "pg": "^8.16.3"
-  },
-  "devDependencies": {
-    "mysql2": "^3.22.5"
   }
 }

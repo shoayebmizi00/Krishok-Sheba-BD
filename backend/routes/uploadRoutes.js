@@ -73,7 +73,7 @@ router.post('/:folder', authenticate, (req, res, next) => {
       const id = crypto.randomUUID();
       await pool.execute(
         `INSERT INTO uploaded_files (id, owner_id, folder, original_name, mime_type, file_size, file_data)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
         [id, req.user.id, folder, req.file.originalname, req.file.mimetype, req.file.size, req.file.buffer]
       );
       return res.status(201).json({

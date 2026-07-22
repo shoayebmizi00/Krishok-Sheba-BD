@@ -27,7 +27,7 @@ export async function configureAdmin(connection, { email, password, fullName, re
   const passwordHash = await bcrypt.hash(password, 12);
   await connection.execute(
     `INSERT INTO users (id, email, password_hash, full_name, role, is_active)
-     VALUES ($1, $2, $3, $4, 'admin', TRUE)`,
+     VALUES ($1, $2, $3, $4, 'admin', TRUE) RETURNING id`,
     [crypto.randomUUID(), email, passwordHash, fullName]
   );
   return { action: 'created', passwordReset: false };

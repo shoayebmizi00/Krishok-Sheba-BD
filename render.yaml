@@ -14,17 +14,21 @@ services:
         value: https://krishok-sheba-bd.vercel.app
       - key: PUBLIC_BASE_URL
         value: https://krishok-sheba-bd.onrender.com
+      - key: DATABASE_URL
+        sync: false
+      # Rollback-only legacy values. The PostgreSQL runtime does not read them;
+      # remove from Render after the production Supabase smoke-test gate passes.
       - key: DB_HOST
-        value: mysql-144f41d0-mrshoayeb75-31ff.i.aivencloud.com
+        sync: false
       - key: DB_PORT
-        value: "24973"
+        sync: false
       - key: DB_USER
-        value: avnadmin
+        sync: false
       - key: DB_PASSWORD
         sync: false
       - key: DB_NAME
-        value: defaultdb
-      - key: DB_CONNECTION_LIMIT
+        sync: false
+      - key: DB_POOL_MAX
         value: "5"
       - key: DB_SSL
         value: "true"

@@ -57,10 +57,10 @@ test('registration works without SMTP and new users can log in for every public 
         const [id, email, passwordHash, fullName, role] = params;
         if (users.has(email)) {
           const error = new Error('duplicate');
-          error.code = 'ER_DUP_ENTRY';
+          error.code = '23505';
           throw error;
         }
-        users.set(email, {
+        const user = {
           id,
           email,
           password_hash: passwordHash,
@@ -70,8 +70,9 @@ test('registration works without SMTP and new users can log in for every public 
           email_verified: true,
           email_verification_token: null,
           email_verification_expires: null
-        });
-        return [{ affectedRows: 1 }];
+        };
+        users.set(email, user);
+        return [[user]];
       }
       if (sql.startsWith('SELECT * FROM users WHERE id')) {
         return [[...users.values()].filter((user) => user.id === params[0])];
@@ -116,6 +117,9 @@ test('registration works without SMTP and new users can log in for every public 
     const invalidEmails = ['abc', 'abc@', '@gmail.com', 'user@domain', 'user@@gmail.com', 'user@gmail..com'];
     for (const email of invalidEmails) assert.equal((await invoke(register, { full_name: 'Invalid', email, password: 'Password1', role: 'farmer' })).body.code, 'INVALID_EMAIL');
     for (const password of ['Short1', 'password1', 'PASSWORD1', 'Password']) assert.equal((await invoke(register, { full_name: 'Weak', email: `weak-${password}@example.com`, password, role: 'farmer' })).body.code, 'INVALID_PASSWORD');
+    const mismatch = await invoke(register, { full_name: 'Mismatch', email: 'mismatch@example.com', password: 'Password1', confirmPassword: 'Password2', role: 'farmer' });
+    assert.equal(mismatch.statusCode, 400);
+    assert.equal(mismatch.body.code, 'PASSWORD_MISMATCH');
 
     const duplicate = await invoke(register, { full_name: 'Duplicate', email: 'farmer@example.com', password: 'Password1', role: 'farmer' });
     assert.equal(duplicate.statusCode, 409);
