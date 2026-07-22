@@ -123,30 +123,45 @@ for (const [name, config] of Object.entries(resources)) {
 app.use((_req, res) => res.status(404).json({ message: 'API route not found' }));
 
 app.use((error, req, res, _next) => {
+  const category = req.path === '/api/auth/register'
+    ? 'auth.register'
+    : req.path === '/api/auth/login'
+      ? 'auth.login'
+      : 'api.request';
   console.error('[api.error]', {
+    category,
     requestId: req.id,
     method: req.method,
     path: req.originalUrl,
     code: error.code,
+    table: error.table,
+    column: error.column,
+    constraint: error.constraint,
+    dataType: error.dataType,
     message: process.env.NODE_ENV === 'production' ? 'Request failed' : error.message
   });
   if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
-    return res.status(400).json({ code: 'INVALID_JSON', message: 'Request body must contain valid JSON.' });
+    return res.status(400).json({ code: 'INVALID_JSON', message: 'Request body must contain valid JSON.', requestId: req.id });
   }
   if (error.code === '23503') {
-    return res.status(400).json({ message: 'A referenced record does not exist' });
+    return res.status(400).json({ code: 'REFERENCED_RECORD_NOT_FOUND', message: 'A referenced record does not exist.', requestId: req.id });
   }
   if (error.code === '23505') {
-    return res.status(409).json({ message: 'A record with this value already exists' });
+    return res.status(409).json({ code: 'CONFLICT', message: 'A record with this value already exists.', requestId: req.id });
+  }
+  if (['42P01', '42703', '23514', '42601', '22P02'].includes(error.code)) {
+    return res.status(500).json({ code: 'DATABASE_SCHEMA_ERROR', message: 'The database schema rejected this request.', requestId: req.id });
   }
   if (['ECONNREFUSED', 'ETIMEDOUT', '08000', '08003', '08006', '57P01'].includes(error.code)) {
-    return res.status(503).json({ message: 'Database is temporarily unavailable. Please try again shortly.' });
+    return res.status(503).json({ code: 'DATABASE_UNAVAILABLE', message: 'Database is temporarily unavailable. Please try again shortly.', requestId: req.id });
   }
   if (error.name === 'MulterError' || error.message?.startsWith('Only ')) {
-    return res.status(400).json({ message: error.message });
+    return res.status(400).json({ code: 'UPLOAD_ERROR', message: error.message, requestId: req.id });
   }
   res.status(500).json({
-    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+    code: 'INTERNAL_ERROR',
+    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message,
+    requestId: req.id
   });
 });
 

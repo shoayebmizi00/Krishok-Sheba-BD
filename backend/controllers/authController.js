@@ -49,7 +49,7 @@ export async function register(req, res, next) {
     await connection.commit();
     res.status(201).json({ success: true, user: publicUser(rows[0]), message: 'Account created successfully. Please log in.' });
   } catch (error) {
-    if (connection) await connection.rollback();
+    if (connection) await connection.rollback().catch(() => {});
     if (error.code === '23505') return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' });
     next(error);
   }
