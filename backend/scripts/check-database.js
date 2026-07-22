@@ -1,11 +1,17 @@
-import { checkDatabaseConnection, checkDatabaseSchema, pool } from '../config/db.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+let pool;
 
 try {
+  const database = await import('../config/db.js');
+  pool = database.pool;
   const [probe] = await pool.execute('SELECT 1 AS ok');
   if (probe[0]?.ok !== 1) throw new Error('Database probe returned an unexpected result');
 
-  const connection = await checkDatabaseConnection();
-  const schema = await checkDatabaseSchema();
+  const connection = await database.checkDatabaseConnection();
+  const schema = await database.checkDatabaseSchema();
   if (!schema.ready || schema.tableCount !== 18) {
     throw new Error(`Expected schema is incomplete (${schema.tableCount}/18 tables)`);
   }
@@ -17,5 +23,5 @@ try {
   console.error(`PostgreSQL verification failed (${error.code || 'SCHEMA_CHECK_FAILED'})`);
   process.exitCode = 1;
 } finally {
-  await pool.end().catch(() => {});
+  await pool?.end().catch(() => {});
 }

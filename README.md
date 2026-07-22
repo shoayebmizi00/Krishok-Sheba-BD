@@ -19,9 +19,9 @@ the Express backend; authentication remains application-managed JWT/bcrypt.
    Copy-Item backend/.env.example backend/.env
    ```
 
-2. Set `DATABASE_URL` to a PostgreSQL connection URL, set `DB_SSL` as required
-   by the provider, and replace `JWT_SECRET`. Never place a database URL or
-   secret key in `frontend/.env`.
+2. Set `DATABASE_URL` to a PostgreSQL connection URL and replace `JWT_SECRET`.
+   `DB_CONNECTION_LIMIT` optionally controls the pool size. Never place a
+   database URL or secret key in `frontend/.env`.
 
 3. Install dependencies and start the applications:
 
