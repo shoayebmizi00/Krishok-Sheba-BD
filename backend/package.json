@@ -10,10 +10,12 @@
     "start": "npm run migrate && node scripts/create-admin.js --if-configured && node server.js",
     "dev": "node --watch server.js",
     "check": "node --check server.js",
-    "test": "node --test tests/*.test.js",
+    "test": "node --import ./tests/setup-env.js --test tests/*.test.js",
     "migrate": "node scripts/migrate.js",
-    "admin:create": "node scripts/create-admin.js"
-    ,"email:test": "node scripts/test-email.js"
+    "data:transfer": "node scripts/transfer-data.js",
+    "data:validate": "node scripts/validate-migration.js",
+    "admin:create": "node scripts/create-admin.js",
+    "email:test": "node scripts/test-email.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -24,7 +26,10 @@
     "express-rate-limit": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
-    "mysql2": "^3.22.5",
-    "nodemailer": "^9.0.3"
+    "nodemailer": "^9.0.3",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "mysql2": "^3.22.5"
   }
 }

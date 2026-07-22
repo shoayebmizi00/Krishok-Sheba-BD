@@ -158,8 +158,8 @@ app.listen(port, '0.0.0.0', async () => {
   console.log(`Password recovery email: ${getEmailConfiguration().configured ? 'configured' : 'SMTP configuration incomplete'}`);
   try {
     await checkDatabaseConnection();
-    console.log('MySQL connection established');
+    console.log('PostgreSQL connection established');
   } catch (error) {
-    console.error(`MySQL connection failed: ${error.message}`);
+    console.error(`PostgreSQL connection failed: ${error.message}`);
   }
 });

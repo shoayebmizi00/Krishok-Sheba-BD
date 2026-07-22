@@ -34,11 +34,11 @@ function dashboardMessagePath(role, conversationId) {
 
 async function relationFor(type, id) {
   const queries = {
-    listing: ['SELECT id, farmer_id FROM crop_listings WHERE id=? LIMIT 1', [id]],
-    bid: ['SELECT id, buyer_id, farmer_id FROM bids WHERE id=? LIMIT 1', [id]],
-    order: ['SELECT id, buyer_id, seller_id FROM orders WHERE id=? LIMIT 1', [id]],
-    equipment_booking: ['SELECT id, farmer_id, owner_id FROM equipment_bookings WHERE id=? LIMIT 1', [id]],
-    transport_booking: ['SELECT id, farmer_id, provider_id FROM transport_bookings WHERE id=? LIMIT 1', [id]]
+    listing: ['SELECT id, farmer_id FROM crop_listings WHERE id=$1 LIMIT 1', [id]],
+    bid: ['SELECT id, buyer_id, farmer_id FROM bids WHERE id=$1 LIMIT 1', [id]],
+    order: ['SELECT id, buyer_id, seller_id FROM orders WHERE id=$1 LIMIT 1', [id]],
+    equipment_booking: ['SELECT id, farmer_id, owner_id FROM equipment_bookings WHERE id=$1 LIMIT 1', [id]],
+    transport_booking: ['SELECT id, farmer_id, provider_id FROM transport_bookings WHERE id=$1 LIMIT 1', [id]]
   };
   if (!queries[type] || !id) return null;
   const [sql, values] = queries[type];
@@ -47,7 +47,7 @@ async function relationFor(type, id) {
 }
 
 async function findConversation(id, db = pool) {
-  const [rows] = await db.execute('SELECT * FROM conversations WHERE id=? LIMIT 1', [id]);
+  const [rows] = await db.execute('SELECT * FROM conversations WHERE id=$1 LIMIT 1', [id]);
   return normalizeConversation(rows[0]);
 }
 
@@ -55,19 +55,19 @@ export async function listConversations(req, res, next) {
   try {
     const scope = req.user.role === 'admin'
       ? ''
-      : 'WHERE c.participant_one_id=? OR c.participant_two_id=? OR JSON_CONTAINS(COALESCE(c.participant_ids, JSON_ARRAY()), JSON_QUOTE(?))';
-    const values = req.user.role === 'admin' ? [] : [req.user.id, req.user.id, req.user.id];
+      : "WHERE c.participant_one_id=$1 OR c.participant_two_id=$2 OR COALESCE(c.participant_ids, '[]'::jsonb) @> jsonb_build_array($3::text)";
+    const values = [req.user.id, req.user.id, req.user.id];
     const [rows] = await pool.execute(
       `SELECT c.*,
-        CASE WHEN c.participant_one_id=? THEN u2.full_name ELSE u1.full_name END other_name,
-        CASE WHEN c.participant_one_id=? THEN u2.role ELSE u1.role END other_role,
-        SUM(CASE WHEN m.receiver_id=? AND m.is_read=FALSE THEN 1 ELSE 0 END) unread_count
+        CASE WHEN c.participant_one_id=$1 THEN u2.full_name ELSE u1.full_name END other_name,
+        CASE WHEN c.participant_one_id=$2 THEN u2.role ELSE u1.role END other_role,
+        SUM(CASE WHEN m.receiver_id=$3 AND m.is_read=FALSE THEN 1 ELSE 0 END) unread_count
        FROM conversations c
        LEFT JOIN users u1 ON u1.id=c.participant_one_id
        LEFT JOIN users u2 ON u2.id=c.participant_two_id
        LEFT JOIN messages m ON m.conversation_id=c.id
        ${scope}
-       GROUP BY c.id
+       GROUP BY c.id,u1.full_name,u2.full_name,u1.role,u2.role
        ORDER BY COALESCE(c.last_message_at,c.last_message_date,c.updated_at) DESC
        LIMIT 100`,
       [req.user.id, req.user.id, req.user.id, ...values]
@@ -88,7 +88,7 @@ export async function createConversation(req, res, next) {
     if (!receiverId) return res.status(400).json({ message: 'বার্তা প্রাপকের তথ্য দিন' });
 
     const [userRows] = await pool.execute(
-      'SELECT id,full_name,role,is_active FROM users WHERE id IN (?,?)',
+      'SELECT id,full_name,role,is_active FROM users WHERE id IN ($1,$2)',
       [req.user.id, receiverId]
     );
     const currentUser = userRows.find((item) => item.id === req.user.id) || req.user;
@@ -101,10 +101,10 @@ export async function createConversation(req, res, next) {
 
     const [existing] = await pool.execute(
       `SELECT * FROM conversations WHERE
-       ((participant_one_id=? AND participant_two_id=?) OR (participant_one_id=? AND participant_two_id=?)
-        OR (JSON_CONTAINS(COALESCE(participant_ids, JSON_ARRAY()), JSON_QUOTE(?))
-          AND JSON_CONTAINS(COALESCE(participant_ids, JSON_ARRAY()), JSON_QUOTE(?))))
-       AND related_type <=> ? AND related_id <=> ? LIMIT 1`,
+       ((participant_one_id=$1 AND participant_two_id=$2) OR (participant_one_id=$3 AND participant_two_id=$4)
+        OR (COALESCE(participant_ids, '[]'::jsonb) @> jsonb_build_array($5::text)
+          AND COALESCE(participant_ids, '[]'::jsonb) @> jsonb_build_array($6::text)))
+       AND related_type IS NOT DISTINCT FROM $7 AND related_id IS NOT DISTINCT FROM $8 LIMIT 1`,
       [req.user.id, receiverId, receiverId, req.user.id, req.user.id, receiverId, relatedType, relatedId]
     );
     if (existing[0]) return res.json(normalizeConversation(existing[0]));
@@ -116,7 +116,7 @@ export async function createConversation(req, res, next) {
       `INSERT INTO conversations
        (id,participant_one_id,participant_two_id,participant_ids,participant_names,subject,listing_id,
         listing_name,related_type,related_id,last_message,last_message_date,last_message_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,'',NOW(),NOW())`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'',NOW(),NOW())`,
       [
         id, req.user.id, receiverId, JSON.stringify([req.user.id, receiverId]), JSON.stringify(names),
         subject, relatedType === 'listing' ? relatedId : null, req.body.listing_name || null, relatedType, relatedId
@@ -135,7 +135,7 @@ export async function getConversationMessages(req, res, next) {
       return res.status(404).json({ message: 'কথোপকথন পাওয়া যায়নি' });
     }
     const [messages] = await pool.execute(
-      'SELECT * FROM messages WHERE conversation_id=? ORDER BY created_at ASC LIMIT 500',
+      'SELECT * FROM messages WHERE conversation_id=$1 ORDER BY created_at ASC LIMIT 500',
       [conversation.id]
     );
     res.json({
@@ -171,23 +171,23 @@ export async function sendMessage(req, res, next) {
       return res.status(400).json({ message: 'বার্তা প্রাপক পাওয়া যায়নি' });
     }
 
-    const [senders] = await db.execute('SELECT full_name FROM users WHERE id=? LIMIT 1', [req.user.id]);
+    const [senders] = await db.execute('SELECT full_name FROM users WHERE id=$1 LIMIT 1', [req.user.id]);
     const senderName = senders[0]?.full_name || 'ব্যবহারকারী';
     const id = crypto.randomUUID();
     await db.execute(
       `INSERT INTO messages (id,conversation_id,sender_id,receiver_id,sender_name,content,message_text,is_read)
-       VALUES (?,?,?,?,?,?,?,FALSE)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,FALSE)`,
       [id, conversation.id, req.user.id, receiverId, senderName, text, text]
     );
     await db.execute(
-      `UPDATE conversations SET last_message=?,last_message_by=?,last_message_date=NOW(),last_message_at=NOW()
-       WHERE id=?`,
+      `UPDATE conversations SET last_message=$1,last_message_by=$2,last_message_date=NOW(),last_message_at=NOW()
+       WHERE id=$3`,
       [text, req.user.id, conversation.id]
     );
-    const [receiverRows] = await db.execute('SELECT role FROM users WHERE id=? LIMIT 1', [receiverId]);
+    const [receiverRows] = await db.execute('SELECT role FROM users WHERE id=$1 LIMIT 1', [receiverId]);
     await db.execute(
       `INSERT INTO notifications (id,user_id,title,message,type,is_read,link)
-       VALUES (?,?,? ,?,'message',FALSE,?)`,
+       VALUES ($1,$2,$3 ,$4,'message',FALSE,$5)`,
       [
         crypto.randomUUID(),
         receiverId,
@@ -196,7 +196,7 @@ export async function sendMessage(req, res, next) {
         dashboardMessagePath(receiverRows[0]?.role, conversation.id)
       ]
     );
-    const [created] = await db.execute('SELECT * FROM messages WHERE id=?', [id]);
+    const [created] = await db.execute('SELECT * FROM messages WHERE id=$1', [id]);
     await db.commit();
     res.status(201).json({
       ...created[0],
@@ -213,11 +213,11 @@ export async function sendMessage(req, res, next) {
 
 export async function markMessageRead(req, res, next) {
   try {
-    const [rows] = await pool.execute('SELECT * FROM messages WHERE id=? LIMIT 1', [req.params.id]);
+    const [rows] = await pool.execute('SELECT * FROM messages WHERE id=$1 LIMIT 1', [req.params.id]);
     if (!rows[0] || (req.user.role !== 'admin' && rows[0].receiver_id !== req.user.id)) {
       return res.status(403).json({ message: 'এই বার্তা পরিবর্তনের অনুমতি নেই' });
     }
-    await pool.execute('UPDATE messages SET is_read=TRUE WHERE id=?', [req.params.id]);
+    await pool.execute('UPDATE messages SET is_read=TRUE WHERE id=$1', [req.params.id]);
     res.json({ ...rows[0], is_read: true });
   } catch (error) {
     next(error);
@@ -231,7 +231,7 @@ export async function markConversationRead(req, res, next) {
       return res.status(404).json({ message: 'কথোপকথন পাওয়া যায়নি' });
     }
     await pool.execute(
-      'UPDATE messages SET is_read=TRUE WHERE conversation_id=? AND receiver_id=?',
+      'UPDATE messages SET is_read=TRUE WHERE conversation_id=$1 AND receiver_id=$2',
       [conversation.id, req.user.id]
     );
     res.json({ success: true });

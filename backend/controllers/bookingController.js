@@ -4,7 +4,7 @@ import { pool } from '../config/db.js';
 async function notify(db, userId, title, message, link) {
   await db.execute(
     `INSERT INTO notifications (id,user_id,title,message,type,is_read,link)
-     VALUES (?,?,?,?, 'booking',FALSE,?)`,
+     VALUES ($1,$2,$3,$4, 'booking',FALSE,$5)`,
     [crypto.randomUUID(), userId, title, message, link]
   );
 }
@@ -17,7 +17,7 @@ export async function myEquipmentBookings(req, res, next) {
        FROM equipment_bookings b
        JOIN equipment e ON e.id=b.equipment_id
        LEFT JOIN users u ON u.id=b.owner_id
-       WHERE b.farmer_id=? ORDER BY b.created_at DESC LIMIT 100`,
+       WHERE b.farmer_id=$1 ORDER BY b.created_at DESC LIMIT 100`,
       [req.user.id]
     );
     rows.forEach((row) => {
@@ -40,7 +40,7 @@ export async function createEquipmentBooking(req, res, next) {
     await db.beginTransaction();
     const [equipmentRows] = await db.execute(
       `SELECT id,name,owner_id,owner_name,rent_price_per_day,availability,approval_status
-       FROM equipment WHERE id=? FOR UPDATE`,
+       FROM equipment WHERE id=$1 FOR UPDATE`,
       [equipmentId]
     );
     const equipment = equipmentRows[0];
@@ -49,9 +49,9 @@ export async function createEquipmentBooking(req, res, next) {
       return res.status(409).json({ message: 'যন্ত্রপাতিটি বর্তমানে বুকিংয়ের জন্য উপলব্ধ নয়' });
     }
     const [conflicts] = await db.execute(
-      `SELECT id FROM equipment_bookings WHERE equipment_id=?
+      `SELECT id FROM equipment_bookings WHERE equipment_id=$1
        AND status IN ('pending','approved','confirmed','active')
-       AND start_date<=? AND end_date>=? LIMIT 1`,
+       AND start_date<=$2 AND end_date>=$3 LIMIT 1`,
       [equipmentId, endDate, startDate]
     );
     if (conflicts.length) {
@@ -64,7 +64,7 @@ export async function createEquipmentBooking(req, res, next) {
       `INSERT INTO equipment_bookings
        (id,equipment_id,equipment_name,farmer_id,farmer_name,owner_id,owner_name,start_date,end_date,
         rental_days,quantity,pickup_location,notes,total_cost,status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending')`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending')`,
       [
         id, equipment.id, equipment.name, req.user.id, req.user.full_name || 'কৃষক',
         equipment.owner_id, equipment.owner_name, startDate, endDate, days,
@@ -78,7 +78,7 @@ export async function createEquipmentBooking(req, res, next) {
       '/equipment-owner-dashboard/bookings');
     await notify(db, req.user.id, 'যন্ত্রপাতি বুকিং জমা হয়েছে',
       'আপনার যন্ত্রপাতি বুকিং সফলভাবে জমা হয়েছে।', '/farmer/equipment-booking');
-    const [created] = await db.execute('SELECT * FROM equipment_bookings WHERE id=?', [id]);
+    const [created] = await db.execute('SELECT * FROM equipment_bookings WHERE id=$1', [id]);
     await db.commit();
     res.status(201).json(created[0]);
   } catch (error) {
@@ -92,7 +92,7 @@ export async function updateEquipmentBooking(req, res, next) {
   const db = await pool.getConnection();
   try {
     await db.beginTransaction();
-    const [rows] = await db.execute('SELECT * FROM equipment_bookings WHERE id=? FOR UPDATE', [req.params.id]);
+    const [rows] = await db.execute('SELECT * FROM equipment_bookings WHERE id=$1 FOR UPDATE', [req.params.id]);
     const booking = rows[0];
     if (!booking) {
       await db.rollback();
@@ -108,7 +108,7 @@ export async function updateEquipmentBooking(req, res, next) {
       await db.rollback();
       return res.status(403).json({ message: 'এই বুকিং পরিবর্তনের অনুমতি নেই' });
     }
-    await db.execute('UPDATE equipment_bookings SET status=? WHERE id=?', [status, booking.id]);
+    await db.execute('UPDATE equipment_bookings SET status=$1 WHERE id=$2', [status, booking.id]);
     const messages = {
       approved: ['যন্ত্রপাতি বুকিং অনুমোদিত', 'আপনার যন্ত্রপাতি বুকিং অনুমোদন করা হয়েছে।'],
       rejected: ['যন্ত্রপাতি বুকিং প্রত্যাখ্যাত', 'আপনার যন্ত্রপাতি বুকিং প্রত্যাখ্যান করা হয়েছে।'],
@@ -120,7 +120,7 @@ export async function updateEquipmentBooking(req, res, next) {
       await notify(db, recipient, messages[status][0], messages[status][1],
         farmerCancel ? '/equipment-owner-dashboard/bookings' : '/farmer/equipment-booking');
     }
-    const [updated] = await db.execute('SELECT * FROM equipment_bookings WHERE id=?', [booking.id]);
+    const [updated] = await db.execute('SELECT * FROM equipment_bookings WHERE id=$1', [booking.id]);
     await db.commit();
     res.json(updated[0]);
   } catch (error) {
@@ -136,7 +136,7 @@ export async function myTransportBookings(req, res, next) {
               u.phone AS provider_phone
        FROM transport_bookings b JOIN vehicles v ON v.id=b.vehicle_id
        LEFT JOIN users u ON u.id=b.provider_id
-       WHERE b.farmer_id=? ORDER BY b.created_at DESC LIMIT 100`,
+       WHERE b.farmer_id=$1 ORDER BY b.created_at DESC LIMIT 100`,
       [req.user.id]
     );
     rows.forEach((row) => {
@@ -159,7 +159,7 @@ export async function createTransportBooking(req, res, next) {
     await db.beginTransaction();
     const [vehicleRows] = await db.execute(
       `SELECT id,vehicle_type,owner_id,owner_name,price_per_km,availability,approval_status
-       FROM vehicles WHERE id=? FOR UPDATE`,
+       FROM vehicles WHERE id=$1 FOR UPDATE`,
       [vehicleId]
     );
     const vehicle = vehicleRows[0];
@@ -168,7 +168,7 @@ export async function createTransportBooking(req, res, next) {
       return res.status(409).json({ message: 'যানবাহনটি বর্তমানে উপলব্ধ নয়' });
     }
     const [conflicts] = await db.execute(
-      `SELECT id FROM transport_bookings WHERE vehicle_id=? AND pickup_date=?
+      `SELECT id FROM transport_bookings WHERE vehicle_id=$1 AND pickup_date=$2
        AND status IN ('pending','accepted','confirmed','in_transit') LIMIT 1`,
       [vehicleId, pickupDate]
     );
@@ -182,7 +182,7 @@ export async function createTransportBooking(req, res, next) {
        (id,vehicle_id,vehicle_type,farmer_id,farmer_name,provider_id,provider_name,pickup_location,
         delivery_location,pickup_date,preferred_time,product_name,quantity,estimated_cost,status,
         cargo_description,additional_instructions)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',?,?)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending',$15,$16)`,
       [
         id, vehicle.id, vehicle.vehicle_type, req.user.id, req.user.full_name || 'কৃষক',
         vehicle.owner_id, vehicle.owner_name, String(pickup).trim(), String(destination).trim(), pickupDate,
@@ -197,7 +197,7 @@ export async function createTransportBooking(req, res, next) {
       '/transport-dashboard/bookings');
     await notify(db, req.user.id, 'পরিবহন অনুরোধ জমা হয়েছে',
       'আপনার পরিবহন অনুরোধ সফলভাবে জমা হয়েছে।', '/farmer/transport-request');
-    const [created] = await db.execute('SELECT * FROM transport_bookings WHERE id=?', [id]);
+    const [created] = await db.execute('SELECT * FROM transport_bookings WHERE id=$1', [id]);
     await db.commit();
     res.status(201).json(created[0]);
   } catch (error) {
@@ -211,7 +211,7 @@ export async function updateTransportBooking(req, res, next) {
   const db = await pool.getConnection();
   try {
     await db.beginTransaction();
-    const [rows] = await db.execute('SELECT * FROM transport_bookings WHERE id=? FOR UPDATE', [req.params.id]);
+    const [rows] = await db.execute('SELECT * FROM transport_bookings WHERE id=$1 FOR UPDATE', [req.params.id]);
     const booking = rows[0];
     if (!booking) {
       await db.rollback();
@@ -227,7 +227,7 @@ export async function updateTransportBooking(req, res, next) {
       await db.rollback();
       return res.status(403).json({ message: 'এই অনুরোধ পরিবর্তনের অনুমতি নেই' });
     }
-    await db.execute('UPDATE transport_bookings SET status=? WHERE id=?', [status, booking.id]);
+    await db.execute('UPDATE transport_bookings SET status=$1 WHERE id=$2', [status, booking.id]);
     const messages = {
       accepted: ['পরিবহন অনুরোধ গ্রহণ করা হয়েছে', 'আপনার পরিবহন অনুরোধ গ্রহণ করা হয়েছে।'],
       rejected: ['পরিবহন অনুরোধ প্রত্যাখ্যাত', 'আপনার পরিবহন অনুরোধ প্রত্যাখ্যান করা হয়েছে।'],
@@ -239,7 +239,7 @@ export async function updateTransportBooking(req, res, next) {
       await notify(db, recipient, messages[status][0], messages[status][1],
         farmerCancel ? '/transport-dashboard/bookings' : '/farmer/transport-request');
     }
-    const [updated] = await db.execute('SELECT * FROM transport_bookings WHERE id=?', [booking.id]);
+    const [updated] = await db.execute('SELECT * FROM transport_bookings WHERE id=$1', [booking.id]);
     await db.commit();
     res.json(updated[0]);
   } catch (error) {

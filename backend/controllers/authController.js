@@ -36,15 +36,15 @@ export async function register(req, res, next) {
 
     connection = await pool.getConnection();
     await connection.beginTransaction();
-    const [existing] = await connection.execute('SELECT id FROM users WHERE email = ? LIMIT 1 FOR UPDATE', [email]);
+    const [existing] = await connection.execute('SELECT id FROM users WHERE email = $1 LIMIT 1 FOR UPDATE', [email]);
     if (existing.length) { await connection.rollback(); return res.status(409).json({ code: 'EMAIL_EXISTS', message: 'An account already exists for this email.' }); }
     const id = crypto.randomUUID();
     const passwordHash = await bcrypt.hash(password, 12);
     await connection.execute(
-      'INSERT INTO users (id, email, password_hash, full_name, role, is_active) VALUES (?, ?, ?, ?, ?, TRUE)',
+      'INSERT INTO users (id, email, password_hash, full_name, role, is_active) VALUES ($1, $2, $3, $4, $5, TRUE)',
       [id, email, passwordHash, name, role]
     );
-    const [rows] = await connection.execute('SELECT * FROM users WHERE id = ?', [id]);
+    const [rows] = await connection.execute('SELECT * FROM users WHERE id = $1', [id]);
     await connection.commit();
     res.status(201).json({ success: true, user: publicUser(rows[0]), message: 'Account created successfully. Please log in.' });
   } catch (error) {
@@ -59,7 +59,7 @@ export async function login(req, res, next) {
     const { password } = req.body;
     const email = normalizeEmail(req.body.email);
     if (!isValidEmail(email) || typeof password !== 'string' || !password) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Invalid email or password.' });
-    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
+    const [rows] = await pool.execute('SELECT * FROM users WHERE email = $1 LIMIT 1', [email]);
     const user = rows[0];
     const passwordMatches = await bcrypt.compare(password, user?.password_hash || dummyPasswordHash);
     if (!user || !user.is_active || !passwordMatches) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Invalid email or password.' });
@@ -69,7 +69,7 @@ export async function login(req, res, next) {
 
 export async function me(req, res, next) {
   try {
-    const [rows] = await pool.execute('SELECT * FROM users WHERE id = ? LIMIT 1', [req.user.id]);
+    const [rows] = await pool.execute('SELECT * FROM users WHERE id = $1 LIMIT 1', [req.user.id]);
     if (!rows[0]) return res.status(404).json({ message: 'User not found.' });
     res.json(publicUser(rows[0]));
   } catch (error) { next(error); }
@@ -80,8 +80,8 @@ export async function updateMe(req, res, next) {
     const allowed = ['full_name', 'phone', 'district', 'farm_name', 'land_size', 'crops_grown', 'profile_picture', 'bkash_number', 'nagad_number', 'rocket_number', 'upay_number', 'bank_name', 'bank_account_number', 'account_holder_name', 'branch_name'];
     const entries = Object.entries(req.body).filter(([field]) => allowed.includes(field));
     if (!entries.length) return me(req, res, next);
-    const assignments = entries.map(([field]) => `\`${field}\` = ?`).join(', ');
-    await pool.execute(`UPDATE users SET ${assignments} WHERE id = ?`, [...entries.map(([, value]) => value), req.user.id]);
+    const assignments = entries.map(([field], index) => `${field} = $${index + 1}`).join(', ');
+    await pool.execute(`UPDATE users SET ${assignments} WHERE id = $${entries.length + 1}`, [...entries.map(([, value]) => value), req.user.id]);
     return me(req, res, next);
   } catch (error) { next(error); }
 }
@@ -92,12 +92,12 @@ export async function requestPasswordReset(req, res, next) {
     const email = normalizeEmail(req.body.email);
     if (!isValidEmail(email)) return res.status(400).json({ code: 'INVALID_EMAIL', message: 'Please provide a valid email address.' });
     if (!getEmailConfiguration().configured) return res.status(503).json({ code: 'PASSWORD_RESET_UNAVAILABLE', message: 'Password reset email is temporarily unavailable.' });
-    const [rows] = await pool.execute('SELECT id, email, full_name FROM users WHERE email = ? LIMIT 1', [email]);
+    const [rows] = await pool.execute('SELECT id, email, full_name FROM users WHERE email = $1 LIMIT 1', [email]);
     if (rows[0]) {
       const rawToken = crypto.randomBytes(32).toString('hex');
       const configured = Number(process.env.RESET_TOKEN_EXPIRES_MINUTES || 30);
       const minutes = Number.isFinite(configured) && configured >= 5 && configured <= 60 ? configured : 30;
-      await pool.execute('UPDATE users SET reset_password_token = ?, reset_password_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE) WHERE id = ?', [hashToken(rawToken), minutes, rows[0].id]);
+      await pool.execute("UPDATE users SET reset_password_token = $1, reset_password_expires = NOW() + ($2 * INTERVAL '1 minute') WHERE id = $3", [hashToken(rawToken), minutes, rows[0].id]);
       try {
         const delivery = await sendPasswordResetEmail({ to: rows[0].email, name: rows[0].full_name, resetUrl: `${frontendUrl()}/reset-password?token=${encodeURIComponent(rawToken)}`, expiresMinutes: minutes });
         if (!delivery.sent) return res.status(503).json({ code: 'PASSWORD_RESET_UNAVAILABLE', message: 'Password reset email is temporarily unavailable.' });
@@ -116,9 +116,9 @@ export async function resetPassword(req, res, next) {
     const { token, newPassword } = req.body;
     if (typeof token !== 'string' || !/^[a-f\d]{64}$/i.test(token) || !passwordPolicy.test(newPassword)) return res.status(400).json({ code: 'INVALID_RESET_REQUEST', message: 'Use a valid link and a password with uppercase, lowercase, and a number.' });
     connection = await pool.getConnection(); await connection.beginTransaction();
-    const [rows] = await connection.execute('SELECT id FROM users WHERE reset_password_token = ? AND reset_password_expires > NOW() LIMIT 1 FOR UPDATE', [hashToken(token)]);
+    const [rows] = await connection.execute('SELECT id FROM users WHERE reset_password_token = $1 AND reset_password_expires > NOW() LIMIT 1 FOR UPDATE', [hashToken(token)]);
     if (!rows[0]) { await connection.rollback(); return res.status(400).json({ code: 'INVALID_OR_EXPIRED_RESET_TOKEN', message: 'This reset link is invalid, expired, or already used.' }); }
-    await connection.execute('UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?', [await bcrypt.hash(newPassword, 12), rows[0].id]);
+    await connection.execute('UPDATE users SET password_hash = $1, reset_password_token = NULL, reset_password_expires = NULL WHERE id = $2', [await bcrypt.hash(newPassword, 12), rows[0].id]);
     await connection.commit(); res.json({ message: 'Password reset successful.' });
   } catch (error) { if (connection) await connection.rollback(); next(error); }
   finally { connection?.release(); }

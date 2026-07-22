@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 export async function configureAdmin(connection, { email, password, fullName, resetExistingPassword = false }) {
   const [existing] = await connection.execute(
-    'SELECT id, role, is_active FROM users WHERE email = ? LIMIT 1',
+    'SELECT id, role, is_active FROM users WHERE email = $1 LIMIT 1',
     [email]
   );
 
@@ -12,11 +12,11 @@ export async function configureAdmin(connection, { email, password, fullName, re
     const values = [];
     if (resetExistingPassword) {
       if (password.length < 8) throw new Error('--reset-password requires ADMIN_PASSWORD with at least 8 characters.');
-      updates.push('password_hash = ?');
+      updates.push('password_hash = $1');
       values.push(await bcrypt.hash(password, 12));
     }
     await connection.execute(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${values.length + 1}`,
       [...values, existing[0].id]
     );
     return { action: 'verified', passwordReset: resetExistingPassword };
@@ -27,7 +27,7 @@ export async function configureAdmin(connection, { email, password, fullName, re
   const passwordHash = await bcrypt.hash(password, 12);
   await connection.execute(
     `INSERT INTO users (id, email, password_hash, full_name, role, is_active)
-     VALUES (?, ?, ?, ?, 'admin', TRUE)`,
+     VALUES ($1, $2, $3, $4, 'admin', TRUE)`,
     [crypto.randomUUID(), email, passwordHash, fullName]
   );
   return { action: 'created', passwordReset: false };

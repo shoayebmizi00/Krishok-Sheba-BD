@@ -34,7 +34,7 @@ function uploadToCloudinary(file, folder) {
 router.get('/files/:id', async (req, res, next) => {
   try {
     const [rows] = await pool.execute(
-      'SELECT mime_type, file_data FROM uploaded_files WHERE id = ? LIMIT 1',
+      'SELECT mime_type, file_data FROM uploaded_files WHERE id = $1 LIMIT 1',
       [req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ message: 'Image not found' });
@@ -73,7 +73,7 @@ router.post('/:folder', authenticate, (req, res, next) => {
       const id = crypto.randomUUID();
       await pool.execute(
         `INSERT INTO uploaded_files (id, owner_id, folder, original_name, mime_type, file_size, file_data)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [id, req.user.id, folder, req.file.originalname, req.file.mimetype, req.file.size, req.file.buffer]
       );
       return res.status(201).json({

@@ -38,17 +38,18 @@ export default class BaseModel {
     return normalized;
   }
 
-  scopeFor(user) {
+  scopeFor(user, startIndex = 1) {
     if (!user || user.role === 'admin' || this.config.publicRead) return { sql: '', values: [] };
-    const clauses = (this.config.ownerFields || []).map((field) => `\`${field}\` = ?`);
+    let parameterIndex = startIndex;
+    const clauses = (this.config.ownerFields || []).map((field) => `${field} = $${parameterIndex++}`);
     const values = (this.config.ownerFields || []).map(() => user.id);
     if (this.config.participantField) {
-      clauses.push(`JSON_CONTAINS(\`${this.config.participantField}\`, JSON_QUOTE(?))`);
+      clauses.push(`${this.config.participantField} @> jsonb_build_array($${parameterIndex++}::text)`);
       values.push(user.id);
     }
     if (this.config.conversationField) {
-      clauses.push(`\`${this.config.conversationField}\` IN (
-        SELECT id FROM conversations WHERE JSON_CONTAINS(participant_ids, JSON_QUOTE(?))
+      clauses.push(`${this.config.conversationField} IN (
+        SELECT id FROM conversations WHERE participant_ids @> jsonb_build_array($${parameterIndex++}::text)
       )`);
       values.push(user.id);
     }
@@ -62,10 +63,10 @@ export default class BaseModel {
     for (const [field, value] of Object.entries(filters)) {
       const mapped = sortableAliases[field] || field;
       if (!this.allowed(mapped)) continue;
-      conditions.push(`\`${mapped}\` = ?`);
+      conditions.push(`${mapped} = $${values.length + 1}`);
       values.push(value);
     }
-    const scope = this.scopeFor(user);
+    const scope = this.scopeFor(user, values.length + 1);
     let where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : 'WHERE 1 = 1';
     where += scope.sql;
     values.push(...scope.values);
@@ -78,7 +79,7 @@ export default class BaseModel {
     const safePage = Math.max(Number(page) || 1, 1);
     const offset = (safePage - 1) * safeLimit;
     const [rows] = await pool.execute(
-      `SELECT * FROM \`${this.config.table}\` ${where} ORDER BY \`${safeSort}\` ${descending ? 'DESC' : 'ASC'} LIMIT ${safeLimit} OFFSET ${offset}`,
+      `SELECT * FROM ${this.config.table} ${where} ORDER BY ${safeSort} ${descending ? 'DESC' : 'ASC'} LIMIT ${safeLimit} OFFSET ${offset}`,
       values
     );
     return rows.map((row) => parseRow(row, this.config));
@@ -94,9 +95,9 @@ export default class BaseModel {
     const id = crypto.randomUUID();
     const fields = ['id', ...Object.keys(normalized)];
     const values = [id, ...Object.values(normalized)];
-    const placeholders = fields.map(() => '?').join(', ');
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(', ');
     await pool.execute(
-      `INSERT INTO \`${this.config.table}\` (${fields.map((field) => `\`${field}\``).join(', ')}) VALUES (${placeholders})`,
+      `INSERT INTO ${this.config.table} (${fields.join(', ')}) VALUES (${placeholders})`,
       values
     );
     return this.findById(id);
@@ -106,16 +107,16 @@ export default class BaseModel {
     const normalized = this.normalizeData(data);
     const fields = Object.keys(normalized);
     if (!fields.length) return this.findById(id);
-    const assignments = fields.map((field) => `\`${field}\` = ?`).join(', ');
+    const assignments = fields.map((field, index) => `${field} = $${index + 1}`).join(', ');
     await pool.execute(
-      `UPDATE \`${this.config.table}\` SET ${assignments} WHERE id = ?`,
+      `UPDATE ${this.config.table} SET ${assignments} WHERE id = $${fields.length + 1}`,
       [...Object.values(normalized), id]
     );
     return this.findById(id);
   }
 
   async remove(id) {
-    const [result] = await pool.execute(`DELETE FROM \`${this.config.table}\` WHERE id = ?`, [id]);
+    const [result] = await pool.execute(`DELETE FROM ${this.config.table} WHERE id = $1`, [id]);
     return result.affectedRows > 0;
   }
 }

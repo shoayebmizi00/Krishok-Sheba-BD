@@ -7,7 +7,7 @@ async function createNotification(connection, { userId, title, message, type = '
   if (!userId) return;
   await connection.execute(
     `INSERT INTO notifications (id, user_id, title, message, type, is_read, link)
-     VALUES (?, ?, ?, ?, ?, FALSE, ?)`,
+     VALUES ($1, $2, $3, $4, $5, FALSE, $6)`,
     [crypto.randomUUID(), userId, title, message, type, link]
   );
 }
@@ -60,7 +60,7 @@ async function validateCropListing(data, user) {
   if (data.images !== undefined && !Array.isArray(data.images)) {
     return { error: 'ফসলের ছবিগুলো সঠিকভাবে দিন' };
   }
-  const [users] = await pool.execute('SELECT full_name FROM users WHERE id = ? LIMIT 1', [user.id]);
+  const [users] = await pool.execute('SELECT full_name FROM users WHERE id = $1 LIMIT 1', [user.id]);
   return {
     data: {
       ...data,
@@ -86,7 +86,7 @@ async function createOrder(req, res) {
   try {
     await connection.beginTransaction();
     const [users] = await connection.execute(
-      'SELECT id, full_name, role, is_active FROM users WHERE id = ? LIMIT 1 FOR UPDATE',
+      'SELECT id, full_name, role, is_active FROM users WHERE id = $1 LIMIT 1 FOR UPDATE',
       [req.user.id]
     );
     const currentUser = users[0];
@@ -99,7 +99,7 @@ async function createOrder(req, res) {
               listing.status AS listing_status, listing.farmer_name, listing.id AS crop_listing_id
        FROM bids AS bid
        JOIN crop_listings AS listing ON listing.id = bid.listing_id
-       WHERE bid.id = ? FOR UPDATE`,
+       WHERE bid.id = $1 FOR UPDATE`,
       [bidId]
     );
     const bid = bids[0];
@@ -119,7 +119,7 @@ async function createOrder(req, res) {
       await connection.rollback();
       return res.status(validation.status).json({ message: validation.message });
     }
-    const [existing] = await connection.execute('SELECT id FROM orders WHERE bid_id = ? LIMIT 1', [bidId]);
+    const [existing] = await connection.execute('SELECT id FROM orders WHERE bid_id = $1 LIMIT 1', [bidId]);
     if (existing.length) {
       await connection.rollback();
       return res.status(409).json({ message: 'এই বিড থেকে ইতিমধ্যে অর্ডার তৈরি হয়েছে' });
@@ -139,7 +139,7 @@ async function createOrder(req, res) {
       `INSERT INTO orders
         (id, buyer_id, buyer_name, seller_id, seller_name, items, total_amount, status,
          delivery_address, delivery_district, payment_status, bid_id, payment_method)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, 'pending', ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, $9, 'pending', $10, $11)`,
       [
         orderId, currentUser.id, currentUser.full_name || 'ক্রেতা', bid.farmer_id,
         bid.farmer_name || 'কৃষক', JSON.stringify(items), totalAmount,
@@ -150,10 +150,10 @@ async function createOrder(req, res) {
     );
     await connection.execute(
       `UPDATE crop_listings
-       SET sold_quantity = sold_quantity + ?,
-           remaining_quantity = ?,
-           status = IF(? <= 0, 'sold_out', 'active')
-       WHERE id = ?`,
+       SET sold_quantity = sold_quantity + $1,
+           remaining_quantity = $2,
+           status = CASE WHEN $3 <= 0 THEN 'sold_out' ELSE 'active' END
+       WHERE id = $4`,
       [quantity, remaining, remaining, bid.listing_id]
     );
     await createNotification(connection, {
@@ -170,7 +170,7 @@ async function createOrder(req, res) {
       type: 'order',
       link: '/buyer-dashboard/orders'
     });
-    const [orders] = await connection.execute('SELECT * FROM orders WHERE id = ?', [orderId]);
+    const [orders] = await connection.execute('SELECT * FROM orders WHERE id = $1', [orderId]);
     await connection.commit();
     orders[0].items = parseJsonArray(orders[0].items);
     return res.status(201).json(orders[0]);
@@ -189,8 +189,8 @@ async function createEquipmentBooking(req, res) {
   }
   const [conflicts] = await pool.execute(
     `SELECT id FROM equipment_bookings
-     WHERE equipment_id = ? AND status IN ('pending','approved','confirmed','active')
-       AND start_date <= ? AND end_date >= ? LIMIT 1`,
+     WHERE equipment_id = $1 AND status IN ('pending','approved','confirmed','active')
+       AND start_date <= $2 AND end_date >= $3 LIMIT 1`,
     [equipment_id, end_date, start_date]
   );
   if (conflicts.length) return res.status(409).json({ message: 'নির্বাচিত তারিখে যন্ত্রপাতিটি উপলব্ধ নয়' });
@@ -202,7 +202,7 @@ async function createTransportBooking(req, res) {
   if (!vehicle_id || !pickup_date) return res.status(400).json({ message: 'পিকআপের তারিখ দিন' });
   const [conflicts] = await pool.execute(
     `SELECT id FROM transport_bookings
-     WHERE vehicle_id = ? AND pickup_date = ?
+     WHERE vehicle_id = $1 AND pickup_date = $2
        AND status IN ('pending','accepted','confirmed','in_transit') LIMIT 1`,
     [vehicle_id, pickup_date]
   );
@@ -218,7 +218,7 @@ async function canWriteRow(config, user, row) {
   if (config.participantField && row[config.participantField]?.includes(user.id)) return true;
   if (config.conversationField) {
     const [rows] = await pool.execute(
-      'SELECT id FROM conversations WHERE id = ? AND JSON_CONTAINS(participant_ids, JSON_QUOTE(?))',
+      'SELECT id FROM conversations WHERE id = $1 AND participant_ids @> jsonb_build_array($2::text)',
       [row[config.conversationField], user.id]
     );
     return rows.length > 0;
@@ -232,7 +232,7 @@ async function createConversation(req, res) {
     return res.status(400).json({ message: 'A conversation must include you and one other user' });
   }
 
-  const placeholders = participantIds.map(() => '?').join(', ');
+  const placeholders = participantIds.map((_, index) => `$${index + 1}`).join(', ');
   const [users] = await pool.execute(
     `SELECT id, full_name, is_active FROM users WHERE id IN (${placeholders})`,
     participantIds
@@ -244,7 +244,7 @@ async function createConversation(req, res) {
   let listing;
   if (req.body.listing_id) {
     const [listings] = await pool.execute(
-      'SELECT id, crop_name, district, farmer_id FROM crop_listings WHERE id = ? LIMIT 1',
+      'SELECT id, crop_name, district, farmer_id FROM crop_listings WHERE id = $1 LIMIT 1',
       [req.body.listing_id]
     );
     listing = listings[0];
@@ -256,9 +256,9 @@ async function createConversation(req, res) {
 
   const [existing] = await pool.execute(
     `SELECT * FROM conversations
-     WHERE listing_id <=> ?
-       AND JSON_CONTAINS(participant_ids, JSON_QUOTE(?))
-       AND JSON_CONTAINS(participant_ids, JSON_QUOTE(?))
+     WHERE listing_id IS NOT DISTINCT FROM $1
+       AND participant_ids @> jsonb_build_array($2::text)
+       AND participant_ids @> jsonb_build_array($3::text)
      LIMIT 1`,
     [listing?.id || null, participantIds[0], participantIds[1]]
   );
@@ -279,7 +279,7 @@ async function createConversation(req, res) {
   await pool.execute(
     `INSERT INTO conversations
       (id, participant_ids, participant_names, subject, listing_id, listing_name, last_message, last_message_date)
-     VALUES (?, ?, ?, ?, ?, ?, '', NOW())`,
+     VALUES ($1, $2, $3, $4, $5, $6, '', NOW())`,
     [
       id,
       JSON.stringify(participantIds),
@@ -289,7 +289,7 @@ async function createConversation(req, res) {
       listing?.crop_name || null
     ]
   );
-  const [created] = await pool.execute('SELECT * FROM conversations WHERE id = ?', [id]);
+  const [created] = await pool.execute('SELECT * FROM conversations WHERE id = $1', [id]);
   const conversation = created[0];
   conversation.participant_ids = parseJsonArray(conversation.participant_ids);
   conversation.participant_names = parseJsonArray(conversation.participant_names);
@@ -302,7 +302,7 @@ async function createMessage(req, res) {
   if (content.length > 5000) return res.status(400).json({ message: 'Message is too long' });
 
   const [conversations] = await pool.execute(
-    'SELECT id, participant_ids FROM conversations WHERE id = ? LIMIT 1',
+    'SELECT id, participant_ids FROM conversations WHERE id = $1 LIMIT 1',
     [req.body.conversation_id]
   );
   const conversation = conversations[0];
@@ -313,7 +313,7 @@ async function createMessage(req, res) {
   const receiverId = participantIds.find((participantId) => participantId !== req.user.id);
   if (!receiverId) return res.status(400).json({ message: 'Conversation recipient is invalid' });
 
-  const [senders] = await pool.execute('SELECT full_name FROM users WHERE id = ? LIMIT 1', [req.user.id]);
+  const [senders] = await pool.execute('SELECT full_name FROM users WHERE id = $1 LIMIT 1', [req.user.id]);
   const senderName = senders[0]?.full_name || 'User';
   const id = crypto.randomUUID();
   const connection = await pool.getConnection();
@@ -321,13 +321,13 @@ async function createMessage(req, res) {
     await connection.beginTransaction();
     await connection.execute(
       `INSERT INTO messages (id, conversation_id, sender_id, receiver_id, sender_name, content)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6)`,
       [id, conversation.id, req.user.id, receiverId, senderName, content]
     );
     await connection.execute(
       `UPDATE conversations
-       SET last_message = ?, last_message_by = ?, last_message_date = NOW()
-       WHERE id = ?`,
+       SET last_message = $1, last_message_by = $2, last_message_date = NOW()
+       WHERE id = $3`,
       [content, req.user.id, conversation.id]
     );
     await createNotification(connection, {
@@ -337,7 +337,7 @@ async function createMessage(req, res) {
       type: 'message',
       link: `/messages/${conversation.id}`
     });
-    const [messages] = await connection.execute('SELECT * FROM messages WHERE id = ?', [id]);
+    const [messages] = await connection.execute('SELECT * FROM messages WHERE id = $1', [id]);
     await connection.commit();
     return res.status(201).json(messages[0]);
   } catch (error) {
@@ -419,7 +419,7 @@ export function createResourceController(model, config) {
         }
         if (config.route === 'bids') {
           const [listings] = await pool.execute(
-            'SELECT remaining_quantity, unit, status FROM crop_listings WHERE id = ? LIMIT 1',
+            'SELECT remaining_quantity, unit, status FROM crop_listings WHERE id = $1 LIMIT 1',
             [data.listing_id]
           );
           const listing = listings[0];
@@ -433,7 +433,7 @@ export function createResourceController(model, config) {
         }
         if (config.route === 'stories') {
           data.status = req.user.role === 'admin' ? (data.status || 'approved') : 'pending';
-          const [authors] = await pool.execute('SELECT full_name, district FROM users WHERE id = ? LIMIT 1', [req.user.id]);
+          const [authors] = await pool.execute('SELECT full_name, district FROM users WHERE id = $1 LIMIT 1', [req.user.id]);
           data.author_name = authors[0]?.full_name || 'ব্যবহারকারী';
           data.district = data.district || authors[0]?.district;
         }
@@ -454,7 +454,7 @@ export function createResourceController(model, config) {
         }
         if (config.conversationField) {
           const [conversations] = await pool.execute(
-            'SELECT id FROM conversations WHERE id = ? AND JSON_CONTAINS(participant_ids, JSON_QUOTE(?))',
+            'SELECT id FROM conversations WHERE id = $1 AND participant_ids @> jsonb_build_array($2::text)',
             [data[config.conversationField], req.user.id]
           );
           if (!conversations.length) {

@@ -9,8 +9,8 @@ router.get('/equipment/:id', async (req, res, next) => {
     if (!start_date || !end_date) return res.status(400).json({ message: 'শুরু ও শেষ তারিখ দিন' });
     const [rows] = await pool.execute(
       `SELECT id FROM equipment_bookings
-       WHERE equipment_id = ? AND status IN ('pending','approved','confirmed','active')
-         AND start_date <= ? AND end_date >= ? LIMIT 1`,
+       WHERE equipment_id = $1 AND status IN ('pending','approved','confirmed','active')
+         AND start_date <= $2 AND end_date >= $3 LIMIT 1`,
       [req.params.id, end_date, start_date]
     );
     res.json({ available: rows.length === 0 });
@@ -25,7 +25,7 @@ router.get('/transport/:id', async (req, res, next) => {
     if (!pickup_date) return res.status(400).json({ message: 'পিকআপের তারিখ দিন' });
     const [rows] = await pool.execute(
       `SELECT id FROM transport_bookings
-       WHERE vehicle_id = ? AND pickup_date = ?
+       WHERE vehicle_id = $1 AND pickup_date = $2
          AND status IN ('pending','accepted','confirmed','in_transit') LIMIT 1`,
       [req.params.id, pickup_date]
     );

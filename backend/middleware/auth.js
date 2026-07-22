@@ -25,7 +25,7 @@ export async function authenticate(req, res, next) {
   try {
     const claims = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     if (!claims?.id) return res.status(401).json({ code: 'INVALID_TOKEN', message: 'Authentication token is invalid.' });
-    const [rows] = await pool.execute('SELECT id, email, role, is_active FROM users WHERE id = ? LIMIT 1', [claims.id]);
+    const [rows] = await pool.execute('SELECT id, email, role, is_active FROM users WHERE id = $1 LIMIT 1', [claims.id]);
     const user = rows[0];
     if (!user?.is_active) return res.status(401).json({ code: 'ACCOUNT_UNAVAILABLE', message: 'This account is no longer available.' });
     req.user = { id: user.id, email: user.email, role: user.role };
