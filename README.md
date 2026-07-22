@@ -1,46 +1,34 @@
 # KRISHOK-SHEBA BD
 
-Self-hosted agricultural marketplace built with React, Vite, Tailwind CSS, Express, MySQL, JWT, bcryptjs, and Multer.
+Agricultural marketplace built with React, Vite, Tailwind CSS, Express,
+PostgreSQL, JWT, bcryptjs, and Multer. Supabase PostgreSQL is used only through
+the Express backend; authentication remains application-managed JWT/bcrypt.
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 22
 - npm 10+
-- MySQL 8+
+- PostgreSQL 15+
 
 ## Setup
 
-1. Create the database:
-
-   ```powershell
-   mysql -u root -p < database/schema.sql
-   ```
-
-2. Configure environment files:
+1. Copy the environment templates:
 
    ```powershell
    Copy-Item frontend/.env.example frontend/.env
    Copy-Item backend/.env.example backend/.env
    ```
 
-   Update the MySQL credentials and replace `JWT_SECRET` in `backend/.env`.
+2. Set `DATABASE_URL` to a PostgreSQL connection URL, set `DB_SSL` as required
+   by the provider, and replace `JWT_SECRET`. Never place a database URL or
+   secret key in `frontend/.env`.
 
-3. Install dependencies:
+3. Install dependencies and start the applications:
 
    ```powershell
    npm.cmd --prefix frontend install
    npm.cmd --prefix backend install
-   ```
-
-4. Start the API:
-
-   ```powershell
    npm.cmd --prefix backend start
-   ```
-
-5. In another terminal, start the frontend:
-
-   ```powershell
    npm.cmd --prefix frontend run dev
    ```
 
@@ -50,63 +38,58 @@ API: `http://localhost:5000/api`
 
 Health check: `http://localhost:5000/api/health`
 
-On Windows PowerShell systems that allow npm scripts, `npm` can be used instead of `npm.cmd`.
-
-## Local Demo Mode
-
-Vite development uses the local demo API by default, so pages remain testable when MySQL or Express is stopped. Demo changes persist in browser `localStorage`.
-
-Set `VITE_USE_LOCAL_API=false` in `frontend/.env` to use the Express API instead.
-
-All demo accounts use password `123456`:
-
-- `admin@example.com`
-- `farmer@example.com`
-- `buyer@example.com`
-- `equipment@example.com`
-- `transport@example.com`
-
-## Administrator Account
-
-Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME`, then create or promote the
-account with the idempotent bootstrap command:
-
-```sh
-npm --prefix backend run admin:create
-```
-
-See [docs/AUTHENTICATION_RECOVERY_ADMIN.md](docs/AUTHENTICATION_RECOVERY_ADMIN.md)
-for Render Shell usage and intentional password replacement.
-
-## Password Reset
-
-Password recovery requires SMTP configuration. Reset tokens are never returned by
-the API or logged. Configure the SMTP variables documented in
-[docs/AUTHENTICATION_RECOVERY_ADMIN.md](docs/AUTHENTICATION_RECOVERY_ADMIN.md).
-
-## Production uploads
-
-Render's local filesystem is temporary. Configure these backend environment variables for permanent image storage:
-
-```text
-CLOUDINARY_CLOUD_NAME=...
-CLOUDINARY_API_KEY=...
-CLOUDINARY_API_SECRET=...
-```
-
-Without Cloudinary, production uploads are stored persistently in Aiven MySQL. Local development continues to use the local `uploads` directory.
-
 ## Database migrations
 
-The backend applies idempotent SQL migrations before starting:
+The backend applies ordered PostgreSQL migrations from `database/postgresql`
+before startup:
 
 ```powershell
 npm.cmd --prefix backend run migrate
 ```
 
+During the Aiven-to-Supabase transition, source data can be inventoried without
+writing to PostgreSQL:
+
+```powershell
+npm.cmd --prefix backend run data:transfer
+```
+
+Adding `-- --execute` performs the resumable upsert after backups and approval.
+Validation is separate:
+
+```powershell
+npm.cmd --prefix backend run data:validate
+```
+
+See [the PostgreSQL migration runbook](docs/POSTGRESQL_MIGRATION.md) before any
+production cutover. The original MySQL schema and migrations are intentionally
+retained until production data and rollback readiness are verified.
+
+## Local demo mode
+
+Vite development uses the local demo API by default. Set
+`VITE_USE_LOCAL_API=false` to use Express. Demo state persists in browser
+`localStorage`.
+
+## Administrator and password recovery
+
+Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME`, then run:
+
+```powershell
+npm.cmd --prefix backend run admin:create
+```
+
+SMTP and recovery configuration are documented in
+[the authentication runbook](docs/AUTHENTICATION_RECOVERY_ADMIN.md).
+
+## Production uploads
+
+Render's local filesystem is temporary. Configure Cloudinary for permanent
+uploads. Without Cloudinary, uploads are stored in PostgreSQL `bytea` rows.
+
 ## Documentation
 
 - [API reference](docs/API.md)
-- [Migration report](docs/MIGRATION_REPORT.md)
+- [PostgreSQL migration runbook](docs/POSTGRESQL_MIGRATION.md)
 - [Postman collection](postman/KRISHOK-SHEBA-BD.postman_collection.json)
-- [Database schema](database/schema.sql)
+- [PostgreSQL schema](database/postgresql/001_initial_schema.sql)
