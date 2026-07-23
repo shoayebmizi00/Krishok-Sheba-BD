@@ -24,29 +24,29 @@ router.get('/public-summary', async (_req, res, next) => {
 
 router.get('/market-price-trends', async (_req, res, next) => {
   try {
-    const [rows] = await pool.execute(`WITH market_rows AS (
-      SELECT TO_JSONB(row_data) data FROM market_prices row_data
-    ), normalized AS (
-      SELECT
-        data->>'crop_name' crop_name,
-        COALESCE(
-          NULLIF(data->>'date','')::timestamp,
-          NULLIF(data->>'created_at','')::timestamp
-        ) recorded_at,
-        NULLIF(data->>'price','')::numeric price
-      FROM market_rows
-    )
-    SELECT
-      crop_name,
-      TO_CHAR(DATE_TRUNC('month',recorded_at),'YYYY-MM') month,
-      AVG(price) price
-    FROM normalized
-    WHERE crop_name IS NOT NULL
-      AND price IS NOT NULL
-      AND recorded_at>=CURRENT_DATE-INTERVAL '6 months'
-    GROUP BY crop_name,DATE_TRUNC('month',recorded_at)
-    ORDER BY DATE_TRUNC('month',recorded_at),crop_name`);
-    res.json(rows);
+    const [rows] = await pool.execute('SELECT * FROM market_prices LIMIT 1000');
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 6);
+    const grouped = new Map();
+
+    for (const row of rows) {
+      const cropName = row.crop_name;
+      const recordedAt = row.date || row.created_at || row.created_date;
+      const price = Number(row.price);
+      const recordedDate = recordedAt ? new Date(recordedAt) : null;
+      if (!cropName || !Number.isFinite(price) || !recordedDate || Number.isNaN(recordedDate.valueOf()) || recordedDate < cutoff) continue;
+      const month = recordedDate.toISOString().slice(0, 7);
+      const key = `${cropName}\u0000${month}`;
+      const aggregate = grouped.get(key) || { crop_name: cropName, month, total: 0, count: 0 };
+      aggregate.total += price;
+      aggregate.count += 1;
+      grouped.set(key, aggregate);
+    }
+
+    const trends = [...grouped.values()]
+      .map(({ crop_name, month, total, count }) => ({ crop_name, month, price: total / count }))
+      .sort((left, right) => left.month.localeCompare(right.month) || left.crop_name.localeCompare(right.crop_name));
+    res.json(trends);
   } catch (error) { next(error); }
 });
 
