@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SuccessStories() {
-  const { data: stories = [], isLoading } = useQuery({
+  const { data: stories = [], isLoading, isError } = useQuery({
     queryKey: ['home', 'stories'],
     queryFn: () => apiClient.entities.Story.filter({ status: 'approved' }, '-created_date', 3)
   });
@@ -24,7 +24,7 @@ export default function SuccessStories() {
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {isLoading && [1, 2, 3].map((item) => <Skeleton key={item} className="h-64 rounded-2xl" />)}
-          {!isLoading && stories.map((story) => (
+          {!isLoading && !isError && stories.map((story) => (
             <Link key={story.id} to={`/stories/${story.id}`} className="group overflow-hidden rounded-2xl border bg-card hover:shadow-lg">
               {story.image ? <img src={story.image} alt="" loading="lazy" className="h-36 w-full object-cover" /> : (
                 <div className="flex h-36 items-center justify-center bg-primary/10"><BookOpen className="h-12 w-12 text-primary/50" /></div>
@@ -37,7 +37,8 @@ export default function SuccessStories() {
             </Link>
           ))}
         </div>
-        {!isLoading && stories.length === 0 && <p className="text-center text-muted-foreground">অনুমোদিত গল্প এখনো প্রকাশিত হয়নি।</p>}
+        {isError && <p className="text-center text-destructive">গল্পের তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।</p>}
+        {!isLoading && !isError && stories.length === 0 && <p className="text-center text-muted-foreground">অনুমোদিত গল্প এখনো প্রকাশিত হয়নি।</p>}
       </div>
     </section>
   );

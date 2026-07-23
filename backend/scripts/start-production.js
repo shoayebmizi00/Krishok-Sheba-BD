@@ -7,7 +7,7 @@ const stageTimeoutMs = Number.isInteger(configuredTimeout) && configuredTimeout 
 
 const stages = [
   ['PostgreSQL connection', 'scripts/check-connection.js', []],
-  ['PostgreSQL migration', 'scripts/migrate.js', []],
+  ['PostgreSQL schema initialization', 'scripts/initialize-database.js', []],
   ['PostgreSQL seed', 'scripts/seed.js', []],
   ['admin bootstrap', 'scripts/create-admin.js', ['--if-configured']]
 ];

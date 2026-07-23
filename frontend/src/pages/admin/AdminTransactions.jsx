@@ -10,6 +10,7 @@ import StatCard from '@/components/dashboard/StatCard';
 import StatusBadge from '@/components/shared/StatusBadge';
 import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
 import { formatCurrency, formatDate } from '@/utils/constants';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 const COLORS = ['#15803d', '#f59e0b', '#2563eb', '#7c3aed', '#e11d48', '#64748b'];
 export default function AdminTransactions() {
@@ -18,6 +19,7 @@ export default function AdminTransactions() {
   const [summary, setSummary] = useState(null);
   const [filters, setFilters] = useState({ search: '', status: '', payment_method: '', date_from: '', date_to: '', page: 1, limit: 30 });
   const [loading, setLoading] = useState(true);
+  const { options: paymentMethods } = useAppSettings('payment_method');
   const load = async (next = filters) => {
     const [list, totals] = await Promise.all([apiClient.transactions.adminList(next), apiClient.transactions.adminSummary()]);
     setItems(list.items); setSummary(totals); setLoading(false);
@@ -49,7 +51,7 @@ export default function AdminTransactions() {
       <div className="grid gap-3 rounded-2xl border bg-card p-4 md:grid-cols-3 xl:grid-cols-6">
         <div className="relative md:col-span-2"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" placeholder="কোড, ক্রেতা বা বিক্রেতা" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} /></div>
         <Select value={filters.status || 'all'} onValueChange={(value) => setFilters({ ...filters, status: value === 'all' ? '' : value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">সব অবস্থা</SelectItem>{['sent','received','verified','failed','cancelled','cod_pending'].map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
-        <Select value={filters.payment_method || 'all'} onValueChange={(value) => setFilters({ ...filters, payment_method: value === 'all' ? '' : value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">সব পদ্ধতি</SelectItem>{['cash_on_delivery','bkash','nagad','rocket','upay','bank_transfer','visa','mastercard','amex','cash'].map((value) => <SelectItem key={value} value={value}>{value.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
+        <Select value={filters.payment_method || 'all'} onValueChange={(value) => setFilters({ ...filters, payment_method: value === 'all' ? '' : value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">সব পদ্ধতি</SelectItem>{paymentMethods.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
         <Input type="date" value={filters.date_from} onChange={(e) => setFilters({ ...filters, date_from: e.target.value })} />
         <Button onClick={apply}>ফিল্টার করুন</Button>
       </div>

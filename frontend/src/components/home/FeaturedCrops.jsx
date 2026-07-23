@@ -11,9 +11,9 @@ import defaultCropImage from '@/assets/hero/hero-rice.jpg';
 const DEFAULT_CROP_IMAGE = defaultCropImage;
 
 export default function FeaturedCrops() {
-  const { data: crops = [], isLoading } = useQuery({
+  const { data: crops = [], isLoading, isError } = useQuery({
     queryKey: ['home', 'crops'],
-    queryFn: () => apiClient.entities.CropListing.list('-created_date', 6)
+    queryFn: () => apiClient.entities.CropListing.filter({ status: 'active' }, '-created_date', 6)
   });
 
   return (
@@ -31,7 +31,7 @@ export default function FeaturedCrops() {
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {isLoading && [1, 2, 3, 4, 5, 6].map((item) => <Skeleton key={item} className="h-72 rounded-2xl" />)}
-          {!isLoading && crops.map((crop) => (
+          {!isLoading && !isError && crops.map((crop) => (
             <Link
               key={crop.id}
               to={`/listing/${crop.id}`}
@@ -58,7 +58,10 @@ export default function FeaturedCrops() {
             </Link>
           ))}
         </div>
-        {!isLoading && crops.length === 0 && (
+        {isError && (
+          <p className="rounded-2xl border border-destructive/30 p-8 text-center text-destructive">ফসলের তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।</p>
+        )}
+        {!isLoading && !isError && crops.length === 0 && (
           <p className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground">এখনো কোনো সক্রিয় ফসল নেই।</p>
         )}
       </div>

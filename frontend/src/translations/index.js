@@ -38,7 +38,6 @@ const bn = {
     accountType: 'অ্যাকাউন্টের ধরন',
     loginSuccess: 'সফলভাবে লগইন হয়েছে',
     invalidCredentials: 'ইমেইল বা পাসওয়ার্ড সঠিক নয়',
-    demoAccounts: 'ডেমো অ্যাকাউন্ট (পাসওয়ার্ড: 123456)',
     registerSuccess: 'সফলভাবে নিবন্ধন সম্পন্ন হয়েছে',
     accountCreated: 'অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। এখন লগইন করুন।',
     registerFailed: 'নিবন্ধন সম্পন্ন হয়নি',

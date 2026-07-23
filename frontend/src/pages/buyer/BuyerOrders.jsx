@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 const emptyForm = { quantity: '', delivery_location: '', district: '', payment_method: 'cash_on_delivery' };
 
@@ -24,6 +25,8 @@ export default function BuyerOrders() {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const { options: paymentMethods } = useAppSettings('payment_method');
+  const { options: districts } = useAppSettings('district');
 
   const load = async () => {
     const [orderData, bids] = await Promise.all([
@@ -89,8 +92,8 @@ export default function BuyerOrders() {
           <div className="space-y-4">
             <label className="text-sm font-medium">পরিমাণ<Input type="number" min="1" max={Math.min(Number(selectedListing?.remaining_quantity || Infinity), Number(selectedBid?.quantity_requested || Infinity))} className="mt-1" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} /></label>
             <label className="text-sm font-medium">পিকআপ/ডেলিভারি স্থান<Input className="mt-1" value={form.delivery_location} onChange={(e) => setForm({ ...form, delivery_location: e.target.value })} /></label>
-            <label className="text-sm font-medium">গন্তব্য জেলা<Input className="mt-1" value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} /></label>
-            <label className="text-sm font-medium">পেমেন্ট পদ্ধতি<Select value={form.payment_method} onValueChange={(payment_method) => setForm({ ...form, payment_method })}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash_on_delivery">ক্যাশ অন ডেলিভারি</SelectItem><SelectItem value="bkash">বিকাশ</SelectItem><SelectItem value="nagad">নগদ</SelectItem><SelectItem value="rocket">রকেট</SelectItem><SelectItem value="upay">উপায়</SelectItem><SelectItem value="bank_transfer">ব্যাংক ট্রান্সফার</SelectItem><SelectItem value="cash">নগদ টাকা</SelectItem></SelectContent></Select></label>
+            <label className="text-sm font-medium">গন্তব্য জেলা<Select value={form.district} onValueChange={(district) => setForm({ ...form, district })}><SelectTrigger className="mt-1"><SelectValue placeholder="জেলা নির্বাচন করুন" /></SelectTrigger><SelectContent>{districts.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></label>
+            <label className="text-sm font-medium">পেমেন্ট পদ্ধতি<Select value={form.payment_method} onValueChange={(payment_method) => setForm({ ...form, payment_method })}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{paymentMethods.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></label>
             <Button onClick={createOrder} disabled={submitting} className="w-full">{submitting ? 'অর্ডার তৈরি হচ্ছে...' : 'অর্ডার নিশ্চিত করুন'}</Button>
           </div>
         </DialogContent>

@@ -45,30 +45,6 @@ export const PAYMENT_METHODS = [
     type: 'bank'
   },
   {
-    id: 'visa',
-    group: 'কার্ড পেমেন্ট',
-    name: 'Visa',
-    description: 'Debit/Credit Card',
-    logo: '/assets/payment/visa.svg',
-    type: 'card'
-  },
-  {
-    id: 'mastercard',
-    group: 'কার্ড পেমেন্ট',
-    name: 'MasterCard',
-    description: 'Debit/Credit Card',
-    logo: '/assets/payment/mastercard.svg',
-    type: 'card'
-  },
-  {
-    id: 'amex',
-    group: 'কার্ড পেমেন্ট',
-    name: 'American Express',
-    description: 'Premium Card Payment',
-    logo: '/assets/payment/amex.svg',
-    type: 'card'
-  },
-  {
     id: 'cash_on_delivery',
     group: 'অন্যান্য',
     name: 'Cash on Delivery',

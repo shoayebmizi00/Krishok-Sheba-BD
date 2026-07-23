@@ -26,7 +26,6 @@ const en = {
     accountType: 'Account Type',
     loginSuccess: 'Logged in successfully',
     invalidCredentials: 'Email or password is incorrect',
-    demoAccounts: 'Demo accounts (password: 123456)',
     registerSuccess: 'Registration completed successfully',
     accountCreated: 'Account created successfully. Please log in.',
     registerFailed: 'Registration failed',

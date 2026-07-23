@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Banknote, CircleDollarSign, Clock3, PackageCheck, ReceiptText, ShieldCheck, XCircle } from 'lucide-react';
 import { apiClient } from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
@@ -12,29 +12,31 @@ import { formatCurrency, formatDate } from '@/utils/constants';
 export default function FarmerTransactions() {
   const { toast } = useToast();
   const [transactions, setTransactions] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const load = async () => {
-    const result = await apiClient.transactions.myReceived(1, 30);
+    const [result, totals] = await Promise.all([
+      apiClient.transactions.myReceived(1, 30),
+      apiClient.dashboard.farmerTransactionsSummary()
+    ]);
     setTransactions(result.items);
+    setSummary(totals);
     setLoading(false);
   };
-  useEffect(() => { load().catch(() => setLoading(false)); }, []);
-  const summary = useMemo(() => ({
-    total: transactions.reduce((sum, item) => sum + Number(item.amount || 0), 0),
-    pending: transactions.filter((item) => ['pending', 'sent'].includes(item.status)).reduce((sum, item) => sum + Number(item.amount || 0), 0),
-    verified: transactions.filter((item) => ['received', 'verified', 'completed'].includes(item.status)).reduce((sum, item) => sum + Number(item.amount || 0), 0),
-    cod: transactions.filter((item) => item.payment_method === 'cash_on_delivery').length
-  }), [transactions]);
+  useEffect(() => { load().catch(() => { setError(true); setLoading(false); }); }, []);
   const update = async (id, status) => {
     try {
       const updated = await apiClient.transactions.updateStatus(id, status);
       setTransactions((items) => items.map((item) => item.id === id ? updated : item));
+      setSummary(await apiClient.dashboard.farmerTransactionsSummary());
       toast({ title: status === 'received' ? 'পেমেন্ট গ্রহণ করা হয়েছে' : 'লেনদেন বাতিল করা হয়েছে' });
     } catch (error) {
       toast({ title: 'কিছু ভুল হয়েছে, আবার চেষ্টা করুন', description: error.message, variant: 'destructive' });
     }
   };
   if (loading) return <TransactionSkeleton />;
+  if (error || !summary) return <p className="rounded-xl border border-destructive/30 p-6 text-center text-destructive">লেনদেনের তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।</p>;
 
   const cards = [
     [Banknote, 'মোট প্রাপ্ত পেমেন্ট', formatCurrency(summary.total), 'text-emerald-700', 'bg-emerald-100'],

@@ -40,19 +40,19 @@ Health check: `http://localhost:5000/api/health`
 
 ## Database initialization
 
-The backend uses one PostgreSQL connection URL and applies ordered migrations
-from `database/postgresql`. Initialize a fresh database with:
+The backend uses one PostgreSQL connection URL and an idempotent schema in
+`database/postgresql`. Initialize a fresh database with:
 
 ```powershell
 npm.cmd --prefix backend run db:init
 ```
 
-This runs migrations and the idempotent configuration seed. It does not create
-sample users, orders, messages, or transactions. Either part can also be run
+This runs initialization and the idempotent configuration seed. It does not
+create users, orders, messages, or transactions. Either part can also be run
 independently:
 
 ```powershell
-npm.cmd --prefix backend run migrate
+npm.cmd --prefix backend run db:schema
 npm.cmd --prefix backend run db:seed
 ```
 
@@ -64,14 +64,13 @@ npm.cmd --prefix backend run db:check
 ```
 
 `npm start` runs the safe, repeatable initialization before starting Express.
-See [the PostgreSQL deployment runbook](docs/POSTGRESQL_MIGRATION.md) before the
+See [the PostgreSQL deployment runbook](docs/POSTGRESQL_DEPLOYMENT.md) before the
 existing Render service is switched.
 
-## Local demo mode
+## Local development
 
-Vite development uses the local demo API by default. Set
-`VITE_USE_LOCAL_API=false` to use Express. Demo state persists in browser
-`localStorage`.
+The frontend always uses the configured Express API. Set `VITE_API_URL` when
+the backend is not running at `http://localhost:5000/api`.
 
 ## Administrator and password recovery
 
@@ -92,6 +91,6 @@ uploads. Without Cloudinary, uploads are stored in PostgreSQL `bytea` rows.
 ## Documentation
 
 - [API reference](docs/API.md)
-- [PostgreSQL migration runbook](docs/POSTGRESQL_MIGRATION.md)
+- [PostgreSQL deployment runbook](docs/POSTGRESQL_DEPLOYMENT.md)
 - [Postman collection](postman/KRISHOK-SHEBA-BD.postman_collection.json)
-- [PostgreSQL schema](database/postgresql/001_initial_schema.sql)
+- [PostgreSQL schema](database/postgresql/schema.sql)

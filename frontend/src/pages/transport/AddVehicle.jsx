@@ -7,9 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import BackButton from '@/components/shared/BackButton';
-import { DISTRICTS } from '@/utils/constants';
 import { Upload } from 'lucide-react';
-import { VEHICLE_TYPES } from '@/utils/constants';
 import { useAppSettings } from '@/hooks/useAppSettings';
 
 export default function AddVehicle() {
@@ -25,8 +23,8 @@ export default function AddVehicle() {
     district: '',
     description: ''
   });
-  const { options: vehicleTypes } = useAppSettings('vehicle_category', VEHICLE_TYPES);
-  const { options: districts } = useAppSettings('district', DISTRICTS.map((district) => ({ value: district, label: district })));
+  const { options: vehicleTypes } = useAppSettings('vehicle_category');
+  const { options: districts } = useAppSettings('district');
 
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 

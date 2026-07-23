@@ -23,15 +23,9 @@ export const AuthProvider = ({ children }) => {
       const currentUser = await apiClient.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
-      if (import.meta.env.DEV) {
-        console.info(`[KRISHOK-SHEBA] Authenticated as ${currentUser.role}: ${currentUser.email}`);
-      }
     } catch {
       setUser(null);
       setIsAuthenticated(false);
-      if (import.meta.env.DEV) {
-        console.info('[KRISHOK-SHEBA] No active demo session');
-      }
     } finally {
       setIsLoadingAuth(false);
       setAuthChecked(true);

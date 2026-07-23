@@ -19,14 +19,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const t = useTranslation();
   const { toast } = useToast();
-  const demoAccounts = [
-    ['roles.admin', 'admin@example.com'],
-    ['roles.farmer', 'farmer@example.com'],
-    ['roles.buyer', 'buyer@example.com'],
-    ['roles.equipmentOwner', 'equipment@example.com'],
-    ['roles.transportProvider', 'transport@example.com']
-  ];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -107,27 +99,6 @@ export default function Login() {
           )}
         </Button>
       </form>
-      {import.meta.env.DEV && (
-        <div className="mt-5 pt-5 border-t border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-2">{t('auth.demoAccounts')}</p>
-          <div className="flex flex-wrap gap-2">
-            {demoAccounts.map(([labelKey, demoEmail]) => (
-              <Button
-                key={demoEmail}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setEmail(demoEmail);
-                  setPassword('123456');
-                }}
-              >
-                {t(labelKey)}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
     </AuthLayout>
   );
 }

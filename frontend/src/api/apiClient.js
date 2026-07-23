@@ -1,12 +1,9 @@
-import { localApi } from './localApi.js';
-
 const DEFAULT_API_URL = import.meta.env.PROD
   ? 'https://krishok-sheba-bd.onrender.com'
   : 'http://localhost:5000/api';
 const configuredApiUrl = (import.meta.env.VITE_API_URL || DEFAULT_API_URL).replace(/\/+$/, '');
 const API_URL = configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`;
 const TOKEN_KEY = 'krishok_sheba_token';
-const USE_LOCAL_API = import.meta.env.DEV && import.meta.env.VITE_USE_LOCAL_API !== 'false';
 const REQUEST_TIMEOUT_MS = 30000;
 
 function getToken() {
@@ -130,8 +127,15 @@ const remoteApi = {
     adminSummary: () => request('/admin/transactions/summary')
   },
   dashboard: {
+    publicSummary: () => request('/dashboard/public-summary'),
+    marketPriceTrends: () => request('/dashboard/market-price-trends'),
     farmerSummary: () => request('/dashboard/farmer-summary'),
-    adminSummary: () => request('/dashboard/admin-summary')
+    farmerTransactionsSummary: () => request('/dashboard/farmer-transactions-summary'),
+    buyerSummary: () => request('/dashboard/buyer-summary'),
+    equipmentOwnerSummary: () => request('/dashboard/equipment-owner-summary'),
+    transportProviderSummary: () => request('/dashboard/transport-provider-summary'),
+    adminSummary: () => request('/dashboard/admin-summary'),
+    adminReport: () => request('/dashboard/admin-report')
   },
   bookings: {
     equipment: {
@@ -207,8 +211,4 @@ const remoteApi = {
   }
 };
 
-export const apiClient = USE_LOCAL_API ? localApi : remoteApi;
-
-if (import.meta.env.DEV) {
-  console.info(`[KRISHOK-SHEBA] API mode: ${USE_LOCAL_API ? 'local demo data' : API_URL}`);
-}
+export const apiClient = remoteApi;

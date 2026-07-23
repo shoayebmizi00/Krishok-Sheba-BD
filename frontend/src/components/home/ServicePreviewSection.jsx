@@ -18,9 +18,13 @@ export default function ServicePreviewSection({ type }) {
   const title = equipment ? 'যন্ত্রপাতি ভাড়া' : 'পরিবহন বুকিং';
   const subtitle = equipment ? 'সর্বশেষ উপলভ্য কৃষি যন্ত্রপাতি' : 'ফসল পরিবহনের জন্য উপলভ্য যানবাহন';
   const Icon = equipment ? Wrench : Truck;
-  const { data: items = [], isLoading } = useQuery({
+  const { data: items = [], isLoading, isError } = useQuery({
     queryKey: ['home', type],
-    queryFn: () => entity.list('-created_date', 4)
+    queryFn: () => entity.filter(
+      { availability: 'available', approval_status: 'approved' },
+      '-created_date',
+      4
+    )
   });
 
   return (
@@ -35,7 +39,7 @@ export default function ServicePreviewSection({ type }) {
         </div>
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {isLoading && [1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-64 rounded-2xl" />)}
-          {!isLoading && items.map((item) => (
+          {!isLoading && !isError && items.map((item) => (
             <Link key={item.id} to={`${route}?item=${item.id}`} className="group overflow-hidden rounded-2xl border bg-card hover:shadow-lg">
               {item.images?.[0] ? (
                 <img
@@ -67,6 +71,8 @@ export default function ServicePreviewSection({ type }) {
             </Link>
           ))}
         </div>
+        {isError && <p className="mt-5 rounded-2xl border border-destructive/30 p-6 text-center text-destructive">সেবার তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।</p>}
+        {!isLoading && !isError && items.length === 0 && <p className="mt-5 rounded-2xl border border-dashed p-6 text-center text-muted-foreground">বর্তমানে কোনো সেবা উপলভ্য নেই।</p>}
       </div>
     </section>
   );

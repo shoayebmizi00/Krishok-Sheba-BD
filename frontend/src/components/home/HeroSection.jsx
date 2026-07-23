@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, ArrowRight, ChevronLeft, ChevronRight, Sprout, TrendingUp, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSummary } from '@/hooks/usePublicSummary';
 import heroMain from '@/assets/hero/hero-main.jpg';
 import heroEquipment from '@/assets/hero/hero-equipment.jpg';
 import heroTea from '@/assets/hero/hero-tea.jpg';
@@ -21,6 +22,7 @@ const heroSlides = [
 
 export default function HeroSection() {
   const t = useTranslation();
+  const { data: publicSummary = {}, isLoading: isSummaryLoading, isError: isSummaryError } = usePublicSummary();
   const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
@@ -71,9 +73,9 @@ export default function HeroSection() {
   ];
 
   const stats = [
-    { num: "10,000+", label: t('farmers') },
-    { num: "5,000+", label: t('buyers') },
-    { num: "64", label: t('districts') },
+    { num: publicSummary.farmers, label: t('farmers') },
+    { num: publicSummary.buyers, label: t('buyers') },
+    { num: publicSummary.districts, label: t('districts') },
   ];
 
   return (
@@ -122,7 +124,9 @@ export default function HeroSection() {
             <div className="flex gap-6 pt-4">
               {stats.map((s) =>
               <div key={s.label}>
-                  <div className="font-heading text-xl font-bold text-white dark:text-white">{s.num}</div>
+                  <div className="font-heading text-xl font-bold text-white dark:text-white">
+                    {isSummaryLoading ? '…' : isSummaryError ? '—' : Number(s.num || 0).toLocaleString('bn-BD')}
+                  </div>
                   <div className="text-xs text-white/70 dark:text-gray-400">{s.label}</div>
                 </div>
               )}

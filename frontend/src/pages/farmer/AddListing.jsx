@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { CROP_CATEGORIES, DISTRICTS } from '@/utils/constants';
 import { Upload } from 'lucide-react';
 import BackButton from '@/components/shared/BackButton';
 import { useAppSettings } from '@/hooks/useAppSettings';
@@ -23,12 +22,9 @@ export default function AddListing() {
     expected_price: '', location: '', district: '', description: '',
     listing_type: 'ready', images: []
   });
-  const { options: cropCategories } = useAppSettings('crop_category', CROP_CATEGORIES);
-  const { options: units } = useAppSettings('unit', [
-    { value: 'kg', label: 'কেজি' }, { value: 'mon', label: 'মণ' },
-    { value: 'ton', label: 'টন' }, { value: 'piece', label: 'পিস' }
-  ]);
-  const { options: districts } = useAppSettings('district', DISTRICTS.map((district) => ({ value: district, label: district })));
+  const { options: cropCategories } = useAppSettings('crop_category');
+  const { options: units } = useAppSettings('unit');
+  const { options: districts } = useAppSettings('district');
   useEffect(() => {
     if (!id) return;
     apiClient.entities.CropListing.filter({ id }, undefined, 1).then((rows) => {

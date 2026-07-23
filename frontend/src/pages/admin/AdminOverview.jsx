@@ -9,13 +9,16 @@ import { ROLE_LABELS, formatCurrency } from '@/utils/constants';
 const COLORS = ['#16A34A', '#F59E0B', '#3B82F6', '#8B5CF6', '#F97316'];
 export default function AdminOverview() {
   const [data, setData] = useState(null);
-  useEffect(() => { apiClient.dashboard.adminSummary().then(setData).catch(() => setData({ roles: [], months: [] })); }, []);
+  const [error, setError] = useState(false);
+  useEffect(() => { apiClient.dashboard.adminSummary().then(setData).catch(() => setError(true)); }, []);
+  if (error) return <p className="rounded-xl border border-destructive/30 p-6 text-center text-destructive">ড্যাশবোর্ডের তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।</p>;
   if (!data) return <TransactionSkeleton />;
   const roles = (data.roles || []).map((item) => ({ ...item, name: ROLE_LABELS[item.name] || item.name }));
   const cards = [
     [Users, 'মোট ব্যবহারকারী', data.users], [UserRound, 'মোট কৃষক', data.farmers], [UserRound, 'মোট ক্রেতা', data.buyers],
     [Wrench, 'যন্ত্রপাতির মালিক', data.equipmentOwners], [Truck, 'পরিবহন মালিক', data.transportOwners],
-    [Sprout, 'ফসলের তালিকা', data.listings], [Package, 'মোট অর্ডার', data.orders], [CalendarDays, 'মোট বুকিং', data.bookings],
+    [Sprout, 'ফসলের তালিকা', data.listings], [Sprout, 'সক্রিয় তালিকা', data.active_listings], [Package, 'পণ্য', data.products],
+    [Package, 'মোট অর্ডার', data.orders], [CalendarDays, 'মোট বুকিং', data.bookings],
     [Banknote, 'মোট লেনদেন', data.transactions], [CircleDollarSign, 'যাচাইকৃত আয়', formatCurrency(data.revenue || 0)],
     [Clock3, 'অপেক্ষমাণ অনুমোদন', data.pending], [Sprout, 'বিক্রি শেষ', data.sold_out]
   ];
