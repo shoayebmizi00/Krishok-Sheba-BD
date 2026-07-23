@@ -7,7 +7,7 @@
     "node": "22.x"
   },
   "scripts": {
-    "start": "npm run db:init && node scripts/create-admin.js --if-configured && node server.js",
+    "start": "node scripts/start-production.js",
     "dev": "node --watch server.js",
     "check": "node --check server.js",
     "test": "node --import ./tests/setup-env.js --test tests/*.test.js",
