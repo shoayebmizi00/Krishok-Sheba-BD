@@ -16,6 +16,8 @@ test('Supabase URL SSL query options cannot overwrite the explicit TLS policy', 
     assert.equal(config.user, 'postgres.project-ref');
     assert.equal(config.password, 'p@ssword');
     assert.equal(config.max, 4);
+    assert.equal(config.query_timeout, 30_000);
+    assert.equal(config.statement_timeout, 30_000);
     assert.deepEqual(config.ssl, { rejectUnauthorized: false });
     assert.equal(Object.hasOwn(config, 'connectionString'), false);
   } finally {

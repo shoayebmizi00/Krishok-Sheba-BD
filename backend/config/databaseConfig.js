@@ -55,6 +55,16 @@ export function getDatabaseConfig() {
       10_000,
       'DB_CONNECTION_TIMEOUT_MS'
     ),
+    query_timeout: parsePositiveInteger(
+      process.env.DB_QUERY_TIMEOUT_MS,
+      30_000,
+      'DB_QUERY_TIMEOUT_MS'
+    ),
+    statement_timeout: parsePositiveInteger(
+      process.env.DB_STATEMENT_TIMEOUT_MS,
+      30_000,
+      'DB_STATEMENT_TIMEOUT_MS'
+    ),
     keepAlive: true,
     // Supabase's session pooler presents a chain that Render does not trust.
     // DATABASE_URL query options (including sslmode) are intentionally ignored

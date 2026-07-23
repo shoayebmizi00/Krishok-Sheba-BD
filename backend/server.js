@@ -166,7 +166,7 @@ app.use((error, req, res, _next) => {
 });
 
 const server = app.listen(port, '0.0.0.0', async () => {
-  console.log(`KRISHOK-SHEBA BD API running on 0.0.0.0:${port} (${deployment})`);
+  console.log(`[startup] Express listening on 0.0.0.0:${port} (${deployment}, PostgreSQL)`);
   console.log(`Password recovery email: ${getEmailConfiguration().configured ? 'configured' : 'SMTP configuration incomplete'}`);
   try {
     await checkDatabaseConnection();

@@ -79,6 +79,7 @@ settings.district = districts;
 const client = await pool.getConnection();
 let seeded = 0;
 try {
+  console.log('[seed] PostgreSQL seed starting');
   await client.beginTransaction();
   for (const [group, values] of Object.entries(settings)) {
     for (const [index, [value, labelBn, labelEn]] of values.entries()) {
@@ -98,10 +99,10 @@ try {
     }
   }
   await client.commit();
-  console.log(`Database seed complete: ${seeded} configuration values`);
+  console.log(`[seed] PostgreSQL seed complete: ${seeded} configuration values`);
 } catch (error) {
   await client.rollback();
-  console.error(`Database seed failed (${error.code || 'SEED_FAILED'})`);
+  console.error(`[seed] PostgreSQL seed failed (${error.code || 'SEED_FAILED'}): ${error.message}`);
   process.exitCode = 1;
 } finally {
   client.release();
