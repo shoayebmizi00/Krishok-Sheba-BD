@@ -24,14 +24,28 @@ router.get('/public-summary', async (_req, res, next) => {
 
 router.get('/market-price-trends', async (_req, res, next) => {
   try {
-    const [rows] = await pool.execute(`SELECT
+    const [rows] = await pool.execute(`WITH market_rows AS (
+      SELECT TO_JSONB(row_data) data FROM market_prices row_data
+    ), normalized AS (
+      SELECT
+        data->>'crop_name' crop_name,
+        COALESCE(
+          NULLIF(data->>'date','')::timestamp,
+          NULLIF(data->>'created_at','')::timestamp
+        ) recorded_at,
+        NULLIF(data->>'price','')::numeric price
+      FROM market_rows
+    )
+    SELECT
       crop_name,
-      TO_CHAR(DATE_TRUNC('month',created_at),'YYYY-MM') month,
+      TO_CHAR(DATE_TRUNC('month',recorded_at),'YYYY-MM') month,
       AVG(price) price
-      FROM market_prices
-      WHERE created_at>=CURRENT_DATE-INTERVAL '6 months'
-      GROUP BY crop_name,DATE_TRUNC('month',created_at)
-      ORDER BY DATE_TRUNC('month',created_at),crop_name`);
+    FROM normalized
+    WHERE crop_name IS NOT NULL
+      AND price IS NOT NULL
+      AND recorded_at>=CURRENT_DATE-INTERVAL '6 months'
+    GROUP BY crop_name,DATE_TRUNC('month',recorded_at)
+    ORDER BY DATE_TRUNC('month',recorded_at),crop_name`);
     res.json(rows);
   } catch (error) { next(error); }
 });
