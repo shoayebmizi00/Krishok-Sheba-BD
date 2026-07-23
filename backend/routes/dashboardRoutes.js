@@ -26,12 +26,12 @@ router.get('/market-price-trends', async (_req, res, next) => {
   try {
     const [rows] = await pool.execute(`SELECT
       crop_name,
-      TO_CHAR(DATE_TRUNC('month', date),'YYYY-MM') month,
-      ROUND(AVG(price),2) price
+      TO_CHAR(DATE_TRUNC('month',created_at),'YYYY-MM') month,
+      AVG(price) price
       FROM market_prices
-      WHERE date>=CURRENT_DATE-INTERVAL '6 months'
-      GROUP BY crop_name,DATE_TRUNC('month',date)
-      ORDER BY DATE_TRUNC('month',date),crop_name`);
+      WHERE created_at>=CURRENT_DATE-INTERVAL '6 months'
+      GROUP BY crop_name,DATE_TRUNC('month',created_at)
+      ORDER BY DATE_TRUNC('month',created_at),crop_name`);
     res.json(rows);
   } catch (error) { next(error); }
 });
