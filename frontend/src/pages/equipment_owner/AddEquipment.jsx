@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
-import { DISTRICTS, EQUIPMENT_TYPES } from '@/utils/constants';
 import { Upload } from 'lucide-react';
 import BackButton from '@/components/shared/BackButton';
 import { useAppSettings } from '@/hooks/useAppSettings';
@@ -21,8 +20,8 @@ export default function AddEquipment() {
     name: '', type: 'tractor', description: '', rent_price_per_day: '',
     sale_price: '', is_for_rent: true, is_for_sale: false, district: '', images: []
   });
-  const { options: equipmentTypes } = useAppSettings('equipment_category', EQUIPMENT_TYPES);
-  const { options: districts } = useAppSettings('district', DISTRICTS.map((district) => ({ value: district, label: district })));
+  const { options: equipmentTypes } = useAppSettings('equipment_category');
+  const { options: districts } = useAppSettings('district');
 
   const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 

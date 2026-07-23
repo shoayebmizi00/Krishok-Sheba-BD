@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DISTRICTS, CROP_CATEGORIES, formatCurrency } from '@/utils/constants';
+import { formatCurrency } from '@/utils/constants';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
@@ -62,6 +63,8 @@ function CropCard({ crop, type }) {
 }
 
 export default function Marketplace() {
+  const { options: districts } = useAppSettings('district');
+  const { options: cropCategories } = useAppSettings('crop_category');
   const { user } = useOutletContext();
   const [listings, setListings] = useState([]);
   const [products, setProducts] = useState([]);
@@ -139,14 +142,14 @@ export default function Marketplace() {
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Districts" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">সব জেলা</SelectItem>
-            {DISTRICTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            {districts.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Categories" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">সব বিভাগ</SelectItem>
-            {CROP_CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+            {cropCategories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>

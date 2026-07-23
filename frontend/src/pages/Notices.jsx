@@ -14,24 +14,18 @@ const CATEGORY_ICONS = {
   scheme: BookOpen,
 };
 
-const SAMPLE_NOTICES = [
-  { id: '1', title: "Boro Rice Subsidy Program 2025", category: "subsidy", description: "Government is offering subsidized seeds and fertilizer for Boro season. Eligible small and marginal farmers can apply through local agriculture office.", eligibility: "Farmers with less than 2.5 acres of land", deadline: "2025-03-15", is_active: true },
-  { id: '2', title: "Agricultural Loan at 4% Interest", category: "loan", description: "Bangladesh Bank has introduced special agricultural loans at 4% interest rate for crop cultivation. Apply at any scheduled bank.", eligibility: "All registered farmers", deadline: "2025-06-30", is_active: true },
-  { id: '3', title: "Modern Farming Training — Rajshahi", category: "training", description: "Free training on modern farming techniques including IPM, organic farming, and mechanized harvesting. Conducted by DAE.", eligibility: "Farmers from Rajshahi Division", deadline: "2025-02-28", is_active: true },
-  { id: '4', title: "Digital Agriculture Scheme", category: "scheme", description: "Government initiative to digitize agricultural records and provide smart farming solutions to all farmers.", eligibility: "All farmers", is_active: true },
-];
-
 export default function Notices() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await apiClient.entities.GovernmentNotice.list('-created_date', 50);
-        setNotices(data.length > 0 ? data : SAMPLE_NOTICES);
+        const data = await apiClient.entities.GovernmentNotice.filter({ is_active: true }, '-created_date', 50);
+        setNotices(data);
       } catch {
-        setNotices(SAMPLE_NOTICES);
+        setError('Government notices could not be loaded. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -39,7 +33,7 @@ export default function Notices() {
     load();
   }, []);
 
-  const categories = ['all', 'notice', 'subsidy', 'loan', 'training', 'scheme'];
+  const categories = ['all', ...new Set(notices.map((notice) => notice.category).filter(Boolean))];
 
   const renderNotices = (filterCat) => {
     const filtered = filterCat === 'all' ? notices : notices.filter(n => n.category === filterCat);
@@ -86,6 +80,7 @@ export default function Notices() {
   };
 
   if (loading) return <LoadingSpinner />;
+  if (error) return <p className="mx-auto max-w-3xl p-8 text-center text-destructive">{error}</p>;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">

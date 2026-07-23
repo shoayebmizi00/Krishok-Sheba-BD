@@ -1,32 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { apiClient } from '@/api/apiClient';
-import { ShoppingCart, Package, Banknote, Clock } from 'lucide-react';
+import { ShoppingCart, Package, Banknote, Clock, Bell, MessageSquare, Gavel } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import { formatCurrency } from '@/utils/constants';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 export default function BuyerOverview() {
   const { user } = useOutletContext();
-  const [stats, setStats] = useState({ orders: 0, pending: 0, totalSpent: 0, bids: 0 });
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [orders, bids] = await Promise.all([
-        apiClient.entities.Order.filter({ buyer_id: user.id }),
-        apiClient.entities.Bid.filter({ buyer_id: user.id })
-      ]);
-      const pending = orders.filter(o => o.status === 'pending').length;
-      const totalSpent = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
-      setStats({ orders: orders.length, pending, totalSpent, bids: bids.length });
-      setLoading(false);
+      try {
+        setStats(await apiClient.dashboard.buyerSummary());
+      } catch {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, [user]);
 
   if (loading) return <LoadingSpinner />;
+  if (error) return <p className="rounded-xl border border-destructive/30 p-6 text-center text-destructive">Dashboard data could not be loaded. Please try again.</p>;
 
   return (
     <div className="space-y-6">
@@ -37,9 +38,12 @@ export default function BuyerOverview() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={ShoppingCart} label="Total Orders" value={stats.orders} color="text-blue-600" bgColor="bg-blue-100" />
-        <StatCard icon={Clock} label="Pending" value={stats.pending} color="text-yellow-600" bgColor="bg-yellow-100" />
-        <StatCard icon={Banknote} label="Total Spent" value={formatCurrency(stats.totalSpent)} color="text-primary" bgColor="bg-primary/10" />
-        <StatCard icon={Package} label="Active Bids" value={stats.bids} color="text-purple-600" bgColor="bg-purple-100" />
+        <StatCard icon={Clock} label="Active Orders" value={stats.active_orders} color="text-yellow-600" bgColor="bg-yellow-100" />
+        <StatCard icon={Package} label="Purchased Products" value={stats.purchased_products} color="text-green-600" bgColor="bg-green-100" />
+        <StatCard icon={Banknote} label="Total Spent" value={formatCurrency(stats.total_spent)} color="text-primary" bgColor="bg-primary/10" />
+        <StatCard icon={Gavel} label="Active Bids" value={stats.active_bids} color="text-purple-600" bgColor="bg-purple-100" />
+        <StatCard icon={Bell} label="Unread Notifications" value={stats.unread_notifications} color="text-orange-600" bgColor="bg-orange-100" />
+        <StatCard icon={MessageSquare} label="Unread Messages" value={stats.unread_messages} color="text-cyan-600" bgColor="bg-cyan-100" />
       </div>
     </div>
   );

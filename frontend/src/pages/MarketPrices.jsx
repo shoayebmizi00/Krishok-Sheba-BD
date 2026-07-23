@@ -2,50 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/api/apiClient';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { DISTRICTS } from '@/utils/constants';
 import { formatCurrency } from '@/utils/constants';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { TrendingUp } from 'lucide-react';
 
-const SAMPLE_PRICES = [
-  { crop_name: "Rice", market_name: "Mohammadpur Market", district: "Dhaka", price: 52, unit: "kg" },
-  { crop_name: "Rice", market_name: "Rayer Bazar", district: "Dhaka", price: 55, unit: "kg" },
-  { crop_name: "Rice", market_name: "Sadarghat Market", district: "Dhaka", price: 50, unit: "kg" },
-  { crop_name: "Rice", market_name: "Bogura Market", district: "Bogura", price: 48, unit: "kg" },
-  { crop_name: "Potato", market_name: "Mohammadpur Market", district: "Dhaka", price: 22, unit: "kg" },
-  { crop_name: "Potato", market_name: "Rangpur Market", district: "Rangpur", price: 18, unit: "kg" },
-  { crop_name: "Potato", market_name: "Bogura Market", district: "Bogura", price: 20, unit: "kg" },
-  { crop_name: "Onion", market_name: "Rajshahi Market", district: "Rajshahi", price: 45, unit: "kg" },
-  { crop_name: "Onion", market_name: "Dhaka Market", district: "Dhaka", price: 50, unit: "kg" },
-  { crop_name: "Onion", market_name: "Chittagong Market", district: "Chittagong", price: 48, unit: "kg" },
-  { crop_name: "Tomato", market_name: "Jessore Market", district: "Jessore", price: 35, unit: "kg" },
-  { crop_name: "Tomato", market_name: "Dhaka Market", district: "Dhaka", price: 40, unit: "kg" },
-  { crop_name: "Wheat", market_name: "Rajshahi Market", district: "Rajshahi", price: 38, unit: "kg" },
-  { crop_name: "Wheat", market_name: "Dhaka Market", district: "Dhaka", price: 42, unit: "kg" },
-];
-
-const TREND_DATA = [
-  { month: "Jan", Rice: 48, Potato: 20, Onion: 40 },
-  { month: "Feb", Rice: 50, Potato: 22, Onion: 42 },
-  { month: "Mar", Rice: 52, Potato: 18, Onion: 45 },
-  { month: "Apr", Rice: 51, Potato: 24, Onion: 50 },
-  { month: "May", Rice: 55, Potato: 20, Onion: 48 },
-  { month: "Jun", Rice: 53, Potato: 22, Onion: 46 },
-];
-
 export default function MarketPrices() {
   const [prices, setPrices] = useState([]);
+  const [trends, setTrends] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCrop, setSelectedCrop] = useState('Rice');
+  const [error, setError] = useState('');
+  const [selectedCrop, setSelectedCrop] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
 
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await apiClient.entities.MarketPrice.list('-created_date', 100);
-        setPrices(data.length > 0 ? data : SAMPLE_PRICES);
+        const [priceRows, trendRows] = await Promise.all([
+          apiClient.entities.MarketPrice.list('-date', 100),
+          apiClient.dashboard.marketPriceTrends()
+        ]);
+        setPrices(priceRows);
+        setTrends(trendRows);
+        setSelectedCrop((current) => current || priceRows[0]?.crop_name || '');
       } catch {
-        setPrices(SAMPLE_PRICES);
+        setError('Market price data could not be loaded. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -54,6 +34,7 @@ export default function MarketPrices() {
   }, []);
 
   const crops = [...new Set(prices.map(p => p.crop_name))];
+  const districts = [...new Set(prices.map((price) => price.district).filter(Boolean))];
   const filteredPrices = prices.filter(p => {
     const matchCrop = p.crop_name === selectedCrop;
     const matchDistrict = !selectedDistrict || selectedDistrict === 'all' || p.district === selectedDistrict;
@@ -64,8 +45,10 @@ export default function MarketPrices() {
     name: p.market_name,
     price: p.price
   }));
+  const trendData = trends.filter((row) => row.crop_name === selectedCrop);
 
   if (loading) return <LoadingSpinner />;
+  if (error) return <p className="mx-auto max-w-3xl p-8 text-center text-destructive">{error}</p>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -85,7 +68,7 @@ export default function MarketPrices() {
           <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All Districts" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">সব জেলা</SelectItem>
-            {DISTRICTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            {districts.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -116,14 +99,12 @@ export default function MarketPrices() {
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={TREND_DATA}>
+              <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis className="text-xs" />
                 <Tooltip formatter={(v) => [`৳${v}/kg`]} />
-                <Line type="monotone" dataKey="Rice" stroke="hsl(142, 72%, 29%)" strokeWidth={2} />
-                <Line type="monotone" dataKey="Potato" stroke="hsl(48, 96%, 53%)" strokeWidth={2} />
-                <Line type="monotone" dataKey="Onion" stroke="hsl(30, 80%, 28%)" strokeWidth={2} />
+                <Line type="monotone" dataKey="price" stroke="hsl(142, 72%, 29%)" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>

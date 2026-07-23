@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { DISTRICTS, EQUIPMENT_TYPES, formatCurrency } from '@/utils/constants';
+import { formatCurrency } from '@/utils/constants';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
@@ -80,6 +81,8 @@ function BookingDialog({ equipment, user }) {
 }
 
 export default function Equipment() {
+  const { options: equipmentTypes } = useAppSettings('equipment_category');
+  const { options: districts } = useAppSettings('district');
   const { user } = useOutletContext();
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,14 +133,14 @@ export default function Equipment() {
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Types" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">সব ধরনের যন্ত্র</SelectItem>
-            {EQUIPMENT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+            {equipmentTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={districtFilter} onValueChange={setDistrictFilter}>
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All Districts" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">সব জেলা</SelectItem>
-            {DISTRICTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            {districts.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>

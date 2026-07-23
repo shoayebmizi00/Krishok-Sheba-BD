@@ -9,7 +9,6 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import PageLoader from '@/components/shared/PageLoader';
-import RouteDiagnostics from '@/components/RouteDiagnostics';
 import ScrollToTop from '@/components/ScrollToTop';
 import AppRoutes from '@/routes/AppRoutes';
 
@@ -32,7 +31,6 @@ export default function App() {
             <QueryClientProvider client={queryClientInstance}>
               <Router>
                 <ScrollToTop />
-                <RouteDiagnostics />
                 <RoutedApp />
               </Router>
               <Toaster />

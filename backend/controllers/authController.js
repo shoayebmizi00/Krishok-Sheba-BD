@@ -6,7 +6,7 @@ import { getEmailConfiguration, sendPasswordResetEmail } from '../services/email
 import { isValidEmail, normalizeEmail, passwordPolicy } from '../utils/authValidation.js';
 
 const roles = new Set(['admin', 'farmer', 'buyer', 'equipment_owner', 'transport_provider']);
-const dummyPasswordHash = '$2b$12$/7rXs2Rk6qxCMZ8v92L/zunksTk6SGMcGsnnpQI4DeQ/vRbMkmH2S';
+const fallbackPasswordHash = '$2b$12$/7rXs2Rk6qxCMZ8v92L/zunksTk6SGMcGsnnpQI4DeQ/vRbMkmH2S';
 const frontendUrl = () => String(process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim().replace(/\/$/, '');
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -62,7 +62,7 @@ export async function login(req, res, next) {
     if (!isValidEmail(email) || typeof password !== 'string' || !password) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Invalid email or password.' });
     const [rows] = await pool.execute('SELECT * FROM users WHERE email = $1 LIMIT 1', [email]);
     const user = rows[0];
-    const passwordMatches = await bcrypt.compare(password, user?.password_hash || dummyPasswordHash);
+    const passwordMatches = await bcrypt.compare(password, user?.password_hash || fallbackPasswordHash);
     if (!user || !user.is_active || !passwordMatches) return res.status(401).json({ code: 'INVALID_CREDENTIALS', message: 'Invalid email or password.' });
     res.json({ token: signToken(user), user: publicUser(user) });
   } catch (error) { next(error); }

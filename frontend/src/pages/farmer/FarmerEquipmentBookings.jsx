@@ -13,12 +13,15 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
 import TransactionSkeleton from '@/components/payments/TransactionSkeleton';
 import AddToCalendar from '@/components/shared/AddToCalendar';
-import { DISTRICTS, EQUIPMENT_TYPES, formatCurrency, formatDate } from '@/utils/constants';
+import { formatCurrency, formatDate } from '@/utils/constants';
 import fallbackImage from '@/assets/hero/hero-equipment.jpg';
+import { useAppSettings } from '@/hooks/useAppSettings';
 
 const emptyForm = { start_date: '', end_date: '', quantity: '1', pickup_location: '', notes: '' };
 
 export default function FarmerEquipmentBookings() {
+  const { options: equipmentTypes } = useAppSettings('equipment_category');
+  const { options: districts } = useAppSettings('district');
   const { toast } = useToast();
   const navigate = useNavigate();
   const [equipment, setEquipment] = useState([]);
@@ -100,8 +103,8 @@ export default function FarmerEquipmentBookings() {
         <TabsContent value="browse" className="space-y-5 pt-4">
           <div className="grid gap-3 rounded-2xl border bg-card p-4 md:grid-cols-3">
             <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" placeholder="নাম বা মালিক দিয়ে খুঁজুন" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} /></div>
-            <Select value={filters.type} onValueChange={(type) => setFilters({ ...filters, type })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">সব বিভাগ</SelectItem>{EQUIPMENT_TYPES.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
-            <Select value={filters.district} onValueChange={(district) => setFilters({ ...filters, district })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">সব জেলা</SelectItem>{DISTRICTS.map((district) => <SelectItem key={district} value={district}>{district}</SelectItem>)}</SelectContent></Select>
+            <Select value={filters.type} onValueChange={(type) => setFilters({ ...filters, type })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">সব বিভাগ</SelectItem>{equipmentTypes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
+            <Select value={filters.district} onValueChange={(district) => setFilters({ ...filters, district })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">সব জেলা</SelectItem>{districts.map((district) => <SelectItem key={district.value} value={district.value}>{district.label}</SelectItem>)}</SelectContent></Select>
           </div>
           {!filtered.length ? <EmptyState icon={Wrench} title="কোনো উপলব্ধ যন্ত্রপাতি পাওয়া যায়নি" /> : (
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{filtered.map((item) => <article key={item.id} className="overflow-hidden rounded-2xl border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">

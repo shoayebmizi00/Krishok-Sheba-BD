@@ -34,16 +34,15 @@ npm run admin:create
 
 - `db:check` runs `SELECT 1`, identifies the PostgreSQL server, and requires all
   18 application tables without logging credentials.
-- `db:init` applies ordered migrations and then the seed.
+- `db:init` applies the idempotent schema and then the seed.
 - `db:seed` upserts required categories, units, districts, payment methods,
   notice types, and story categories. Re-running it creates no duplicates.
 - `admin:create` uses `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME`. It
   normalizes the email, hashes once with bcryptjs, preserves an existing account,
   and never depends on SMTP.
 
-`npm start` runs `db:init`, conditionally creates the configured administrator,
-and then starts Express. Migration records prevent already-applied migrations
-from being recreated.
+`npm start` applies the idempotent schema, seeds configuration, conditionally
+creates the configured administrator, and then starts Express.
 
 ## Existing Render service cutover
 
@@ -53,7 +52,7 @@ from being recreated.
 3. Add or replace `DATABASE_URL` with the rotated session-pooler URL.
 4. Deploy the latest `main`; do not create another service or change the service
    URL.
-5. Watch logs for successful migration/seed/admin initialization and server
+5. Watch logs for successful schema/seed/admin initialization and server
    startup. Logs must not contain credentials.
 6. Check `/api/health`, then run disposable registration and core workflow smoke
    tests through the existing API URL.
@@ -77,10 +76,6 @@ the production Render gate.
 
 ## Cleanup after production verification
 
-Transfer scripts and the unused MySQL driver have already been removed because
-fresh initialization cannot call them. The legacy SQL schema/migration files are
-retained only as historical rollback evidence and are not referenced at runtime.
-After the production gate passes, delete verified-obsolete legacy SQL and remove
-old database-host environment variables from Render. Preserve Git history, the
-active PostgreSQL schema, migrations, tests, deployment documentation, and
-current rollback notes.
+Obsolete conversion scripts and schemas have been removed. Preserve Git history,
+the active PostgreSQL initialization schema, tests, deployment documentation,
+and current rollback notes.

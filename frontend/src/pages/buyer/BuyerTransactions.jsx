@@ -14,6 +14,7 @@ import PaymentSuccess from '@/components/payments/PaymentSuccess';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
 import { PAYMENT_METHOD_BY_ID, paymentMethodLabel } from '@/components/payments/paymentMethods';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import { formatCurrency, formatDate } from '@/utils/constants';
 
 const initialForm = {
@@ -26,14 +27,9 @@ const initialForm = {
   transaction_reference: '',
   screenshot_url: '',
   note: '',
-  card_holder: '',
-  card_number: '',
-  card_expiry: '',
-  card_cvv: ''
 };
 
 const mobileMethods = new Set(['bkash', 'nagad', 'rocket', 'upay']);
-const cardMethods = new Set(['visa', 'mastercard', 'amex']);
 
 export default function BuyerTransactions() {
   const { toast } = useToast();
@@ -44,6 +40,7 @@ export default function BuyerTransactions() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [successTransaction, setSuccessTransaction] = useState(null);
+  const { options: paymentMethods } = useAppSettings('payment_method');
 
   const load = async () => {
     const [sent, orderData] = await Promise.all([
@@ -73,10 +70,13 @@ export default function BuyerTransactions() {
     }
   };
 
-  const selectedMethod = PAYMENT_METHOD_BY_ID[form.payment_method] || PAYMENT_METHOD_BY_ID.bkash;
+  const selectedMethod = PAYMENT_METHOD_BY_ID[form.payment_method] || {
+    name: paymentMethods.find((method) => method.value === form.payment_method)?.label || form.payment_method,
+    description: 'Configured payment method',
+    logo: '/assets/payment/bank.svg'
+  };
   const isMobilePayment = mobileMethods.has(form.payment_method);
   const isBankPayment = form.payment_method === 'bank_transfer';
-  const isCardPayment = cardMethods.has(form.payment_method);
   const isCod = form.payment_method === 'cash_on_delivery';
 
   const copy = async (value) => {
@@ -111,17 +111,7 @@ export default function BuyerTransactions() {
 
     setSubmitting(true);
     try {
-      const payload = {
-        ...form,
-        note: isCardPayment
-          ? [form.note, `Card UI only: ${selectedMethod.name}${form.card_holder ? `, Holder: ${form.card_holder}` : ''}`].filter(Boolean).join('\n')
-          : form.note,
-        account_number: isCardPayment ? form.card_number?.replace(/\s/g, '').slice(-4) : form.account_number,
-        transaction_reference: isCardPayment && !form.transaction_reference
-          ? `CARD-UI-${Date.now().toString(36).toUpperCase()}`
-          : form.transaction_reference
-      };
-      const created = await apiClient.transactions.create(payload);
+      const created = await apiClient.transactions.create(form);
       toast({ title: 'পেমেন্ট তথ্য সফলভাবে পাঠানো হয়েছে।' });
       setSuccessTransaction(created);
       setForm(initialForm);
@@ -179,7 +169,11 @@ export default function BuyerTransactions() {
               <h3 className="font-heading text-xl font-bold">পেমেন্ট পদ্ধতি</h3>
               <p className="text-sm text-muted-foreground">আপনার সুবিধামতো একটি পদ্ধতি নির্বাচন করুন।</p>
             </div>
-            <PaymentMethodSelector value={form.payment_method} onChange={(payment_method) => updateForm({ payment_method })} />
+            <PaymentMethodSelector
+              value={form.payment_method}
+              methodOptions={paymentMethods}
+              onChange={(payment_method) => updateForm({ payment_method })}
+            />
           </section>
 
           <section className="animate-in fade-in-50 rounded-lg border bg-white p-5 shadow-sm sm:p-6">
@@ -214,27 +208,13 @@ export default function BuyerTransactions() {
                   </>
                 )}
 
-                {isCardPayment && (
-                  <>
-                    <label className="text-sm font-medium">Card Holder Name<Input className="mt-1 h-11 rounded-lg" value={form.card_holder} onChange={(event) => updateForm({ card_holder: event.target.value })} /></label>
-                    <label className="text-sm font-medium">Card Number<Input className="mt-1 h-11 rounded-lg" inputMode="numeric" value={form.card_number} onChange={(event) => updateForm({ card_number: event.target.value })} placeholder="0000 0000 0000 0000" /></label>
-                    <label className="text-sm font-medium">Expiry Date<Input className="mt-1 h-11 rounded-lg" value={form.card_expiry} onChange={(event) => updateForm({ card_expiry: event.target.value })} placeholder="MM/YY" /></label>
-                    <label className="text-sm font-medium">CVV<Input className="mt-1 h-11 rounded-lg" inputMode="numeric" value={form.card_cvv} onChange={(event) => updateForm({ card_cvv: event.target.value })} placeholder="***" /></label>
-                    <label className="text-sm font-medium sm:col-span-2">Amount<Input type="number" className="mt-1 h-11 rounded-lg" value={form.amount} onChange={(event) => updateForm({ amount: event.target.value })} /></label>
-                  </>
-                )}
+                <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-emerald-50/40 p-4 text-center text-sm font-medium text-primary transition hover:bg-emerald-50 sm:col-span-2">
+                  <ImagePlus className="h-5 w-5" />
+                  {form.screenshot_url ? 'ফাইল যোগ করা হয়েছে' : isBankPayment ? 'Upload Slip' : 'Upload Payment Screenshot (optional)'}
+                  <input type="file" accept="image/*" className="hidden" onChange={upload} />
+                </label>
 
-                {!isCardPayment && (
-                  <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-emerald-50/40 p-4 text-center text-sm font-medium text-primary transition hover:bg-emerald-50 sm:col-span-2">
-                    <ImagePlus className="h-5 w-5" />
-                    {form.screenshot_url ? 'ফাইল যোগ করা হয়েছে' : isBankPayment ? 'Upload Slip' : 'Upload Payment Screenshot (optional)'}
-                    <input type="file" accept="image/*" className="hidden" onChange={upload} />
-                  </label>
-                )}
-
-                {!isCardPayment && (
-                  <label className="text-sm font-medium sm:col-span-2">Note<Textarea className="mt-1 min-h-24 rounded-lg" value={form.note} onChange={(event) => updateForm({ note: event.target.value })} /></label>
-                )}
+                <label className="text-sm font-medium sm:col-span-2">Note<Textarea className="mt-1 min-h-24 rounded-lg" value={form.note} onChange={(event) => updateForm({ note: event.target.value })} /></label>
               </div>
             )}
 

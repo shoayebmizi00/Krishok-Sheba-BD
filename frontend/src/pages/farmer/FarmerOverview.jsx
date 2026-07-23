@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { Banknote, CheckCircle2, Clock, Package, Sprout, Truck, Wrench } from 'lucide-react';
+import { Banknote, Bell, CheckCircle2, Clock, MessageSquare, Package, Sprout, Truck, Wrench } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { apiClient } from '@/api/apiClient';
 import StatCard from '@/components/dashboard/StatCard';
@@ -12,17 +12,23 @@ import { formatCurrency } from '@/utils/constants';
 export default function FarmerOverview() {
   const { user } = useOutletContext();
   const [data, setData] = useState(null);
-  useEffect(() => { apiClient.dashboard.farmerSummary().then(setData).catch(() => setData({ summary: {}, recentOrders: [], recentBids: [], months: [] })); }, []);
+  const [error, setError] = useState(false);
+  useEffect(() => { apiClient.dashboard.farmerSummary().then(setData).catch(() => setError(true)); }, []);
+  if (error) return <p className="rounded-xl border border-destructive/30 p-6 text-center text-destructive">ড্যাশবোর্ডের তথ্য লোড করা যায়নি। আবার চেষ্টা করুন।</p>;
   if (!data) return <TransactionSkeleton />;
   const stats = data.summary || {};
   return (
     <div className="space-y-6">
       <div><h2 className="font-heading text-xl font-bold">স্বাগতম, {user?.full_name || 'কৃষক'}! 🌾</h2><p className="text-sm text-muted-foreground">আপনার কৃষি কার্যক্রমের দ্রুত সারসংক্ষেপ</p></div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard icon={Sprout} label="মোট তালিকা" value={Number(stats.total_listings || 0).toLocaleString('bn-BD')} color="text-emerald-600" bgColor="bg-emerald-100" />
         <StatCard icon={Sprout} label="সক্রিয় তালিকা" value={Number(stats.active_listings || 0).toLocaleString('bn-BD')} color="text-green-600" bgColor="bg-green-100" />
+        <StatCard icon={Package} label="বিক্রি হওয়া পণ্য" value={Number(stats.sold_products || 0).toLocaleString('bn-BD')} color="text-teal-600" bgColor="bg-teal-100" />
         <StatCard icon={Package} label="মোট অর্ডার" value={Number(stats.total_orders || 0).toLocaleString('bn-BD')} color="text-blue-600" bgColor="bg-blue-100" />
         <StatCard icon={Clock} label="অপেক্ষমাণ অর্ডার" value={Number(stats.pending_orders || 0).toLocaleString('bn-BD')} color="text-yellow-600" bgColor="bg-yellow-100" />
         <StatCard icon={Banknote} label="যাচাইকৃত আয়" value={formatCurrency(stats.revenue || 0)} color="text-primary" bgColor="bg-primary/10" />
+        <StatCard icon={Bell} label="অপঠিত নোটিফিকেশন" value={Number(stats.unread_notifications || 0).toLocaleString('bn-BD')} color="text-orange-600" bgColor="bg-orange-100" />
+        <StatCard icon={MessageSquare} label="অপঠিত বার্তা" value={Number(stats.unread_messages || 0).toLocaleString('bn-BD')} color="text-cyan-600" bgColor="bg-cyan-100" />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Link to="/farmer/equipment-booking" className="group rounded-2xl border bg-card p-5 transition hover:border-primary/40 hover:shadow-md">

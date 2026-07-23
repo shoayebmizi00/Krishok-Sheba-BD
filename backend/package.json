@@ -11,9 +11,9 @@
     "dev": "node --watch server.js",
     "check": "node --check server.js",
     "test": "node --import ./tests/setup-env.js --test tests/*.test.js",
-    "migrate": "node scripts/migrate.js",
     "db:check": "node scripts/check-database.js",
-    "db:init": "npm run migrate && npm run db:seed",
+    "db:init": "npm run db:schema && npm run db:seed",
+    "db:schema": "node scripts/initialize-database.js",
     "db:seed": "node scripts/seed.js",
     "admin:create": "node scripts/create-admin.js",
     "email:test": "node scripts/test-email.js"

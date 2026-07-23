@@ -1,15 +1,17 @@
 import React from 'react';
 import { Users, Sprout, Package, MapPin } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePublicSummary } from '@/hooks/usePublicSummary';
 
 export default function StatsSection() {
   const t = useTranslation();
+  const { data = {}, isLoading, isError } = usePublicSummary();
 
   const stats = [
-    { icon: Users, value: "15,000+", label: t('registeredFarmers') },
-    { icon: Sprout, value: "8,500+", label: t('activeListings') },
-    { icon: Package, value: "25,000+", label: t('successfulTrades') },
-    { icon: MapPin, value: "64", label: t('districtsCovered') },
+    { icon: Users, value: data.farmers, label: t('registeredFarmers') },
+    { icon: Sprout, value: data.active_listings, label: t('activeListings') },
+    { icon: Package, value: data.successful_trades, label: t('successfulTrades') },
+    { icon: MapPin, value: data.districts, label: t('districtsCovered') },
   ];
 
   return (
@@ -21,7 +23,9 @@ export default function StatsSection() {
               <div className="mx-auto w-12 h-12 rounded-xl bg-primary-foreground/15 flex items-center justify-center mb-3">
                 <s.icon className="w-6 h-6 text-primary-foreground" />
               </div>
-              <div className="font-heading font-bold text-2xl md:text-3xl text-primary-foreground">{s.value}</div>
+              <div className="font-heading font-bold text-2xl md:text-3xl text-primary-foreground">
+                {isLoading ? '…' : isError ? '—' : Number(s.value || 0).toLocaleString('bn-BD')}
+              </div>
               <div className="text-sm text-primary-foreground/70 mt-1">{s.label}</div>
             </div>
           ))}
